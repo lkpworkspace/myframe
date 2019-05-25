@@ -1,6 +1,6 @@
 # ![run](https://github.com/lkpworkspace/demo/blob/master/pics/icon3.png)MyFrame
 
-# MyFrame is a lightweight message-based and event-driven application framework
+## MyFrame is a lightweight message-based and event-driven application framework
 	
 ## Build
 
@@ -27,5 +27,5 @@
     - 仅支持linux
 	- No document (you can find more docs in the code)
 
-## debug note：
+## debug note
 * MyFrame/doc/debug.md
