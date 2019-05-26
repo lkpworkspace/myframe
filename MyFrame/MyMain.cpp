@@ -15,6 +15,7 @@ int main(int argc, char** argv)
 
     // 加载服务模块
     assert(app.CreateContext("../CXXService/", "libtest_service.so", nullptr));
+    assert(app.CreateContext("../CXXService/", "libtest_service2.so", nullptr));
 
     // 开始事件循环
     return app.Exec();
