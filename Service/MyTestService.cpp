@@ -13,7 +13,7 @@ public:
 
     virtual int Init(MyContext* c, const char* param) override
     {
-        std::cout << "logger init" << std::endl;
+        std::cout << "MyTestService init" << std::endl;
         my_send(c, 0, 0x0, 0, 0, (void*)"init msg", 8);
         my_callback(c, CB, nullptr);
         usleep(1000 * 500);
@@ -24,14 +24,16 @@ public:
     {
         const char* send_msg = "hello, world";
         std::string str((char*)msg,sz);
-        std::cout << str << " " << m_count++ << std::endl;
-        my_send(context, 0, 0x0, 0, 0, (void*)send_msg, strlen(send_msg));
+        std::cout << m_srv << " from " << source << " to " << my_handle(context) << ": " << str << ", " << m_count++ << std::endl;
+        my_send(context, 0, 0x1, 0, 0, (void*)send_msg, strlen(send_msg));
         usleep(1000 * 100);
     }
     static int m_count;
+    static std::string m_srv;
 };
 
 int MyTestService::m_count = 0;
+std::string MyTestService::m_srv = "MyTestService: ";
 
 extern "C" MyModule* my_mod_create()
 {
