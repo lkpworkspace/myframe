@@ -35,7 +35,7 @@ public:
     // 获得posix的线程id
     pthread_t GetPosixThreadId(){return m_posix_thread_id;}
 
-    virtual enum ENUM_EVENT_TYPE GetEventType() { return EV_THREAD; }
+    virtual int GetEventType() { return EV_THREAD; }
 
 protected:
 

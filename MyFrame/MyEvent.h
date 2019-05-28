@@ -22,7 +22,7 @@ public:
     virtual ~MyEvent();
 
     /* 事件类型 */
-    virtual enum ENUM_EVENT_TYPE GetEventType() = 0;
+    virtual int GetEventType() = 0;
 
     /* 获得当前事件的文件描述符 */
     virtual int GetFd(){ return -1; }
@@ -37,7 +37,7 @@ public:
     virtual enum ENUM_NODE_TYPE GetNodeType() { return NODE_EVENT; }
 
     /* 事件的回调函数 */
-    virtual void* CB(MyEvent*) = 0;
+    virtual MyObj* CB(MyEvent*) = 0;
 };
 
 #endif // __MYEVENT_H__
