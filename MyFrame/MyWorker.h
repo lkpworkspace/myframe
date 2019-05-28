@@ -22,11 +22,11 @@ public:
     /**
      * override MyEvent virtual method
      */
-    virtual enum ENUM_EVENT_TYPE GetEventType() override
+    virtual int GetEventType() override
     { return EV_WORKER; }
     virtual int GetFd() override;
     virtual unsigned int GetEpollEventType() override;
-    virtual void* CB(MyEvent*) override
+    virtual MyObj* CB(MyEvent*) override
     { return nullptr; }
 
     // 主线程调用该函数与工作线程通信
@@ -49,6 +49,7 @@ private:
     /* idx: 0 used by MyWorker, 1 used by MyApp */
     int               m_sockpair[2];
 
+    MyList            m_send;              // 发送消息队列(针对没有服务的消息,缓存到该队列)
     MyList            m_que;               // work queue
     MyContext*        m_context;           // 当前执行服务的指针
 };

@@ -9,12 +9,15 @@
 #include "MyMsg.h"
 #include "MyModule.h"
 
+MyApp* MyApp::s_inst = nullptr;
+
 MyApp::MyApp(int worker_count) :
     m_epoll_fd(-1),
     m_worker_count(0),
     m_quit(true)
 {
     SetInherits("MyObj");
+    s_inst = this;
     Start(worker_count);
 }
 
@@ -106,8 +109,13 @@ void MyApp::Start(int worker_count)
     m_quit = false;
 }
 
+MyContext* MyApp::GetContext(uint32_t handle)
+{
+    return m_handle_mgr.GetContext(handle);
+}
+
 // 获得一个有消息待处理的服务(m_recv不为空的服务)
-MyContext* MyApp::GetContext()
+MyContext* MyApp::GetContextWithMsg()
 {
     // 1. 判断是否在全局数组中
     //      - 如果不是则查找下一个
@@ -130,16 +138,13 @@ MyContext* MyApp::GetContext()
     return nullptr;
 }
 
-// 将获得的消息分发给其他服务
-void MyApp::DispatchMsg(MyContext* context)
+void MyApp::DispatchMsg(MyList* msg_list)
 {
     MyMsg* msg;
     MyContext* ctx;
     MyNode* begin;
     MyNode* end;
     MyNode* temp;
-    if(nullptr == context) return;
-    MyList* msg_list = context->GetDispatchMsgList();
 
     begin= msg_list->Begin();
     end = msg_list->End();
@@ -147,9 +152,9 @@ void MyApp::DispatchMsg(MyContext* context)
     {
         temp = begin->next;
         msg = static_cast<MyMsg*>(begin);
-        if(msg->destination == 0xffffff){
+        if(msg->destination == MY_MYFRAME_MSG){
             MYLOG(MYLL_INFO, ("handle 0xffffff msg\n"));
-            // TODO...
+            m_cache_que.AddTail(begin);
         }else{
             ctx = m_handle_mgr.GetContext(msg->destination);
             if(nullptr != ctx){
@@ -162,6 +167,14 @@ void MyApp::DispatchMsg(MyContext* context)
         }
         begin = temp;
     }
+}
+
+// 将获得的消息分发给其他服务
+void MyApp::DispatchMsg(MyContext* context)
+{
+    if(nullptr == context) return;
+    MyList* msg_list = context->GetDispatchMsgList();
+    DispatchMsg(msg_list);
 }
 
 void MyApp::CheckStopWorkers()
@@ -181,7 +194,16 @@ void MyApp::CheckStopWorkers()
     {
         temp = begin->next;
         worker = static_cast<MyWorker*>(begin);
-        if(nullptr == (context = GetContext())) break;
+        // 主线程有消息，则先派发执行主线程中消息
+        if(false == m_cache_que.IsEmpty()){
+            worker->m_que.Append(&m_cache_que);
+            m_idle_workers.Del(worker);
+            worker->SendCmd(&cmd, sizeof(char));
+            begin = temp;
+            continue;
+        }
+        // 主线程没有消息，则派发执行服务中的消息
+        if(nullptr == (context = GetContextWithMsg())) break;
         list = context->GetRecvMsgList();
         if(!list->IsEmpty()){
             worker->m_que.Append(list);
@@ -202,16 +224,22 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
     worker->RecvCmd(&cmd, 1);
     switch(cmd){
     case 'i': // idle
-        // 1. 将服务要发送的消息队列分发至各个服务的接受队列
-        // 2. 将工作线程中的服务状态设置为全局状态
-        // 3. 将线程加入空闲队列
-
-        // 1.
+        // 将工作线程的发送队列分发完毕
+        DispatchMsg(&worker->m_send);
+        // 将服务的发送队列分发完毕
         DispatchMsg(worker->m_context);
-        // 2.
-        worker->Idle();
-        // 3.
-        m_idle_workers.AddTail(static_cast<MyNode*>(worker));
+
+        if(false == m_cache_que.IsEmpty()){
+            // 检查主线程消息缓存队列，如果有消息就分发给工作线程, 唤醒并执行
+            worker->Idle();
+            worker->m_que.Append(&m_cache_que);
+            worker->SendCmd(&cmd, sizeof(char));
+        }else{
+            // 将工作线程中的服务状态设置为全局状态
+            // 将线程加入空闲队列
+            worker->Idle();
+            m_idle_workers.AddTail(static_cast<MyNode*>(worker));
+        }
         break;
     case 'q': // quit
         // TODO...
@@ -224,23 +252,27 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
 
 void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
 {
-    MyNode* ev_obj;
+    MyEvent* ev_obj;
 
     for(int i = 0; i < ev_count; ++i)
     {
-        ev_obj = static_cast<MyNode*>(evs[i].data.ptr);
-        switch(ev_obj->GetNodeType())
-        {
-        case MyNode::NODE_EVENT:
-            ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));
-            break;
-        case MyNode::NODE_MSG:
-            // 现在貌似不会产生该类型的消息
-            // 将来可能socket消息使用该类型或者 NODE_SOCKET 类型
-            // TODO...
-            break;
-        default:
-            MYLOG(MYLL_ERROR,("node type error\n")); break;
+        ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
+        if(MyNode::NODE_EVENT == ev_obj->GetNodeType()){
+            switch(ev_obj->GetEventType()){
+            case MyEvent::EV_WORKER:
+                // 工作线程事件
+                ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));break;
+            case MyEvent::EV_SOCK:
+                // socket可读可写事件
+                //      如果不是 EPOLLONESHOT 类型， 需要调用 DelEvent() 删除该监听事件
+                //      将事件缓存到主线程的消息队列
+                m_cache_que.AddTail(ev_obj);
+                break;
+            default:
+                MYLOG(MYLL_ERROR,("node type error\n")); break;
+            }
+        }else{
+            MYLOG(MYLL_ERROR,("node type error\n"));
         }
     }
 }

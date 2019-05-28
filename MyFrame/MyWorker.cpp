@@ -53,6 +53,7 @@ void MyWorker::OnExit()
 int MyWorker::Work()
 {
     MyMsg* msg;
+    MyEvent* event;
     MyNode* temp;
     MyNode* begin = m_que.Begin();
     MyNode* end = m_que.End();
@@ -60,13 +61,48 @@ int MyWorker::Work()
     {
         temp = begin->next;
         m_que.Del(begin,false);
-        msg = static_cast<MyMsg*>(begin);
-        // 将工作队列中的消息交由服务进行处理
+
         if(m_context){
-            m_context->CB(msg);
+            // 处理工作队列中的消息交
+            //  1. des == 该服务的handle，由服务进行处理
+            //  2. des != 该服务的handle，由系统进行处理
+            msg = static_cast<MyMsg*>(begin);
+            if(msg->destination == m_context->m_handle){
+                m_context->CB(msg);
+            }else if(msg->destination == MY_MYFRAME_MSG){
+                MYLOG(MYLL_INFO, ("thread %d get a system msg\n", GetThreadId()));
+                // 处理请求消息
+                // 将处理后产生的消息放入m_send队列
+                // TODO...
+                // 此处回复一条消息给服务
+                const char* re = "system msg";
+                my_send(my_context(msg->source), MY_MYFRAME_MSG, msg->source, 0, 0, (void*)re, strlen(re));
+            }else{
+                MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
+            }
         }else{
-            MYLOG(MYLL_ERROR, ("thread %d has no context\n", GetThreadId()));
-            assert(false);
+            switch(begin->GetNodeType()){
+            case NODE_EVENT:
+                MYLOG(MYLL_INFO, ("thread %d get a event msg\n", GetThreadId()));
+                event = static_cast<MyEvent*>(begin);
+                switch (event->GetEventType()) {
+                case EV_SOCK:
+                    // for socket:
+                    //      处理读写事件
+                    //      处理完毕将产生的消息缓存到工作线程的发送队列
+                    m_send.Append(static_cast<MyList*>(event->CB(event)));
+                    break;
+                default:
+                    MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
+                    assert(false);
+                    break;
+                }
+                break;
+            default:
+                MYLOG(MYLL_ERROR, ("thread %d get a unknown msg\n", GetThreadId()));
+                assert(false);
+                break;
+            }
         }
         begin = temp;
     }
