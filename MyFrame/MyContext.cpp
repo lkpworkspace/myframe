@@ -68,6 +68,9 @@ int MyContext::SendMsg(uint32_t source,
     MyMsg* m = new MyMsg();
     if(source == 0)
         m->source = m_handle;
+    else
+        m->source = source;
+
     m->destination = destination;
     m->session = session;
     m->data = data;
