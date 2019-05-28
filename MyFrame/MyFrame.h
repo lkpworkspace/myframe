@@ -9,6 +9,8 @@
 #define MY_PTYPE_TAG_DONTCOPY 0x10000
 #define MY_PTYPE_TAG_ALLOCSESSION 0x20000
 
+#define MY_MYFRAME_MSG 0xffffff
+
 class MyContext;
 class MyApp;
 
@@ -20,13 +22,15 @@ typedef int (*my_cb)(MyContext* context, void *ud, int type, int session, uint32
 
 int my_send(MyContext* ctx,
          uint32_t source,
-         uint32_t destination ,
+         uint32_t destination,
          int type, /* 消息类型 */
          int session,
          void * msg,/* 消息内容 */
          size_t sz /* 消息长度 */);
 
 uint32_t my_handle(MyContext* ctx);
+
+MyContext* my_context(uint32_t handle);
 
 void my_callback(MyContext* ctx, my_cb cb, void* ud);
 

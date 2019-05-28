@@ -18,6 +18,13 @@ void my_callback(MyContext* ctx, my_cb cb, void* ud)
     ctx->SetCB(cb, ud);
 }
 
+MyContext* my_context(uint32_t handle)
+{
+    MyContext* ctx = nullptr;
+    ctx = MyApp::s_inst->GetContext(handle);
+    return ctx;
+}
+
 uint32_t my_handle(MyContext* ctx)
 {
     return ctx->GetHandle();
