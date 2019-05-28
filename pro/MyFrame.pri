@@ -11,7 +11,8 @@ SOURCES += \
     ../MyFrame/MyContext.cpp \
     ../MyFrame/MyHandleMgr.cpp \
     ../MyFrame/MyModules.cpp \
-    $$PWD/../MyFrame/MyFrame.cpp
+    ../MyFrame/MyFrame.cpp \
+    ../MyFrame/MySock.cpp
 
 
 HEADERS += \
@@ -29,7 +30,8 @@ HEADERS += \
     ../MyFrame/MyContext.h \
     ../MyFrame/MyModule.h \
     ../MyFrame/MyHandleMgr.h \
-    ../MyFrame/MyModules.h
+    ../MyFrame/MyModules.h \
+    ../MyFrame/MySock.h
 
 DISTFILES += \
-    $$PWD/../README.md
+    ../README.md
