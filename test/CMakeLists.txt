@@ -6,4 +6,6 @@ LINK_LIBRARIES(pthread dl rt m gtest_main gtest)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-E")
+
 ADD_EXECUTABLE(myframe_test ${TEST_SRCS} ${MYFRAME_SRCS})

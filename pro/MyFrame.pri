@@ -12,7 +12,8 @@ SOURCES += \
     ../MyFrame/MyHandleMgr.cpp \
     ../MyFrame/MyModules.cpp \
     ../MyFrame/MyFrame.cpp \
-    ../MyFrame/MySock.cpp
+    ../MyFrame/MySock.cpp \
+    ../MyFrame/MySocksMgr.cpp
 
 
 HEADERS += \
@@ -31,7 +32,8 @@ HEADERS += \
     ../MyFrame/MyModule.h \
     ../MyFrame/MyHandleMgr.h \
     ../MyFrame/MyModules.h \
-    ../MyFrame/MySock.h
+    ../MyFrame/MySock.h \
+    ../MyFrame/MySocksMgr.h
 
 DISTFILES += \
     ../README.md

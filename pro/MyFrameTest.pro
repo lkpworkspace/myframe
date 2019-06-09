@@ -26,6 +26,7 @@ SOURCES += \
     ../test/MyFrame_test.cpp
 
 unix {
+    QMAKE_LFLAGS += -Wl,-E
     LIBS += -ldl -lrt
     LIBS += -pthread
     LIBS += -lgtest_main -lgtest

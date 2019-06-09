@@ -17,6 +17,8 @@ set(MYFRAME_SRCS
     ${PROJECT_SOURCE_DIR}/MyFrame/MyObj.cpp
     ${PROJECT_SOURCE_DIR}/MyFrame/MyThread.cpp
     ${PROJECT_SOURCE_DIR}/MyFrame/MyWorker.cpp
+    ${PROJECT_SOURCE_DIR}/MyFrame/MySocksMgr.cpp
+    ${PROJECT_SOURCE_DIR}/MyFrame/MySock.cpp
 )
 
 add_subdirectory(Service)
