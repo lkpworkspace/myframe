@@ -1,6 +1,6 @@
 # ![run](https://github.com/lkpworkspace/demo/blob/master/pics/icon3.png)MyFrame
 
-## MyFrame is a lightweight message-based and event-driven application framework
+MyFrame is a lightweight event-driven application framework
 	
 ## 构建
 
@@ -74,4 +74,4 @@ extern "C" void my_mod_destory(MyModule* m)
 	- No document (you can find more docs in the code)
 
 ## 调试日志
-* MyFrame/doc/debug.md
+* doc/debug.md
