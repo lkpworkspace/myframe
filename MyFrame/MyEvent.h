@@ -36,8 +36,11 @@ public:
     /* 节点类型 */
     virtual enum ENUM_NODE_TYPE GetNodeType() { return NODE_EVENT; }
 
+    /* 获得的epoll事件类型(call by MyApp) */
+    virtual void SetEpollEvents(uint32_t ev) = 0;
+
     /* 事件的回调函数 */
-    virtual MyObj* CB(MyEvent*) = 0;
+    virtual MyList* CB(MyEvent*, int *ud) = 0;
 };
 
 #endif // __MYEVENT_H__

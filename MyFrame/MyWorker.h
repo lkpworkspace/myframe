@@ -26,8 +26,10 @@ public:
     { return EV_WORKER; }
     virtual int GetFd() override;
     virtual unsigned int GetEpollEventType() override;
-    virtual MyObj* CB(MyEvent*) override
+    virtual MyList* CB(MyEvent*, int*) override
     { return nullptr; }
+    virtual void SetEpollEvents(uint32_t ev) override
+    { ev = ev; }
 
     // 主线程调用该函数与工作线程通信
     int SendCmd(const char* cmd, size_t len);
