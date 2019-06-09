@@ -9,9 +9,11 @@
 class MyMsg;
 class MyModule;
 class MyWorker;
+class MySocksMgr;
 class MyContext : public MyObj
 {
     friend class MyHandleMgr;
+    friend class MySocksMgr;
     friend class MyWorker;
     friend class MyApp;
 public:

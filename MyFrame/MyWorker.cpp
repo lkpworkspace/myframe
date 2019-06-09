@@ -3,6 +3,7 @@
 #include "MyCUtils.h"
 #include "MyContext.h"
 #include "MyMsg.h"
+#include "MyApp.h"
 
 #include <assert.h>
 #include <sys/types.h>          /* See NOTES */
@@ -69,14 +70,14 @@ int MyWorker::Work()
             msg = static_cast<MyMsg*>(begin);
             if(msg->destination == m_context->m_handle){
                 m_context->CB(msg);
-            }else if(msg->destination == MY_MYFRAME_MSG){
+            }else if(msg->destination == MY_FRAME_DST){
                 MYLOG(MYLL_INFO, ("thread %d get a system msg\n", GetThreadId()));
-                // 处理请求消息
+                // 处理请求消息 request msg
                 // 将处理后产生的消息放入m_send队列
                 // TODO...
                 // 此处回复一条消息给服务
                 const char* re = "system msg";
-                my_send(my_context(msg->source), MY_MYFRAME_MSG, msg->source, 0, 0, (void*)re, strlen(re));
+                my_send(my_context(msg->source), MY_FRAME_DST, msg->source, 0, 0, (void*)re, strlen(re));
             }else{
                 MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
             }
@@ -86,18 +87,29 @@ int MyWorker::Work()
                 MYLOG(MYLL_INFO, ("thread %d get a event msg\n", GetThreadId()));
                 event = static_cast<MyEvent*>(begin);
                 switch (event->GetEventType()) {
-                case EV_SOCK:
+                case EV_SOCK:{
                     // for socket:
+                    //      判读是新连接/读事件/写事件
                     //      处理读写事件
                     //      处理完毕将产生的消息缓存到工作线程的发送队列
-                    m_send.Append(static_cast<MyList*>(event->CB(event)));
+                    int add;
+                    m_send.Append(event->CB(event, &add));
+                    if(add){
+                        MyApp::Inst()->AddEvent(event);
+                    }
                     break;
+                }
                 default:
                     MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
                     assert(false);
                     break;
                 }
                 break;
+            case NODE_MSG:{
+                // 接收一些关闭socket的消息
+                MYLOG(MYLL_ERROR, ("get socket close msg, TODO...\n"));
+                break;
+            }
             default:
                 MYLOG(MYLL_ERROR, ("thread %d get a unknown msg\n", GetThreadId()));
                 assert(false);
