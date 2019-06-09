@@ -32,6 +32,6 @@ void MyLog::Log(const char* fmt, ...)
     va_start(ap, fmt);
     vfprintf(m_log_file, fmt, ap);
     va_end(ap);
-    fputc('\n', m_log_file);
+    //fputc('\n', m_log_file);
     fflush(m_log_file);
 }

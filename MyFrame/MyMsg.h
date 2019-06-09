@@ -11,7 +11,13 @@
 class MyMsg : public MyNode
 {
 public:
-    MyMsg(){}
+    MyMsg() :
+        source(0),
+        destination(0),
+        session(0),
+        data(nullptr),
+        sz(0)
+    {}
     virtual ~MyMsg(){}
 
     uint32_t  source;

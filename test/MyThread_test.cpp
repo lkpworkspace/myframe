@@ -10,13 +10,16 @@ public:
     ~MyThreadTest(){}
 
     /* 事件类型 */
-    virtual enum ENUM_EVENT_TYPE GetEventType() override
+    virtual int GetEventType() override
     { return EV_THREAD; }
 
     virtual unsigned int GetEpollEventType() override
     { return EPOLLIN; }
 
-    virtual void* CB(MyEvent*) override
+    virtual void SetEpollEvents(uint32_t) override
+    {}
+
+    virtual MyList* CB(MyEvent*, int*) override
     { return nullptr; }
 
     virtual void Run()
