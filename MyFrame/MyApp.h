@@ -3,28 +3,35 @@
 
 #include "MyCommon.h"
 #include "MyList.h"
-#include "MyHandleMgr.h"
-#include "MyModules.h"
 
 struct epoll_event;
 class MyEvent;
 class MyContext;
+class MyModule;
+class MyModules;
+class MySocksMgr;
+class MyHandleMgr;
 class MyWorker;
+
 /**
  * 该类为单例类，不允许创建多个
  */
 class MyApp : public MyObj
 {
-public:
+private:
     MyApp(int worker_count = 1);
     virtual ~MyApp();
-
     static MyApp* s_inst;
+public:
+    static MyApp *Create(int worker_count = 1);
+    static MyApp* Inst();
+
 
     bool CreateContext(const char* mod_path, const char* mod_name, const char* param);
     bool CreateContext(MyModule* mod_inst, const char* param);
 
     MyContext* GetContext(uint32_t handle);
+    MySocksMgr* GetSocksMgr();
 
     bool AddEvent(MyEvent *ev);
     bool DelEvent(MyEvent *ev);
@@ -47,8 +54,9 @@ private:
     int                 m_epoll_fd;       // epoll文件描述符
     int                 m_worker_count;   // 工作线程数
     bool                m_quit;           // 退出标志
-    MyHandleMgr         m_handle_mgr;     // 句柄管理对象
-    MyModules           m_mods;           // 模块管理对象
+    MyHandleMgr*        m_handle_mgr;     // 句柄管理对象
+    MyModules*          m_mods;           // 模块管理对象
+    MySocksMgr*         m_socks_mgr;      // 套接字管理对象
 };
 
 #endif

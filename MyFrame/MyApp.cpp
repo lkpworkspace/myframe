@@ -8,21 +8,45 @@
 #include "MyContext.h"
 #include "MyMsg.h"
 #include "MyModule.h"
+#include "MyHandleMgr.h"
+#include "MySocksMgr.h"
+#include "MyModules.h"
 
 MyApp* MyApp::s_inst = nullptr;
 
 MyApp::MyApp(int worker_count) :
     m_epoll_fd(-1),
     m_worker_count(0),
-    m_quit(true)
+    m_quit(true),
+    m_handle_mgr(nullptr),
+    m_mods(nullptr),
+    m_socks_mgr(nullptr)
 {
     SetInherits("MyObj");
+
+    m_handle_mgr = new MyHandleMgr();
+    m_mods = new MyModules();
+    m_socks_mgr = new MySocksMgr();
+
     s_inst = this;
     Start(worker_count);
 }
 
 MyApp::~MyApp()
 {}
+
+MyApp* MyApp::Create(int worker_count)
+{
+    if(s_inst == nullptr){
+        s_inst = new MyApp(worker_count);
+    }
+    return s_inst;
+}
+
+MyApp* MyApp::Inst()
+{
+    return s_inst;
+}
 
 /**
  * 创建一个新的服务:
@@ -35,16 +59,16 @@ MyApp::~MyApp()
 */
 bool MyApp::CreateContext(const char* mod_path, const char* mod_name, const char* param)
 {
-    m_mods.SetModPath(mod_path);
-    if(false == m_mods.LoadMod(mod_name)) return false;
-    MyModule* mod_inst = m_mods.CreateModInst(mod_name);
+    m_mods->SetModPath(mod_path);
+    if(false == m_mods->LoadMod(mod_name)) return false;
+    MyModule* mod_inst = m_mods->CreateModInst(mod_name);
     return CreateContext(mod_inst, param);
 }
 
 bool MyApp::CreateContext(MyModule* mod_inst, const char* param)
 {
     MyContext* ctx = new MyContext(mod_inst);
-    m_handle_mgr.RegHandle(ctx);
+    m_handle_mgr->RegHandle(ctx);
     ctx->Init(param);
     // 初始化之后, 手动将服务中发送消息队列分发出去
     ctx->m_recv.Append(&ctx->m_send);
@@ -54,19 +78,21 @@ bool MyApp::CreateContext(MyModule* mod_inst, const char* param)
 bool MyApp::AddEvent(MyEvent* ev)
 {
     int ret = true;
+    int res;
     struct epoll_event event;
 
     event.data.ptr = ev;
     event.events = ev->GetEpollEventType();
+    MYLOG(MYLL_DEBUG,("reg ev %d\n", ev->GetFd()));
     // 如果该事件已经注册，就修改事件类型
-    if(-1 == epoll_ctl(m_epoll_fd,EPOLL_CTL_MOD,ev->GetFd(),&event)) {
+    if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_MOD,ev->GetFd(),&event))) {
         // 没有注册就添加至epoll
-        if(-1 == epoll_ctl(m_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event)){
+        if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
             ret = false;
             MYLOG(MYLL_ERROR,("%s\n", my_get_error()));
         }
     }else{
-        MYLOG(MYLL_WARN,("%p has already reg ev\n", ev));
+        MYLOG(MYLL_WARN,("%p has already reg ev %d\n", ev, errno));
     }
     return ret;
 }
@@ -111,8 +137,11 @@ void MyApp::Start(int worker_count)
 
 MyContext* MyApp::GetContext(uint32_t handle)
 {
-    return m_handle_mgr.GetContext(handle);
+    return m_handle_mgr->GetContext(handle);
 }
+
+MySocksMgr* MyApp::GetSocksMgr()
+{ return m_socks_mgr; }
 
 // 获得一个有消息待处理的服务(m_recv不为空的服务)
 MyContext* MyApp::GetContextWithMsg()
@@ -124,7 +153,7 @@ MyContext* MyApp::GetContextWithMsg()
     // 3. 如果遍历一遍都没有就直接返回nullptr
     MyContext* ctx;
     MyContext* temp;
-    ctx = temp = m_handle_mgr.GetNextContext();
+    ctx = temp = m_handle_mgr->GetNextContext();
     if(ctx == nullptr) return nullptr;
     for(;;){
         if(ctx->m_in_global){
@@ -132,7 +161,7 @@ MyContext* MyApp::GetContextWithMsg()
                 return ctx;
             }
         }
-        ctx = m_handle_mgr.GetNextContext();
+        ctx = m_handle_mgr->GetNextContext();
         if(temp == ctx) break;
     }
     return nullptr;
@@ -152,17 +181,18 @@ void MyApp::DispatchMsg(MyList* msg_list)
     {
         temp = begin->next;
         msg = static_cast<MyMsg*>(begin);
-        if(msg->destination == MY_MYFRAME_MSG){
+        if(msg->destination == MY_FRAME_DST){
             MYLOG(MYLL_INFO, ("handle 0xffffff msg\n"));
+            msg_list->Del(begin);
             m_cache_que.AddTail(begin);
         }else{
-            ctx = m_handle_mgr.GetContext(msg->destination);
+            ctx = m_handle_mgr->GetContext(msg->destination);
             if(nullptr != ctx){
                 msg_list->Del(begin);
                 ctx->PushMsg(begin);
             }else{
                 msg_list->Del(begin);
-                MYLOG(MYLL_ERROR, ("err handle %u\n", msg->destination));
+                MYLOG(MYLL_ERROR, ("err msg src:%u dst:%u session:%u\n", msg->source, msg->destination, msg->session));
             }
         }
         begin = temp;
@@ -257,6 +287,7 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
     for(int i = 0; i < ev_count; ++i)
     {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
+        ev_obj->SetEpollEvents(evs[i].events);
         if(MyNode::NODE_EVENT == ev_obj->GetNodeType()){
             switch(ev_obj->GetEventType()){
             case MyEvent::EV_WORKER:
@@ -266,6 +297,7 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
                 // socket可读可写事件
                 //      如果不是 EPOLLONESHOT 类型， 需要调用 DelEvent() 删除该监听事件
                 //      将事件缓存到主线程的消息队列
+                DelEvent(ev_obj);
                 m_cache_que.AddTail(ev_obj);
                 break;
             default:
