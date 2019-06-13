@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 project(MyFrame)
 
+option(MYFRAME_DEBUG "debug myframe option" off)
+option(MYFRAME_TEST "build myframe test case option" off)
+option(MYFRAME_EXAMPLE "build myframe Service folder src option" on)
+
+if(MYFRAME_DEBUG)
+    add_definitions(-DMYFRAME_DEBUG)
+endif(MYFRAME_DEBUG)
+
 include_directories(${PROJECT_SOURCE_DIR}/MyFrame)
 
 set(MYFRAME_SRCS 
@@ -21,9 +29,15 @@ set(MYFRAME_SRCS
     ${PROJECT_SOURCE_DIR}/MyFrame/MySock.cpp
 )
 
-# add_subdirectory(Service)
 add_subdirectory(MyFrame)
-add_subdirectory(examples)
-# add_subdirectory(test)
+add_subdirectory(Service)
+
+if(MYFRAME_EXAMPLE)
+    add_subdirectory(examples)
+endif(MYFRAME_EXAMPLE)
+
+if(MYFRAME_TEST)
+    add_subdirectory(test)
+endif(MYFRAME_TEST)
 
 

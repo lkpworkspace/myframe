@@ -3,6 +3,8 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt core
 
+DEFINES += MYFRAME_DEBUG
+
 TARGET = myframe
 
 DESTDIR = ../bin
