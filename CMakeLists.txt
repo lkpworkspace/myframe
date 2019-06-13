@@ -21,8 +21,9 @@ set(MYFRAME_SRCS
     ${PROJECT_SOURCE_DIR}/MyFrame/MySock.cpp
 )
 
-add_subdirectory(Service)
+# add_subdirectory(Service)
 add_subdirectory(MyFrame)
+add_subdirectory(examples)
 # add_subdirectory(test)
 
 

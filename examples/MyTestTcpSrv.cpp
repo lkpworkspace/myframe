@@ -14,17 +14,17 @@ void PrintSockMsg(struct my_sock_msg* msg)
     fflush(stdout);
 }
 
-class MyTCPSockTest : public MyModule
+class MyTestTcpSrv : public MyModule
 {
 public:
-    MyTCPSockTest(){}
-    virtual ~MyTCPSockTest(){}
+    MyTestTcpSrv(){}
+    virtual ~MyTestTcpSrv(){}
 
     virtual int Init(MyContext* c, const char* param) override
     {
-        std::cout << "MyTCPSockTest init" << std::endl;
+        std::cout << "MyTestTcpSrv init" << std::endl;
         my_callback(c, CB, nullptr);
-        my_listen(c, "127.0.0.1", 8888, 0);
+        my_listen(c, "127.0.0.1", 9510, 0);
         return 0;
     }
 
@@ -41,12 +41,12 @@ public:
     static std::string m_srv;
 };
 
-int MyTCPSockTest::m_count = 0;
-std::string MyTCPSockTest::m_srv = "MyTCPSockTest: ";
+int MyTestTcpSrv::m_count = 0;
+std::string MyTestTcpSrv::m_srv = "MyTestTcpSrv: ";
 
 extern "C" MyModule* my_mod_create()
 {
-    return static_cast<MyModule*>(new MyTCPSockTest());
+    return static_cast<MyModule*>(new MyTestTcpSrv());
 }
 
 extern "C" void my_mod_destory(MyModule* m)
