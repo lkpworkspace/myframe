@@ -40,13 +40,13 @@ void MyWorker::OnInit()
     MyThread::OnInit();
 
     // TODO...
-    MYLOG(MYLL_INFO, ("The thread %d init\n", GetThreadId()));
+    MYLOG(MYLL_DEBUG, ("The worker %d init\n", GetThreadId()));
 }
 
 void MyWorker::OnExit()
 {
     // TODO...
-    MYLOG(MYLL_INFO, ("The thread %d exit\n", GetThreadId()));
+    MYLOG(MYLL_DEBUG, ("The worker %d exit\n", GetThreadId()));
 
     MyThread::OnExit();
 }
@@ -71,21 +71,21 @@ int MyWorker::Work()
             if(msg->destination == m_context->m_handle){
                 m_context->CB(msg);
             }else if(msg->destination == MY_FRAME_DST){
-                MYLOG(MYLL_INFO, ("thread %d get a system msg\n", GetThreadId()));
+                MYLOG(MYLL_DEBUG, ("thread %d get a system msg\n", GetThreadId()));
                 // 处理请求消息 request msg
                 // 将处理后产生的消息放入m_send队列
                 // TODO...
                 // 此处回复一条消息给服务
-                const char* re = "system msg";
-                my_send(my_context(msg->source), MY_FRAME_DST, msg->source, 0, 0, (void*)re, strlen(re));
+                //const char* re = "system msg";
+                //my_send(my_context(msg->source), MY_FRAME_DST, msg->source, 0, 0, (void*)re, strlen(re));
             }else{
                 MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
             }
         }else{
             switch(begin->GetNodeType()){
             case NODE_EVENT:
-                MYLOG(MYLL_INFO, ("thread %d get a event msg\n", GetThreadId()));
                 event = static_cast<MyEvent*>(begin);
+                MYLOG(MYLL_DEBUG, ("thread %d get a event %d msg\n", GetThreadId(), event->GetEventType()));
                 switch (event->GetEventType()) {
                 case EV_SOCK:{
                     // for socket:
@@ -100,14 +100,14 @@ int MyWorker::Work()
                     break;
                 }
                 default:
-                    MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
+                    MYLOG(MYLL_ERROR, ("thread %d get a unknown event %d msg\n", GetThreadId(), event->GetEventType()));
                     assert(false);
                     break;
                 }
                 break;
             case NODE_MSG:{
                 // 接收一些关闭socket的消息
-                MYLOG(MYLL_ERROR, ("get socket close msg, TODO...\n"));
+                MYLOG(MYLL_WARN, ("get socket close msg, TODO...\n"));
                 break;
             }
             default:

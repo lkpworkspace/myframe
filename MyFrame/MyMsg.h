@@ -26,6 +26,7 @@ public:
     void *    data;
     size_t    sz;
 
+    void SetTypeSize(size_t size, int type) { sz = size; sz |= (size_t)type << MY_MESSAGE_TYPE_SHIFT; }
 protected:
 
     /* 节点类型 */

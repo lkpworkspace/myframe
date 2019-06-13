@@ -60,6 +60,7 @@ void MySock::SendWriteList()
 
 MyList *MySock::CB(MyEvent* ev, int* ud)
 {
+    ev = ev;
     // 判断该sock类型
     // 判断待处理事件类型()
     // 处理消息
@@ -78,6 +79,8 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
         if(client_sock == nullptr){
             MYLOG(MYLL_ERROR,("Accept error\n"));
             return &m_send;
+        }else{
+            MYLOG(MYLL_DEBUG,("Srv has a new connect %d\n", client_sock->m_id));
         }
         re_msg->id = client_sock->m_id;
         re_msg->buffer = NULL;
@@ -85,7 +88,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
         re_msg->ud = 0;
 
         msg->data = (void*)re_msg;
-        msg->sz = re_msg_len;
+        msg->SetTypeSize(re_msg_len, MY_PTYPE_SOCKET);
         m_send.AddTail(msg);
         break;
     }
@@ -106,7 +109,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                     break;
                 default:
                     // close socket when error
-                    // 发送消息给系统
+                    // 发送错误消息给服务
                     // TODO...
                     socket_type = MY_SOCKET_TYPE_ERROR;
                     *ud = 0;
@@ -133,14 +136,14 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
             } else if (sz > MIN_READ_BUFFER && n*2 < sz) {
                 m_rd_size /= 2;
             }
-            MYLOG(MYLL_DEBUG,("get client msg: %s\n",buffer));
+            MYLOG(MYLL_DEBUG,("get client msg %d: %s\n",socket_type, buffer));
             re_msg->id = m_id;
             re_msg->buffer = buffer;
             re_msg->type = socket_type;
             re_msg->ud = n;
 
             msg->data = (void*)re_msg;
-            msg->sz = re_msg_len;
+            msg->SetTypeSize(re_msg_len, MY_PTYPE_SOCKET);
             m_send.AddTail(msg);
         }
         // 数据可写事件

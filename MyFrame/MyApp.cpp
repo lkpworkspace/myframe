@@ -115,7 +115,7 @@ void MyApp::StartWorker(int worker_count)
         AddEvent(static_cast<MyEvent*>(worker));
         m_worker_count++;
     }
-    MYLOG(MYLL_INFO, ("Worker Start\n"));
+    MYLOG(MYLL_DEBUG, ("Worker Start\n"));
 }
 
 void MyApp::Start(int worker_count)
@@ -125,13 +125,13 @@ void MyApp::Start(int worker_count)
         MYLOG(MYLL_ERROR,("%s\n", my_get_error()));
         return;
     }
-    MYLOG(MYLL_INFO, ("create epoll fd %d\n", m_epoll_fd));
+    MYLOG(MYLL_DEBUG, ("create epoll fd %d\n", m_epoll_fd));
 
     StartWorker(worker_count);
 
     // ingore SIGPIPE signal
     signal(SIGPIPE,SIG_IGN);
-    MYLOG(MYLL_INFO, ("ingore SIGPIPE signal\n"));
+    MYLOG(MYLL_DEBUG, ("ingore SIGPIPE signal\n"));
     m_quit = false;
 }
 
@@ -182,7 +182,7 @@ void MyApp::DispatchMsg(MyList* msg_list)
         temp = begin->next;
         msg = static_cast<MyMsg*>(begin);
         if(msg->destination == MY_FRAME_DST){
-            MYLOG(MYLL_INFO, ("handle 0xffffff msg\n"));
+            MYLOG(MYLL_DEBUG, ("handle 0xffffff msg\n"));
             msg_list->Del(begin);
             m_cache_que.AddTail(begin);
         }else{

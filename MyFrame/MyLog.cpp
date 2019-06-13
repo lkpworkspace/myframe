@@ -4,7 +4,11 @@
 MyLog* MyLog::s_inst = nullptr;
 
 MyLog::MyLog() :
+#ifndef MYFRAME_DEBUG
     m_ll(MYLL_INFO),
+#else
+    m_ll(MYLL_DEBUG),
+#endif
     m_log_file(stdout)
 {
 }
