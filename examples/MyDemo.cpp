@@ -16,7 +16,7 @@ public:
     {
         uint32_t handle = my_handle(c);
         std::cout << "MyDemo init" << std::endl;
-        my_callback(c, CB, nullptr);
+        my_callback(c, CB, this);
         const char* hello = "hello,world";
         my_send(c, 0, handle, handle, 0, (void*)hello, strlen(hello));
         return 0;

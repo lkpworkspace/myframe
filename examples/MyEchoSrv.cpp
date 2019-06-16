@@ -16,7 +16,7 @@ public:
     virtual int Init(MyContext* c, const char* param) override
     {
 		uint32_t handle = my_handle(c);
-		my_callback(c, CB, nullptr);
+		my_callback(c, CB, this);
         m_tcp_srv_id = my_listen(c, "127.0.0.1", 9510, 0);
         if(m_tcp_srv_id == -1)
             printf("Listen on port 9510 failed\n");
@@ -25,6 +25,8 @@ public:
 
     static int CB(MyContext* context, void *ud, int type, int session, uint32_t source , const void *msg, size_t sz)
     {
+        MyEchoSrv* self = static_cast<MyEchoSrv*>(ud);
+
         struct my_sock_msg* sock_msg;
         switch(type){
         case MY_PTYPE_SOCKET:
@@ -49,10 +51,8 @@ public:
         return 0;
     }
 
-    static int m_tcp_srv_id;
+    int m_tcp_srv_id;
 };
-
-int MyEchoSrv::m_tcp_srv_id = -1;
 
 extern "C" MyModule* my_mod_create()
 {

@@ -17,32 +17,34 @@ void PrintSockMsg(struct my_sock_msg* msg)
 class MyTestTcpSrv : public MyModule
 {
 public:
-    MyTestTcpSrv(){}
+    MyTestTcpSrv() :
+    m_count(0),
+    m_srv("MyTestTcpSrv: ")
+    {}
     virtual ~MyTestTcpSrv(){}
 
     virtual int Init(MyContext* c, const char* param) override
     {
         std::cout << "MyTestTcpSrv init" << std::endl;
-        my_callback(c, CB, nullptr);
+        my_callback(c, CB, this);
         my_listen(c, "127.0.0.1", 9510, 0);
         return 0;
     }
 
     static int CB(MyContext* context, void *ud, int type, int session, uint32_t source , const void *msg, size_t sz)
     {
-        std::cout << m_srv << " from " << source << " to " << my_handle(context) << ": size " << sz << ", " << m_count++ << std::endl;
+        MyTestTcpSrv* self = static_cast<MyTestTcpSrv*>(ud);
+
+        std::cout << self->m_srv << " from " << source << " to " << my_handle(context) << ": size " << sz << ", " << self->m_count++ << std::endl;
         struct my_sock_msg* sock_msg = (struct my_sock_msg*)msg;
         PrintSockMsg(sock_msg);
         free(sock_msg->buffer);
         return 0;
     }
 
-    static int m_count;
-    static std::string m_srv;
+    int m_count;
+    std::string m_srv;
 };
-
-int MyTestTcpSrv::m_count = 0;
-std::string MyTestTcpSrv::m_srv = "MyTestTcpSrv: ";
 
 extern "C" MyModule* my_mod_create()
 {

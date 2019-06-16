@@ -13,7 +13,8 @@ SOURCES += \
     ../MyFrame/MyModules.cpp \
     ../MyFrame/MyFrame.cpp \
     ../MyFrame/MySock.cpp \
-    ../MyFrame/MySocksMgr.cpp
+    ../MyFrame/MySocksMgr.cpp \
+    ../MyFrame/MyTimerTask.cpp
 
 
 HEADERS += \
@@ -33,7 +34,8 @@ HEADERS += \
     ../MyFrame/MyHandleMgr.h \
     ../MyFrame/MyModules.h \
     ../MyFrame/MySock.h \
-    ../MyFrame/MySocksMgr.h
+    ../MyFrame/MySocksMgr.h \
+    ../MyFrame/MyTimerTask.h
 
 DISTFILES += \
     ../README.md
