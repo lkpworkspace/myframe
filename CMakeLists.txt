@@ -27,6 +27,7 @@ set(MYFRAME_SRCS
     ${PROJECT_SOURCE_DIR}/MyFrame/MyWorker.cpp
     ${PROJECT_SOURCE_DIR}/MyFrame/MySocksMgr.cpp
     ${PROJECT_SOURCE_DIR}/MyFrame/MySock.cpp
+    ${PROJECT_SOURCE_DIR}/MyFrame/MyTimerTask.cpp
 )
 
 add_subdirectory(MyFrame)
