@@ -8,12 +8,8 @@
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 
-MyTimerMgr::MyTimerMgr() :
-    m_tv1_idx(0)
+MyTimerMgr::MyTimerMgr()
 {
-    for(int i = 0; i < 4; ++i){
-        m_tv_idx[i] = 0;
-    }
     m_tv[0] = m_tv2;
     m_tv[1] = m_tv3;
     m_tv[2] = m_tv4;
@@ -124,7 +120,7 @@ void MyTimerMgr::_Shift()
     } else {
         uint32_t time = ct >> TVR_BITS;
         int i=0;
-
+        // 每255个滴答需要重新分配定时器所在区间
         while ((ct & (mask-1))==0) {
             int idx=time & TVN_MASK;
             if (idx!=0) {

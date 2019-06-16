@@ -45,14 +45,11 @@ private:
     void _Shift();
     void _Dispath(MyList *cur);
 
-
     MyList            m_tv1[TVR_SIZE];
-    int               m_tv1_idx;
     MyList            m_tv2[TVN_SIZE];
     MyList            m_tv3[TVN_SIZE];
     MyList            m_tv4[TVN_SIZE];
     MyList            m_tv5[TVN_SIZE];
-    int               m_tv_idx[4];
     MyList*           m_tv[4];
 
     uint32_t          m_time;
