@@ -12,6 +12,7 @@ class MyModules;
 class MySocksMgr;
 class MyHandleMgr;
 class MyWorker;
+class MyTimerTask;
 
 /**
  * 该类为单例类，不允许创建多个
@@ -32,6 +33,7 @@ public:
 
     MyContext* GetContext(uint32_t handle);
     MySocksMgr* GetSocksMgr();
+    MyTimerTask* GetTimerTask() { return m_timer_task; }
 
     bool AddEvent(MyEvent *ev);
     bool DelEvent(MyEvent *ev);
@@ -42,12 +44,14 @@ public:
 private:
     void Start(int worker_count);
     void StartWorker(int worker_count);
+    void StartTimerTask();
     void CheckStopWorkers();
     MyContext* GetContextWithMsg();
     void DispatchMsg(MyContext* context);
     void DispatchMsg(MyList* msg_list);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
     void ProcessWorkerEvent(MyWorker *worker);
+    void ProcessTimerEvent(MyTimerTask *timer_task);
 
     MyList              m_idle_workers;   // 空闲线程链表
     MyList              m_cache_que;      // 缓存消息队列
@@ -57,6 +61,7 @@ private:
     MyHandleMgr*        m_handle_mgr;     // 句柄管理对象
     MyModules*          m_mods;           // 模块管理对象
     MySocksMgr*         m_socks_mgr;      // 套接字管理对象
+    MyTimerTask*        m_timer_task;     // 定时器线程对象
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include "MyContext.h"
 #include "MySock.h"
 #include "MySocksMgr.h"
+#include "MyTimerTask.h"
 
 #include <string.h>
 
@@ -32,6 +33,11 @@ MyContext* my_context(uint32_t handle)
 uint32_t my_handle(MyContext* ctx)
 {
     return ctx->GetHandle();
+}
+
+int my_timeout(uint32_t handle, int time, int session)
+{
+    return MyApp::Inst()->GetTimerTask()->SetTimeout(handle, time, session);
 }
 
 int my_listen(MyContext *ctx, const char *addr, int port, int backlog)

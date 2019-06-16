@@ -14,6 +14,7 @@ public:
         EV_WORKER,
         EV_SOCK,
         EV_FILE,
+        EV_TIMER,
         EV_NONE
     };
 

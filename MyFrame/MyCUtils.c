@@ -27,7 +27,7 @@ uint8_t my_random_num(int min, int max)
     return temp;
 }
 
-double my_get_time() {
+double my_gettime_sec() {
     struct timespec ti;
     clock_gettime(CLOCK_MONOTONIC, &ti);
 
@@ -36,6 +36,25 @@ double my_get_time() {
 
     return (double)sec + (double)nsec / NANOSEC;
 }
+
+void my_systime_ms(uint32_t *sec, uint32_t *ms)
+{
+    struct timespec ti;
+    clock_gettime(CLOCK_REALTIME, &ti);
+    *sec = (uint32_t)ti.tv_sec;
+    *ms = (uint32_t)(ti.tv_nsec / 1000000);
+}
+
+uint64_t my_gettime_ms()
+{
+    uint64_t t;
+    struct timespec ti;
+    clock_gettime(CLOCK_MONOTONIC, &ti);
+    t = (uint64_t)ti.tv_sec * 1000;
+    t += ti.tv_nsec / 1000000;
+    return t;
+}
+
 
 bool my_set_nonblock(int fd, bool b)
 {

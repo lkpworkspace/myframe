@@ -11,6 +11,7 @@
 #include "MyHandleMgr.h"
 #include "MySocksMgr.h"
 #include "MyModules.h"
+#include "MyTimerTask.h"
 
 MyApp* MyApp::s_inst = nullptr;
 
@@ -115,7 +116,16 @@ void MyApp::StartWorker(int worker_count)
         AddEvent(static_cast<MyEvent*>(worker));
         m_worker_count++;
     }
-    MYLOG(MYLL_DEBUG, ("Worker Start\n"));
+    MYLOG(MYLL_DEBUG, ("Worker start\n"));
+}
+
+void MyApp::StartTimerTask()
+{
+    m_timer_task = new MyTimerTask();
+    m_timer_task->Start();
+    AddEvent(static_cast<MyEvent*>(m_timer_task));
+
+    MYLOG(MYLL_DEBUG, ("Timer task start\n"));
 }
 
 void MyApp::Start(int worker_count)
@@ -128,6 +138,7 @@ void MyApp::Start(int worker_count)
     MYLOG(MYLL_DEBUG, ("create epoll fd %d\n", m_epoll_fd));
 
     StartWorker(worker_count);
+    StartTimerTask();
 
     // ingore SIGPIPE signal
     signal(SIGPIPE,SIG_IGN);
@@ -248,6 +259,26 @@ void MyApp::CheckStopWorkers()
     }
 }
 
+void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
+{
+    char cmd = '\0';
+    timer_task->RecvCmd(&cmd, 1);
+    switch(cmd){
+    case 'i': // idle
+        // 将定时器线程的发送队列分发完毕
+        DispatchMsg(&timer_task->m_send);
+        timer_task->SendCmd(&cmd, sizeof(char));
+        break;
+    case 'q': // quit
+        // TODO...
+        MYLOG(MYLL_ERROR, ("Unimplement timer task quit %c\n", cmd));
+        break;
+    default:
+        MYLOG(MYLL_ERROR, ("get worker cmd err %c\n", cmd));
+        break;
+    }
+}
+
 void MyApp::ProcessWorkerEvent(MyWorker* worker)
 {
     char cmd = '\0';
@@ -273,6 +304,7 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
         break;
     case 'q': // quit
         // TODO...
+        MYLOG(MYLL_ERROR, ("Unimplement worker quit %c\n", cmd));
         break;
     default:
         MYLOG(MYLL_ERROR, ("get worker cmd err %c\n", cmd));
@@ -293,6 +325,10 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
             case MyEvent::EV_WORKER:
                 // 工作线程事件
                 ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));break;
+            case MyEvent::EV_TIMER:
+                // 分发超时消息
+                ProcessTimerEvent(static_cast<MyTimerTask*>(ev_obj));
+                break;
             case MyEvent::EV_SOCK:
                 // socket可读可写事件
                 //      如果不是 EPOLLONESHOT 类型， 需要调用 DelEvent() 删除该监听事件

@@ -6,6 +6,7 @@
 
 /* 一级消息类型 */
 #define MY_PTYPE_TEXT 0
+#define MY_PTYPE_RESPONSE 1
 #define MY_PTYPE_SOCKET 6
 #define MY_PTYPE_TAG_DONTCOPY 0x10000
 #define MY_PTYPE_TAG_ALLOCSESSION 0x20000
@@ -57,6 +58,8 @@ int my_send(MyContext* ctx,
          size_t sz /* 消息长度 */);
 
 uint32_t my_handle(MyContext* ctx);
+
+int my_timeout(uint32_t handle, int time, int session);
 
 MyContext* my_context(uint32_t handle);
 
