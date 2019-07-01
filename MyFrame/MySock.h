@@ -48,6 +48,7 @@ public:
     int GetType() { return m_type; }
 
     int Send(const void* buffer, int sz);
+    int Close(){ return -1; } // 暂未实现
 private:
     void SendWriteList();
     MyMsg* CloseLater();

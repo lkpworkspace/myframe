@@ -27,6 +27,8 @@ public:
     size_t    sz;
 
     void SetTypeSize(size_t size, int type) { sz = size; sz |= (size_t)type << MY_MESSAGE_TYPE_SHIFT; }
+    size_t GetSize() { return sz & MY_MESSAGE_TYPE_MASK; }
+    int GetType() { return sz >> MY_MESSAGE_TYPE_SHIFT; }
 protected:
 
     /* 节点类型 */

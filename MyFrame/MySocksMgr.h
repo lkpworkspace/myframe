@@ -41,7 +41,7 @@ public:
     // Accept
     MySock *Accept(MySock* sock);
     // Close
-    void ForceClose(uint32_t id);
+    void Close(uint32_t id);
 private:
     MySock* NewSock(uint32_t handle, int fd, int protocol);
     int DoBind(const char* host, int port, int portocol, int* family);

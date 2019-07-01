@@ -4,6 +4,7 @@
 #include "MyCommon.h"
 #include "MyThread.h"
 
+class MyMsg;
 class MyContext;
 class MyWorker : public MyThread
 {
@@ -38,6 +39,10 @@ public:
     void SetContext(MyContext* context){ m_context = context; }
 
 private:
+    /* 处理有上下文的消息 */
+    void HandleMsgWithCtx(MyMsg* msg);
+    /* 处理没有上下文的消息 */
+    void HandleMsg(MyMsg* msg);
     /* 等待主线程唤醒工作 */
     int Wait();
     /* 工作线程消息处理 */

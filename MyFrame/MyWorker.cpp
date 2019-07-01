@@ -4,6 +4,7 @@
 #include "MyContext.h"
 #include "MyMsg.h"
 #include "MyApp.h"
+#include "MySocksMgr.h"
 
 #include <assert.h>
 #include <sys/types.h>          /* See NOTES */
@@ -106,8 +107,8 @@ int MyWorker::Work()
                 }
                 break;
             case NODE_MSG:{
-                // 接收一些关闭socket的消息
-                MYLOG(MYLL_WARN, ("get socket close msg, TODO...\n"));
+                msg = static_cast<MyMsg*>(begin);
+                HandleMsg(msg);
                 break;
             }
             default:
@@ -119,6 +120,28 @@ int MyWorker::Work()
         begin = temp;
     }
     return 0;
+}
+
+void MyWorker::HandleMsgWithCtx(MyMsg* msg)
+{
+
+}
+
+void MyWorker::HandleMsg(MyMsg* msg)
+{
+    int type = msg->GetType();
+    struct my_sock_msg* sock_msg;
+
+    switch(type){
+    case MY_PTYPE_SOCKET:
+        // 接收一些socket的消息
+        sock_msg = (struct my_sock_msg*)msg->data;
+        if(sock_msg->type == MY_SOCKET_TYPE_CLOSE){
+            MyApp::Inst()->GetSocksMgr()->Close(sock_msg->id);
+            MYLOG(MYLL_WARN, ("--- socket %d closed\n", sock_msg->id));
+        }
+        break;
+    }
 }
 
 

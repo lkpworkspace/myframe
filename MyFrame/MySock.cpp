@@ -180,6 +180,6 @@ MyMsg* MySock::CloseLater()
     msg->source = m_handle;
     msg->destination = MY_FRAME_DST;
     msg->data = re_msg;
-    msg->sz = re_msg_len;
+    msg->SetTypeSize(re_msg_len, MY_PTYPE_SOCKET);
     return msg;
 }

@@ -189,8 +189,13 @@ MySock* MySocksMgr::NewSock(uint32_t handle, int fd, int protocol)
     return sock;
 }
 
-void MySocksMgr::ForceClose(uint32_t id)
+void MySocksMgr::Close(uint32_t id)
 {
-    // 清理已经关闭的socket残骸
-    // TODO...
+    MySock* s = GetSock(id);
+    // 注销ID
+    UnregId(id);
+    // 发送未发送的数据
+    s->Close();
+    // 删除
+    delete s;
 }
