@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(MyFrame)
 
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+
 option(MYFRAME_DEBUG "debug myframe option" off)
 option(MYFRAME_TEST "build myframe test case option" off)
 option(MYFRAME_EXAMPLE "build myframe Service folder src option" on)
