@@ -62,7 +62,7 @@ int MyContext::SendMsg(uint32_t source,
     }
     FilterArgs(type, &session, (void**)&data, &sz);
     // 此处应该建立一个消息池供存取
-    // 暂时使用new/free的方法
+    // 暂时使用new/delete的方法
     // 之后再进行修改
     // TODO...
     MyMsg* m = new MyMsg();

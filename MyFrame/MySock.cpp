@@ -7,6 +7,7 @@
 #include "MyFrame.h"
 #include "MyMsg.h"
 #include "MyLog.h"
+#include "MyCUtils.h"
 
 #define WARNING_SIZE (1024*1024)
 #define MIN_READ_BUFFER 64
@@ -50,7 +51,10 @@ unsigned int MySock::GetEpollEventType()
 // TODO..
 int MySock::Send(const void* buffer, int sz)
 {
-    return write(m_fd, buffer, sz);
+    int ret = write(m_fd, buffer, sz);
+    if(ret == -1)
+        fprintf(stderr, "%s\n",my_get_error());
+    return ret;
 }
 
 void MySock::SendWriteList()
