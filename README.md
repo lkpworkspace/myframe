@@ -15,7 +15,7 @@ MyFrame is a lightweight event-driven application framework
 
 ```sh
 	cd bin
-	./myframe ../examples/config.json
+	./myframe --conf ../examples/config.json
 ```
 
 ## 服务 Hello,World Demo
