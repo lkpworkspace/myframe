@@ -20,7 +20,7 @@ SOURCES += \
 
 unix {
     QMAKE_LFLAGS += -Wl,-E
-    LIBS += -lpthread -ldl -lrt -lm
+    LIBS += -lpthread -ldl -lrt -lm -lboost_program_options -lboost_system -lboost_filesystem
     #QMAKE_CXXFLAGS += -fno-stack-protector -Wno-reorder
 }
 

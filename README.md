@@ -15,7 +15,7 @@ MyFrame is a lightweight event-driven application framework
 
 ```sh
 	cd bin
-	./myframe
+	./myframe ../examples/config.json
 ```
 
 ## 服务 Hello,World Demo
@@ -65,6 +65,24 @@ extern "C" void my_mod_destory(MyModule* m)
 
 
 ```
+
+## 服务配置文件
+```json
+{
+    "thread":4,
+    "module_path":"../CXXService/",
+    "module_inst":{
+        "libdemo.so":""
+    }
+}
+
+```
+- thread:
+    - 启动线程数
+- module_inst:
+    - 实例化的模块名:传递给实例对象参数
+- module_path:
+    - 模块目录
 
 ## 概述
 	- 使用线程池实现的应用程序框架，支持高并发

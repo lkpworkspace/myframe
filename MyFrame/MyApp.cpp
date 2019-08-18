@@ -1,6 +1,12 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/epoll.h>
+#include <iostream>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/filesystem.hpp>
 #include "MyApp.h"
 #include "MyWorker.h"
 #include "MyLog.h"
@@ -15,7 +21,7 @@
 
 MyApp* MyApp::s_inst = nullptr;
 
-MyApp::MyApp(int worker_count) :
+MyApp::MyApp() :
     m_epoll_fd(-1),
     m_worker_count(0),
     m_quit(true),
@@ -24,22 +30,80 @@ MyApp::MyApp(int worker_count) :
     m_socks_mgr(nullptr)
 {
     SetInherits("MyObj");
-
-    m_handle_mgr = new MyHandleMgr();
-    m_mods = new MyModules();
-    m_socks_mgr = new MySocksMgr();
-
     s_inst = this;
-    Start(worker_count);
 }
 
 MyApp::~MyApp()
 {}
 
-MyApp* MyApp::Create(int worker_count)
+bool MyApp::ParseArg(int argc, char** argv)
+{
+    int ret = true;
+    // 解析命令行输入参数
+    // 命令行参数优先级高于配置文件中的参数优先级
+    namespace po = boost::program_options;
+    po::options_description desc("Allowed options");
+    desc.add_options()
+            ("help", "produce help message")
+            ("conf", po::value<std::string>(), "set config file path")
+    ;
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if(vm.count("help")){
+        std::cout << desc << std::endl;
+        return false;
+    }
+    std::string conf_path = "config.json";
+    if(vm.count("conf")){
+        conf_path = vm["conf"].as<std::string>();
+    }
+
+    m_handle_mgr = new MyHandleMgr();
+    m_mods = new MyModules();
+    m_socks_mgr = new MySocksMgr();
+
+    if(false == LoadFromConf(conf_path)) return false;
+    return ret;
+}
+
+bool MyApp::LoadFromConf(std::string& filename)
+{
+    bool ret = true;
+    namespace pt = boost::property_tree;
+    pt::ptree tree;
+    boost::system::error_code error;
+    if(false == boost::filesystem::is_regular_file(filename, error)) return false;
+
+    pt::read_json(filename, tree);
+    // 获得工作线程数量
+    m_worker_count_conf = tree.get("thread", 4);
+    m_worker_count_conf = (m_worker_count_conf <= 0) ? 1 : m_worker_count_conf;
+    m_worker_count_conf = (m_worker_count_conf >= 128) ? 128 : m_worker_count_conf;
+    Start(m_worker_count_conf);
+    // 获得模块路径
+    m_mod_path = tree.get("module_path", ".");
+    m_mods->SetModPath(m_mod_path.c_str());
+    // 获得例化模块名和参数
+    boost::property_tree::ptree items;
+    items = tree.get_child("module_inst");
+    for(boost::property_tree::ptree::iterator it=items.begin(); it != items.end(); ++it)
+    {
+        std::string m = it->first;
+        std::string p = it->second.get_value("");
+        CreateContext(m_mod_path.c_str(), m.c_str(), p.empty() ? nullptr : p.c_str());
+        m_create_mod.push_back(
+            std::make_pair(m, p)
+        );
+    }
+    return ret;
+}
+
+MyApp* MyApp::Create()
 {
     if(s_inst == nullptr){
-        s_inst = new MyApp(worker_count);
+        s_inst = new MyApp();
     }
     return s_inst;
 }
@@ -76,6 +140,13 @@ bool MyApp::CreateContext(MyModule* mod_inst, const char* param)
     return true;
 }
 
+bool MyApp::CreateContext(const char* mod_name, const char* param)
+{
+    MyModule* mod_inst = m_mods->CreateModInst(mod_name);
+    CreateContext(mod_inst, param);
+    return true;
+}
+
 bool MyApp::AddEvent(MyEvent* ev)
 {
     int ret = true;
@@ -90,7 +161,7 @@ bool MyApp::AddEvent(MyEvent* ev)
         // 没有注册就添加至epoll
         if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
             ret = false;
-            MYLOG(MYLL_ERROR,("%s\n", my_get_error()));
+            MYLOG(MYLL_ERROR,("epoll %s\n", my_get_error()));
         }
     }else{
         MYLOG(MYLL_WARN,("%p has already reg ev %d\n", ev, errno));

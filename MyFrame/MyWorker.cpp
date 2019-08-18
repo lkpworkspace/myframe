@@ -11,7 +11,8 @@
 #include <sys/socket.h>
 
 
-MyWorker::MyWorker()
+MyWorker::MyWorker() :
+    m_context(nullptr)
 {
     SetInherits("MyThread");
     CreateSockPair();

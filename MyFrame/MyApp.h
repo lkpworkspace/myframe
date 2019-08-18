@@ -1,6 +1,6 @@
 #ifndef __MYAPP_H__
 #define __MYAPP_H__
-
+#include <vector>
 #include "MyCommon.h"
 #include "MyList.h"
 
@@ -20,16 +20,18 @@ class MyTimerTask;
 class MyApp : public MyObj
 {
 private:
-    MyApp(int worker_count = 1);
+    MyApp();
     virtual ~MyApp();
     static MyApp* s_inst;
 public:
-    static MyApp *Create(int worker_count = 1);
+    static MyApp* Create();
     static MyApp* Inst();
 
+    bool ParseArg(int argc, char** argv);
 
     bool CreateContext(const char* mod_path, const char* mod_name, const char* param);
     bool CreateContext(MyModule* mod_inst, const char* param);
+    bool CreateContext(const char* mod_name, const char* param);
 
     MyContext* GetContext(uint32_t handle);
     MySocksMgr* GetSocksMgr();
@@ -52,16 +54,20 @@ private:
     void ProcessEvent(struct epoll_event *evs, int ev_count);
     void ProcessWorkerEvent(MyWorker *worker);
     void ProcessTimerEvent(MyTimerTask *timer_task);
+    bool LoadFromConf(std::string& filename);
 
     MyList              m_idle_workers;   // 空闲线程链表
     MyList              m_cache_que;      // 缓存消息队列
     int                 m_epoll_fd;       // epoll文件描述符
     int                 m_worker_count;   // 工作线程数
+    int                 m_worker_count_conf;
     bool                m_quit;           // 退出标志
     MyHandleMgr*        m_handle_mgr;     // 句柄管理对象
     MyModules*          m_mods;           // 模块管理对象
+    std::string         m_mod_path;       // 模块路径
     MySocksMgr*         m_socks_mgr;      // 套接字管理对象
     MyTimerTask*        m_timer_task;     // 定时器线程对象
+    std::vector<std::pair<std::string, std::string>> m_create_mod;
 };
 
 #endif

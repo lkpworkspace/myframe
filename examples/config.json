@@ -1,0 +1,7 @@
+{
+    "thread":4,
+    "module_path":"../CXXService/",
+    "module_inst":{
+        "libdemo.so":""
+    }
+}

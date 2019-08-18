@@ -11,6 +11,11 @@ if(MYFRAME_DEBUG)
     add_definitions(-DMYFRAME_DEBUG)
 endif(MYFRAME_DEBUG)
 
+find_package(Boost COMPONENTS filesystem system program_options)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/MyFrame)
 
 set(MYFRAME_SRCS 
