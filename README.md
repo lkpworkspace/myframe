@@ -1,6 +1,13 @@
 # ![run](https://github.com/lkpworkspace/demo/blob/master/pics/icon3.png)MyFrame
 
 MyFrame is a lightweight event-driven application framework
+
+## 概述
+	- 使用线程池实现的程序框架
+    - 基于服务的编程模式, 服务之间使用消息进行通信
+	- 支持服务间无锁通信，提高并发性能
+    - 仅支持linux
+	- No document (you can find more docs in the code)
 	
 ## 构建
 
@@ -86,13 +93,6 @@ extern "C" void my_mod_destory(MyModule* m)
     - 模块目录
 - module_inst:
     - 实例化的模块名:传递给实例对象参数
-
-## 概述
-	- 使用线程池实现的程序框架
-    - 基于服务的编程模式, 服务之间使用消息进行通信
-	- 支持服务间无锁通信，提高并发性能
-    - 仅支持linux
-	- No document (you can find more docs in the code)
 
 ## 调试日志
 * doc/debug.md
