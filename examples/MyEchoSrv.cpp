@@ -6,7 +6,13 @@
 #include "MyFrame.h"
 #include "MyContext.h"
 
-
+/*
+    该服务实现:
+        在 127.0.0.1:9510 启动TCP监听
+        客户端连接会打印 "Client %d connected"
+        客户端发送数据，服务端会把数据再回传给客户端
+        客户端断开会打印 "Client %d disconnect"
+*/
 class MyEchoSrv : public MyModule
 {
 public:

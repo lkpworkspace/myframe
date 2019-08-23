@@ -28,7 +28,10 @@ MyFrame is a lightweight event-driven application framework
 #include "MyFrame.h"
 #include "MyContext.h"
 
-
+/*
+    该服务实现：
+        自己给自己发送一条消息
+*/
 class MyDemo : public MyModule
 {
 public:
@@ -79,16 +82,15 @@ extern "C" void my_mod_destory(MyModule* m)
 ```
 - thread:
     - 启动线程数
-- module_inst:
-    - 实例化的模块名:传递给实例对象参数
 - module_path:
     - 模块目录
+- module_inst:
+    - 实例化的模块名:传递给实例对象参数
 
 ## 概述
-	- 使用线程池实现的应用程序框架，支持高并发
-	- 基于事件驱动的程序框架
-	- 支持线程间无锁通信，提高并发性能
-    - 基于服务的编程模式
+	- 使用线程池实现的程序框架
+    - 基于服务的编程模式, 服务之间使用消息进行通信
+	- 支持服务间无锁通信，提高并发性能
     - 仅支持linux
 	- No document (you can find more docs in the code)
 

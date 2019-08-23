@@ -5,7 +5,10 @@
 #include "MyFrame.h"
 #include "MyContext.h"
 
-
+/*
+    该服务实现：
+        自己给自己发送一条消息
+*/
 class MyDemo : public MyModule
 {
 public:
