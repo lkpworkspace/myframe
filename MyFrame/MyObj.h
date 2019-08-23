@@ -14,13 +14,13 @@ public:
     virtual ~MyObj();
 
     bool Inherits(const char* classname);
-
+    std::string& GetObjName() { return m_obj_name; }
 protected:
 
     void SetInherits(const char *classname);
 
 private:
-
+    std::string                     m_obj_name;
     std::unordered_set<std::string> m_inherits;
 };
 

@@ -1,11 +1,14 @@
 #include "MyModules.h"
+
+#include <boost/log/trivial.hpp>
+
 #include "MyModule.h"
 #include "MyCUtils.h"
-#include "MyLog.h"
 
 MyModules::MyModules() :
     m_mod_path("")
-{}
+{
+}
 
 MyModules::~MyModules()
 {}
@@ -27,7 +30,7 @@ bool MyModules::LoadMod(const char* dlname)
     std::string full_path;
 
     if(m_mods.find(dlname) != m_mods.end()){
-        MYLOG(MYLL_WARN,("The %s has loaded\n", dlname));
+        BOOST_LOG_TRIVIAL(warning) << "The " << dlname << " has loaded";
         return true;
     }
 
@@ -36,7 +39,7 @@ bool MyModules::LoadMod(const char* dlname)
 
     inst = my_dll_open(full_path.c_str());
     if(inst == nullptr){
-        MYLOG(MYLL_ERROR,("Load %s module failed\n", dlname));
+        BOOST_LOG_TRIVIAL(error) << "Load " << dlname << " module failed";
         return false;
     }
     m_mods[dlname] = inst;
@@ -50,7 +53,7 @@ MyModule* MyModules::CreateModInst(const char* mod_name)
     handle = m_mods[mod_name];
     my_mod_create_func create = (my_mod_create_func)my_dll_use(handle, "my_mod_create");
     if(nullptr == create){
-        MYLOG(MYLL_ERROR,("Load %s module MyCreate function failed\n", mod_name));
+        BOOST_LOG_TRIVIAL(error) << "Load " << mod_name << " module my_mod_create function failed";
         return nullptr;
     }
     return static_cast<MyModule*>(create());
@@ -65,7 +68,7 @@ bool MyModules::DestoryModInst(const char* mod_name, MyModule* mod)
     handle = m_mods[mod_name];
     my_mod_destory_func destory = (my_mod_destory_func)my_dll_use(handle, "my_mod_destory");
     if(nullptr == destory){
-        MYLOG(MYLL_ERROR,("Load %s module MyDestory function failed\n", mod_name));
+        BOOST_LOG_TRIVIAL(error) << "Load " << mod_name << " module my_mod_destory function failed";
         return false;
     }
     destory(mod);

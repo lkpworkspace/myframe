@@ -1,15 +1,18 @@
+#include "MyApp.h"
+
 #include <errno.h>
 #include <signal.h>
 #include <sys/epoll.h>
+
 #include <iostream>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/filesystem.hpp>
-#include "MyApp.h"
+#include <boost/log/trivial.hpp>
+
 #include "MyWorker.h"
-#include "MyLog.h"
 #include "MyCUtils.h"
 #include "MyContext.h"
 #include "MyMsg.h"
@@ -58,8 +61,10 @@ bool MyApp::ParseArg(int argc, char** argv)
     std::string conf_path = "config.json";
     if(vm.count("conf")){
         conf_path = vm["conf"].as<std::string>();
+    }else{
+        std::cout << desc << std::endl;
+        return false;
     }
-
     m_handle_mgr = new MyHandleMgr();
     m_mods = new MyModules();
     m_socks_mgr = new MySocksMgr();
@@ -155,16 +160,18 @@ bool MyApp::AddEvent(MyEvent* ev)
 
     event.data.ptr = ev;
     event.events = ev->GetEpollEventType();
-    MYLOG(MYLL_DEBUG,("reg ev %d\n", ev->GetFd()));
+
+    BOOST_LOG_TRIVIAL(debug) << ev->GetObjName() << " reg event fd: " << ev->GetFd();
     // 如果该事件已经注册，就修改事件类型
     if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_MOD,ev->GetFd(),&event))) {
         // 没有注册就添加至epoll
         if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
             ret = false;
-            MYLOG(MYLL_ERROR,("epoll %s\n", my_get_error()));
+            BOOST_LOG_TRIVIAL(error) << "epoll " << my_get_error();
         }
     }else{
-        MYLOG(MYLL_WARN,("%p has already reg ev %d\n", ev, errno));
+        BOOST_LOG_TRIVIAL(warning) << ev->GetObjName() << " has already reg ev " 
+            << ev->GetFd() << ": " << my_get_error();
     }
     return ret;
 }
@@ -174,7 +181,8 @@ bool MyApp::DelEvent(MyEvent *ev)
     int ret = true;
     if(-1 == epoll_ctl(m_epoll_fd,EPOLL_CTL_DEL,ev->GetFd(),NULL)){
         ret = false;
-        MYLOG(MYLL_ERROR, ("%s\n",my_get_error()));
+        BOOST_LOG_TRIVIAL(error) << ev->GetObjName() << " del event " 
+            << ev->GetFd() << ": " << my_get_error();
     }
     return ret;
 }
@@ -187,7 +195,7 @@ void MyApp::StartWorker(int worker_count)
         AddEvent(static_cast<MyEvent*>(worker));
         m_worker_count++;
     }
-    MYLOG(MYLL_DEBUG, ("Worker start\n"));
+    BOOST_LOG_TRIVIAL(debug) << "Worker start";
 }
 
 void MyApp::StartTimerTask()
@@ -196,24 +204,24 @@ void MyApp::StartTimerTask()
     m_timer_task->Start();
     AddEvent(static_cast<MyEvent*>(m_timer_task));
 
-    MYLOG(MYLL_DEBUG, ("Timer task start\n"));
+    BOOST_LOG_TRIVIAL(debug) << "Timer task start";
 }
 
 void MyApp::Start(int worker_count)
 {
     m_epoll_fd = epoll_create(1024);
     if(-1 == m_epoll_fd){
-        MYLOG(MYLL_ERROR,("%s\n", my_get_error()));
+        BOOST_LOG_TRIVIAL(error) << my_get_error();
         return;
     }
-    MYLOG(MYLL_DEBUG, ("create epoll fd %d\n", m_epoll_fd));
+    BOOST_LOG_TRIVIAL(debug) << "Create epoll fd " << m_epoll_fd;
 
     StartWorker(worker_count);
     StartTimerTask();
 
     // ingore SIGPIPE signal
     signal(SIGPIPE,SIG_IGN);
-    MYLOG(MYLL_DEBUG, ("ingore SIGPIPE signal\n"));
+    BOOST_LOG_TRIVIAL(debug) << "Ingore SIGPIPE signal";
     m_quit = false;
 }
 
@@ -264,7 +272,7 @@ void MyApp::DispatchMsg(MyList* msg_list)
         temp = begin->next;
         msg = static_cast<MyMsg*>(begin);
         if(msg->destination == MY_FRAME_DST){
-            MYLOG(MYLL_DEBUG, ("handle 0xffffff msg\n"));
+            BOOST_LOG_TRIVIAL(debug) << "Handle MY_FRAME_DST msg";
             msg_list->Del(begin);
             m_cache_que.AddTail(begin);
         }else{
@@ -274,7 +282,9 @@ void MyApp::DispatchMsg(MyList* msg_list)
                 ctx->PushMsg(begin);
             }else{
                 msg_list->Del(begin);
-                MYLOG(MYLL_ERROR, ("err msg src:%u dst:%u session:%u\n", msg->source, msg->destination, msg->session));
+                BOOST_LOG_TRIVIAL(error) << "Err msg src:" 
+                    << msg->source << " dst:" << msg->destination 
+                    << " session:" << msg->session;
             }
         }
         begin = temp;
@@ -324,7 +334,7 @@ void MyApp::CheckStopWorkers()
             m_idle_workers.Del(begin);
             worker->SendCmd(&cmd, sizeof(char));
         }else{
-            MYLOG(MYLL_ERROR, ("context has no msg\n"));
+            BOOST_LOG_TRIVIAL(error) << "Context has no msg";
         }
         begin = temp;
     }
@@ -342,10 +352,10 @@ void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
         break;
     case 'q': // quit
         // TODO...
-        MYLOG(MYLL_ERROR, ("Unimplement timer task quit %c\n", cmd));
+        BOOST_LOG_TRIVIAL(warning) << "Unimplement timer task quit: " << cmd;
         break;
     default:
-        MYLOG(MYLL_ERROR, ("get worker cmd err %c\n", cmd));
+        BOOST_LOG_TRIVIAL(warning) << "Unknown timer task cmd: " << cmd;
         break;
     }
 }
@@ -358,6 +368,7 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
     case 'i': // idle
         // 将工作线程的发送队列分发完毕
         DispatchMsg(&worker->m_send);
+
         // 将服务的发送队列分发完毕
         DispatchMsg(worker->m_context);
 
@@ -375,10 +386,10 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
         break;
     case 'q': // quit
         // TODO...
-        MYLOG(MYLL_ERROR, ("Unimplement worker quit %c\n", cmd));
+        BOOST_LOG_TRIVIAL(warning) << "Unimplement worker quit: " << cmd;
         break;
     default:
-        MYLOG(MYLL_ERROR, ("get worker cmd err %c\n", cmd));
+        BOOST_LOG_TRIVIAL(warning) << "Unknown worker cmd: " << cmd;
         break;
     }
 }
@@ -408,10 +419,11 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
                 m_cache_que.AddTail(ev_obj);
                 break;
             default:
-                MYLOG(MYLL_ERROR,("node type error\n")); break;
+                BOOST_LOG_TRIVIAL(warning) << "Unknown event";
+                break;
             }
         }else{
-            MYLOG(MYLL_ERROR,("node type error\n"));
+            BOOST_LOG_TRIVIAL(warning) << "Unknown event node";
         }
     }
 }
@@ -444,16 +456,11 @@ int MyApp::Exec()
             // 3. 处理事件
             //  - 获得事件区分事件类型
             //      - 线程事件
-            //          - 退出消息
-            //              - TODO...
-            //          - 线程事件处理完毕
-            //              - 将线程放入空闲线程链表
-            //      - msg事件
-            //          - 如果是socket消息
-            //              - TODO...
+            //      - timer事件
+            //      - socket事件
             ProcessEvent(evs, ev_count);
         }else{
-            MYLOG(MYLL_ERROR,("%s\n", my_get_error()));
+            BOOST_LOG_TRIVIAL(error) << my_get_error();
         }
         // 4. loop
     }
@@ -462,7 +469,7 @@ int MyApp::Exec()
     free(evs);
     close(m_epoll_fd);
 
-    MYLOG(MYLL_INFO, ("MyApp Exit\n"));
+    BOOST_LOG_TRIVIAL(info) << "MyFrame Exit";
     return 0;
 }
 

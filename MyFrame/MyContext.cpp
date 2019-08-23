@@ -1,9 +1,11 @@
+#include "MyContext.h"
+
 #include <assert.h>
 
-#include "MyContext.h"
+#include <boost/log/trivial.hpp>
+
 #include "MyModule.h"
 #include "MyMsg.h"
-#include "MyLog.h"
 #include "MyFrame.h"
 
 MyContext::MyContext(MyModule* mod) :
@@ -54,7 +56,7 @@ int MyContext::SendMsg(uint32_t source,
                        size_t sz)
 {
     if ((sz & MY_MESSAGE_TYPE_MASK) != sz) {
-        MYLOG(MYLL_ERROR, ("The message to %x is too large", destination));
+        BOOST_LOG_TRIVIAL(error) << "The message to " << destination << " too large";
         if (type & MY_PTYPE_TAG_DONTCOPY) {
             free(data);
         }
@@ -100,7 +102,7 @@ void MyContext::CB(MyMsg* msg)
         if(!reserve_msg)
             free(msg->data);
     }else{
-        MYLOG(MYLL_WARN, ("context %u callback is null\n", m_handle));
+        BOOST_LOG_TRIVIAL(warning) << "Context " << m_handle << " callback is null";
         return;
     }
     // 在该处释放MyMsg对象

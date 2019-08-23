@@ -1,6 +1,7 @@
 #include "MyObj.h"
 
-MyObj::MyObj()
+MyObj::MyObj() :
+    m_obj_name("")
 {}
 
 MyObj::~MyObj()
@@ -15,4 +16,5 @@ bool MyObj::Inherits(const char* classname)
 void MyObj::SetInherits(const char* classname)
 {
     m_inherits.insert(classname);
+    m_obj_name = classname;
 }

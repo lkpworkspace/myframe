@@ -1,41 +1,25 @@
 #include "MyLog.h"
-#include <stdarg.h>
 
-MyLog* MyLog::s_inst = nullptr;
+#include <iostream>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sources/logger.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
-MyLog::MyLog() :
-#ifndef MYFRAME_DEBUG
-    m_ll(MYLL_INFO),
-#else
-    m_ll(MYLL_DEBUG),
-#endif
-    m_log_file(stdout)
+MyLog::MyLog()
 {
-}
-
-MyLog::~MyLog()
-{}
-
-MyLog* MyLog::Inst()
-{
-    if(s_inst == nullptr)
-        s_inst = new MyLog();
-    return s_inst;
-}
-
-bool MyLog::LogPrefix(enum ENUM_MYLOG_LEVEL level, const char *fname, int line)
-{
-    if (level > m_ll) return false;
-    if (m_log_file == NULL) m_log_file = stderr;
-    return true;
-}
-
-void MyLog::Log(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(m_log_file, fmt, ap);
-    va_end(ap);
-    //fputc('\n', m_log_file);
-    fflush(m_log_file);
+    namespace logging = boost::log;
+    namespace keywords = boost::log::keywords;
+    namespace expr = boost::log::expressions;
+    namespace attrs = boost::log::attributes;
+    namespace src = boost::log::sources;
+    logging::core::get()->set_filter
+    (
+        logging::trivial::severity >= logging::trivial::trace
+    );
 }

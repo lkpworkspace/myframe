@@ -1,12 +1,14 @@
+#include "MySock.h"
+
 #include <string.h>
 #include <unistd.h>
 
-#include "MySock.h"
+#include <boost/log/trivial.hpp>
+
 #include "MySocksMgr.h"
 #include "MyApp.h"
 #include "MyFrame.h"
 #include "MyMsg.h"
-#include "MyLog.h"
 #include "MyCUtils.h"
 
 #define WARNING_SIZE (1024*1024)
@@ -53,7 +55,7 @@ int MySock::Send(const void* buffer, int sz)
 {
     int ret = write(m_fd, buffer, sz);
     if(ret == -1)
-        fprintf(stderr, "%s\n",my_get_error());
+        BOOST_LOG_TRIVIAL(error) << my_get_error();
     return ret;
 }
 
@@ -81,10 +83,10 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
     case SOCK_STATE_LISTEN: { // 有新的客户端连接
         MySock* client_sock = MyApp::Inst()->GetSocksMgr()->Accept(this);
         if(client_sock == nullptr){
-            MYLOG(MYLL_ERROR,("Accept error\n"));
+            BOOST_LOG_TRIVIAL(error) << "Accept error";
             return &m_send;
         }else{
-            MYLOG(MYLL_DEBUG,("Srv has a new connect %d\n", client_sock->m_id));
+            BOOST_LOG_TRIVIAL(debug) << "New connect " << client_sock->m_id;
         }
         re_msg->id = client_sock->m_id;
         re_msg->buffer = NULL;
@@ -105,13 +107,16 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
             int n = (int)read(m_fd, buffer, sz);
             if (n<0) {
                 free(buffer);
+                buffer = nullptr;
                 switch(errno) {
                 case EINTR:
+                    BOOST_LOG_TRIVIAL(debug) << "socket-server: read EINTR capture";
                     break;
                 case EAGAIN:
-                    MYLOG(MYLL_ERROR,("socket-server: EAGAIN capture.\n"));
+                    BOOST_LOG_TRIVIAL(debug) << "socket-server: read EAGAIN capture";
                     break;
                 default:
+                    BOOST_LOG_TRIVIAL(error) << "socket-server: read error: " << errno;
                     // close socket when error
                     // 发送错误消息给服务
                     // TODO...
@@ -122,7 +127,9 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                 return &m_send;
             }
             if (n==0) {
+                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " read 0 byte";
                 free(buffer);
+                buffer = nullptr;
                 // close socket
                 // TODO...
                 socket_type = MY_SOCKET_TYPE_CLOSE;
@@ -131,16 +138,20 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
             }
 
             if (m_state == SOCK_STATE_HALFCLOSE) {
+                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " HALFCLOSE";
                 // discard recv data
                 free(buffer);
+                buffer = nullptr;
                 return &m_send;
             }
             if (n == sz) {
                 m_rd_size *= 2;
+                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << "rd size change " << m_rd_size;
             } else if (sz > MIN_READ_BUFFER && n*2 < sz) {
                 m_rd_size /= 2;
+                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << "rd size change " << m_rd_size;
             }
-            MYLOG(MYLL_DEBUG,("get client msg %d: %s\n",socket_type, buffer));
+            BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " get msg type:" << socket_type;
             re_msg->id = m_id;
             re_msg->buffer = buffer;
             re_msg->type = socket_type;
@@ -170,6 +181,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
     return &m_send;
 }
 
+// 该函数是构造一个发送给系统的消息，并没有发送给服务
 MyMsg* MySock::CloseLater()
 {
     MyMsg* msg = new MyMsg();

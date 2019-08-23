@@ -1,14 +1,17 @@
 #include "MyWorker.h"
-#include "MyLog.h"
+
+#include <assert.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include <boost/log/trivial.hpp>
+
 #include "MyCUtils.h"
 #include "MyContext.h"
 #include "MyMsg.h"
 #include "MyApp.h"
 #include "MySocksMgr.h"
 
-#include <assert.h>
-#include <sys/types.h>          /* See NOTES */
-#include <sys/socket.h>
 
 
 MyWorker::MyWorker() :
@@ -42,13 +45,13 @@ void MyWorker::OnInit()
     MyThread::OnInit();
 
     // TODO...
-    MYLOG(MYLL_DEBUG, ("The worker %d init\n", GetThreadId()));
+    BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " init";
 }
 
 void MyWorker::OnExit()
 {
     // TODO...
-    MYLOG(MYLL_DEBUG, ("The worker %d exit\n", GetThreadId()));
+    BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " exit";
 
     MyThread::OnExit();
 }
@@ -73,7 +76,7 @@ int MyWorker::Work()
             if(msg->destination == m_context->m_handle){
                 m_context->CB(msg);
             }else if(msg->destination == MY_FRAME_DST){
-                MYLOG(MYLL_DEBUG, ("thread %d get a system msg\n", GetThreadId()));
+                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a system msg";
                 // 处理请求消息 request msg
                 // 将处理后产生的消息放入m_send队列
                 // TODO...
@@ -81,13 +84,14 @@ int MyWorker::Work()
                 //const char* re = "system msg";
                 //my_send(my_context(msg->source), MY_FRAME_DST, msg->source, 0, 0, (void*)re, strlen(re));
             }else{
-                MYLOG(MYLL_ERROR, ("thread %d get a unknown event msg\n", GetThreadId()));
+                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a unknown msg";
             }
         }else{
             switch(begin->GetNodeType()){
             case NODE_EVENT:
                 event = static_cast<MyEvent*>(begin);
-                MYLOG(MYLL_DEBUG, ("thread %d get a event %d msg\n", GetThreadId(), event->GetEventType()));
+                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
+                    << " get msg ev-type: " << event->GetEventType();
                 switch (event->GetEventType()) {
                 case EV_SOCK:{
                     // for socket:
@@ -102,8 +106,9 @@ int MyWorker::Work()
                     break;
                 }
                 default:
-                    MYLOG(MYLL_ERROR, ("thread %d get a unknown event %d msg\n", GetThreadId(), event->GetEventType()));
-                    assert(false);
+                    BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() 
+                        << " get unknown msg ev-type" << event->GetEventType();
+                    exit(-1);
                     break;
                 }
                 break;
@@ -113,8 +118,9 @@ int MyWorker::Work()
                 break;
             }
             default:
-                MYLOG(MYLL_ERROR, ("thread %d get a unknown msg\n", GetThreadId()));
-                assert(false);
+                BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() 
+                        << " get unknown msg ev-type" << event->GetEventType();
+                exit(-1);
                 break;
             }
         }
@@ -139,7 +145,8 @@ void MyWorker::HandleMsg(MyMsg* msg)
         sock_msg = (struct my_sock_msg*)msg->data;
         if(sock_msg->type == MY_SOCKET_TYPE_CLOSE){
             MyApp::Inst()->GetSocksMgr()->Close(sock_msg->id);
-            MYLOG(MYLL_WARN, ("--- socket %d closed\n", sock_msg->id));
+            BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
+                        << " close socket id: " << sock_msg->id;
         }
         break;
     }
@@ -183,17 +190,17 @@ bool MyWorker::CreateSockPair()
 
     res = socketpair(AF_UNIX,SOCK_DGRAM,0,m_sockpair);
     if(res == -1) {
-        MYLOG(MYLL_ERROR,("sockpair failed\n"));
+        BOOST_LOG_TRIVIAL(error) << "Worker create sockpair failed";
         return false;
     }
     ret = my_set_nonblock(m_sockpair[0], false);
     if(!ret) {
-        MYLOG(MYLL_ERROR,("set sockpair nonblock failed\n"));
+        BOOST_LOG_TRIVIAL(error) << "Worker set sockpair[0] block failed";
         return ret;
     }
     ret = my_set_nonblock(m_sockpair[1], false);
     if(!ret) {
-        MYLOG(MYLL_ERROR,("set sockpair nonblock failed\n"));
+        BOOST_LOG_TRIVIAL(error) << "Worker set sockpair[1] block failed";
         return ret;
     }
     return ret;
@@ -202,9 +209,9 @@ bool MyWorker::CreateSockPair()
 void MyWorker::CloseSockPair()
 {
     if(-1 == close(m_sockpair[0])){
-        MYLOG(MYLL_ERROR, ("%s\n", my_get_error()));
+        BOOST_LOG_TRIVIAL(error) << "Worker close sockpair[0]: " << my_get_error();
     }
     if(-1 == close(m_sockpair[1])){
-        MYLOG(MYLL_ERROR, ("%s\n", my_get_error()));
+        BOOST_LOG_TRIVIAL(error) << "Worker close sockpair[1]: " << my_get_error();
     }
 }

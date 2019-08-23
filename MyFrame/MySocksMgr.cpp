@@ -1,16 +1,17 @@
-#include <assert.h>
-
 #include "MySocksMgr.h"
-#include "MyLog.h"
-#include "MySock.h"
-#include "MyContext.h"
-#include "MyApp.h"
-#include "MyCUtils.h"
 
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+
+#include <boost/log/trivial.hpp>
+
+#include "MySock.h"
+#include "MyContext.h"
+#include "MyApp.h"
+#include "MyCUtils.h"
 
 union sockaddr_all{
     struct sockaddr s;
@@ -38,7 +39,7 @@ uint32_t MySocksMgr::RegId(MySock* sock)
     pthread_rwlock_wrlock(&m_rw);
     id = m_alloc_id;
     if(m_ids.end() != m_ids.find(id)){
-        MYLOG(MYLL_ERROR, ("Alloc id %d failed\n", id));
+        BOOST_LOG_TRIVIAL(error) << "Alloc id:" << id << " failed";
         exit(-1);
     }
     m_ids[m_alloc_id] = sock;
