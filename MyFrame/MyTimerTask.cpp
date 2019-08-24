@@ -63,7 +63,7 @@ int MyTimerMgr::Timeout(uint32_t handle, int time, int session)
 
 void MyTimerMgr::_Dispath(MyList* cur)
 {
-    MyMsg* msg;
+    MyRespMsg* msg;
     MyTimer* timer;
     MyNode* begin;
     MyNode* end;
@@ -76,12 +76,11 @@ void MyTimerMgr::_Dispath(MyList* cur)
         temp = begin->next;
         cur->Del(begin);
         timer = static_cast<MyTimer*>(begin);
-        msg = new MyMsg();
+        msg = new MyRespMsg();
         msg->source = MY_FRAME_DST;
         msg->destination = timer->m_handle;
         msg->session = timer->m_session;
-        msg->data = nullptr;
-        msg->SetTypeSize(0,MY_PTYPE_RESPONSE);
+        msg->SetRespMsgType(MyRespMsg::MyRespMsgType::TIMER);
         delete begin;
         m_timeout.AddTail(msg);
         begin = temp;

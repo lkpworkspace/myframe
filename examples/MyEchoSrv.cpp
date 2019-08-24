@@ -5,6 +5,7 @@
 #include "MyModule.h"
 #include "MyFrame.h"
 #include "MyContext.h"
+#include "MyMsg.h"
 
 /*
     该服务实现:
@@ -29,35 +30,34 @@ public:
         return 0;
     }
 
-    static int CB(MyContext* context, void *ud, int type, int session, uint32_t source , const void *msg, size_t sz)
+    static int CB(MyContext* context, MyMsg* msg, void* ud)
     {
         MyEchoSrv* self = static_cast<MyEchoSrv*>(ud);
+        MySockMsg* smsg = nullptr;
 
-        struct my_sock_msg* sock_msg;
-        switch(type){
-        case MY_PTYPE_SOCKET:
-            sock_msg = (struct my_sock_msg*)msg;
-            switch(sock_msg->type){
-            case MY_SOCKET_TYPE_DATA:
-                my_sock_send(sock_msg->id, sock_msg->buffer, sock_msg->ud);
+        switch(msg->GetMsgType()){
+        case MyMsg::MyMsgType::SOCKET:
+            smsg = static_cast<MySockMsg*>(msg);
+            switch(smsg->GetSockMsgType()){
+            case MySockMsg::MySockMsgType::DATA:
+                my_sock_send(smsg->GetSockId(), smsg->GetData().data(), smsg->GetData().size());
                 break;
-            case MY_SOCKET_TYPE_ACCEPT:
-                printf("Client %d connected\n", sock_msg->id);
+            case MySockMsg::MySockMsgType::ACCEPT:
+                printf("Client %d connected\n", smsg->GetSockId());
                 fflush(stdout);
                 break;
-            case MY_SOCKET_TYPE_CLOSE:
-                printf("Client %d disconnect\n", sock_msg->id);
+            case MySockMsg::MySockMsgType::CLOSE:
+                printf("Client %d disconnect\n", smsg->GetSockId());
                 fflush(stdout);
                 break;
             }
-            if(sock_msg->buffer)
-                free(sock_msg->buffer);
             break;
         }
         return 0;
     }
 
-    int m_tcp_srv_id;
+    uint32_t m_handle;
+    int      m_tcp_srv_id;
 };
 
 extern "C" MyModule* my_mod_create()

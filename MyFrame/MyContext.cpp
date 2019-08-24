@@ -27,57 +27,13 @@ int MyContext::NewSession()
     return session;
 }
 
-void MyContext::FilterArgs(int type, int* session, void** data, size_t* sz)
+int MyContext::SendMsg(MyMsg* msg)
 {
-    int needcopy = !(type & MY_PTYPE_TAG_DONTCOPY);
-    int allocsession = type & MY_PTYPE_TAG_ALLOCSESSION;
-    type &= 0xff;
-
-    if (allocsession) {
-        assert(*session == 0);
-        *session = NewSession();
-    }
-
-    if (needcopy && *data) {
-        char * msg = (char*)malloc(*sz+1);
-        memcpy(msg, *data, *sz);
-        msg[*sz] = '\0';
-        *data = msg;
-    }
-
-    *sz |= (size_t)type << MY_MESSAGE_TYPE_SHIFT;
-}
-
-int MyContext::SendMsg(uint32_t source,
-                       uint32_t destination,
-                       int type,
-                       int session,
-                       void* data,
-                       size_t sz)
-{
-    if ((sz & MY_MESSAGE_TYPE_MASK) != sz) {
-        BOOST_LOG_TRIVIAL(error) << "The message to " << destination << " too large";
-        if (type & MY_PTYPE_TAG_DONTCOPY) {
-            free(data);
-        }
-        return -1;
-    }
-    FilterArgs(type, &session, (void**)&data, &sz);
-    // 此处应该建立一个消息池供存取
-    // 暂时使用new/delete的方法
-    // 之后再进行修改
-    // TODO...
-    MyMsg* m = new MyMsg();
-    if(source == 0)
-        m->source = m_handle;
-    else
-        m->source = source;
-
-    m->destination = destination;
-    m->session = session;
-    m->data = data;
-    m->sz = sz;
-    m_send.AddTail(static_cast<MyNode*>(m));
+    if(nullptr == msg) return -1;
+    BOOST_LOG_TRIVIAL(debug) << "Service " << m_handle << " send message type: " << (int)msg->GetMsgType();
+    if(msg->source == 0) msg->source = m_handle;
+    if((int)msg->GetCtrl() & (int)MyMsg::MyMsgCtrl::ALLOC_SESSION) msg->session = NewSession();
+    m_send.AddTail(static_cast<MyNode*>(msg));
     return 0;
 }
 
@@ -94,19 +50,11 @@ void MyContext::SetCB(my_cb cb, void* ud)
 
 void MyContext::CB(MyMsg* msg)
 {
-    int reserve_msg;
-    int type = msg->sz >> MY_MESSAGE_TYPE_SHIFT;
-    size_t sz = msg->sz & MY_MESSAGE_TYPE_MASK;
     if(m_cb){
-        reserve_msg = m_cb(this, m_ud, type, msg->session, msg->source, msg->data, sz);
-        if(!reserve_msg)
-            free(msg->data);
+        m_cb(this, msg, m_ud);
     }else{
         BOOST_LOG_TRIVIAL(warning) << "Context " << m_handle << " callback is null";
         return;
     }
-    // 在该处释放MyMsg对象
-    // 与SendMsg中的申请对应
-    // TODO...
     delete msg;
 }

@@ -73,12 +73,10 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
     // 生成回复消息
     // 加入发送队列
     *ud = 1;
-    MyMsg* msg = new MyMsg();
-    size_t re_msg_len = sizeof(struct my_sock_msg);
-    struct my_sock_msg* re_msg = (struct my_sock_msg*)malloc(re_msg_len);
+    MySockMsg* smsg = new MySockMsg();
 
-    msg->source = MY_FRAME_DST;
-    msg->destination = m_handle;
+    smsg->source = MY_FRAME_DST;
+    smsg->destination = m_handle;
     switch(m_state){
     case SOCK_STATE_LISTEN: { // 有新的客户端连接
         MySock* client_sock = MyApp::Inst()->GetSocksMgr()->Accept(this);
@@ -88,20 +86,16 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
         }else{
             BOOST_LOG_TRIVIAL(debug) << "New connect " << client_sock->m_id;
         }
-        re_msg->id = client_sock->m_id;
-        re_msg->buffer = NULL;
-        re_msg->type = MY_SOCKET_TYPE_ACCEPT;
-        re_msg->ud = 0;
+        smsg->SetSockId(client_sock->m_id);
+        smsg->SetSockMsgType(MySockMsg::MySockMsgType::ACCEPT);
 
-        msg->data = (void*)re_msg;
-        msg->SetTypeSize(re_msg_len, MY_PTYPE_SOCKET);
-        m_send.AddTail(msg);
+        m_send.AddTail(smsg);
         break;
     }
     case SOCK_STATE_CONNECTED: { // 已经连接的客户端
         // 数据可读事件
         if(m_epoll_events & (EPOLLIN | EPOLLHUP)){
-            int socket_type = MY_SOCKET_TYPE_DATA;
+            MySockMsg::MySockMsgType socket_type = MySockMsg::MySockMsgType::DATA;
             int sz = m_rd_size;
             char * buffer = (char*)malloc(sz);
             int n = (int)read(m_fd, buffer, sz);
@@ -120,7 +114,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                     // close socket when error
                     // 发送错误消息给服务
                     // TODO...
-                    socket_type = MY_SOCKET_TYPE_ERROR;
+                    socket_type = MySockMsg::MySockMsgType::ERROR;
                     *ud = 0;
                     break;
                 }
@@ -132,7 +126,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                 buffer = nullptr;
                 // close socket
                 // TODO...
-                socket_type = MY_SOCKET_TYPE_CLOSE;
+                socket_type = MySockMsg::MySockMsgType::CLOSE;
                 *ud = 0;
                 m_send.AddTail(CloseLater());
             }
@@ -151,15 +145,15 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                 m_rd_size /= 2;
                 BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << "rd size change " << m_rd_size;
             }
-            BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " get msg type:" << socket_type;
-            re_msg->id = m_id;
-            re_msg->buffer = buffer;
-            re_msg->type = socket_type;
-            re_msg->ud = n;
+            BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " get msg type:" << (int)socket_type;
 
-            msg->data = (void*)re_msg;
-            msg->SetTypeSize(re_msg_len, MY_PTYPE_SOCKET);
-            m_send.AddTail(msg);
+            if(buffer != nullptr){
+                smsg->SetData(buffer, n);
+            }
+            smsg->SetSockId(m_id);
+            smsg->SetSockMsgType(socket_type);
+           
+            m_send.AddTail(smsg);
         }
         // 数据可写事件
         if(m_epoll_events & EPOLLOUT){
@@ -184,18 +178,11 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
 // 该函数是构造一个发送给系统的消息，并没有发送给服务
 MyMsg* MySock::CloseLater()
 {
-    MyMsg* msg = new MyMsg();
-    size_t re_msg_len = sizeof(struct my_sock_msg);
-    struct my_sock_msg* re_msg = (struct my_sock_msg*)malloc(re_msg_len);
+    MySockMsg* smsg = new MySockMsg();
+    smsg->source = m_handle;
+    smsg->destination = MY_FRAME_DST;
 
-    re_msg->id = m_id;
-    re_msg->buffer = NULL;
-    re_msg->type = MY_SOCKET_TYPE_CLOSE;
-    re_msg->ud = 0;
-
-    msg->source = m_handle;
-    msg->destination = MY_FRAME_DST;
-    msg->data = re_msg;
-    msg->SetTypeSize(re_msg_len, MY_PTYPE_SOCKET);
-    return msg;
+    smsg->SetSockId(m_id);
+    smsg->SetSockMsgType(MySockMsg::MySockMsgType::CLOSE);
+    return smsg;
 }

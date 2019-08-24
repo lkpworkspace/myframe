@@ -136,17 +136,18 @@ void MyWorker::HandleMsgWithCtx(MyMsg* msg)
 
 void MyWorker::HandleMsg(MyMsg* msg)
 {
-    int type = msg->GetType();
+    MyMsg::MyMsgType type = msg->GetMsgType();
+    MySockMsg* smsg = nullptr;
     struct my_sock_msg* sock_msg;
 
     switch(type){
-    case MY_PTYPE_SOCKET:
+    case MyMsg::MyMsgType::SOCKET:
         // 接收一些socket的消息
-        sock_msg = (struct my_sock_msg*)msg->data;
-        if(sock_msg->type == MY_SOCKET_TYPE_CLOSE){
-            MyApp::Inst()->GetSocksMgr()->Close(sock_msg->id);
+        smsg = static_cast<MySockMsg*>(msg);
+        if(smsg->GetSockMsgType() == MySockMsg::MySockMsgType::CLOSE){
+            MyApp::Inst()->GetSocksMgr()->Close(smsg->GetSockId());
             BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
-                        << " close socket id: " << sock_msg->id;
+                        << " close socket id: " << smsg->GetSockId();
         }
         break;
     }

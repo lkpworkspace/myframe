@@ -24,21 +24,19 @@ public:
 
     /* 设置回调函数 */
     void SetCB(my_cb cb, void* ud);
+
     /* 服务将消息添加至发送队列中 */
-    int SendMsg( uint32_t source,
-                 uint32_t destination,
-                 int type,
-                 int session,
-                 void* msg,
-                 size_t sz);
+    int SendMsg(MyMsg* msg);
 
     /* 工作线程调用回调让服务去处理消息 */
     void CB(MyMsg* msg);
 
     /* 主线程发送消息给该服务 */
     void PushMsg(MyNode* msg){ m_recv.AddTail(msg); }
+
     /* 主线程获得该服务待处理消息链表 */
     MyList* GetRecvMsgList(){ return &m_recv; }
+    
     /* 主线程获得该服务发送消息链表 */
     MyList* GetDispatchMsgList(){ return &m_send; }
 
