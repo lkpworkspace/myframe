@@ -6,6 +6,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <boost/log/trivial.hpp>
 
 #include "MySock.h"
@@ -84,7 +85,7 @@ int MySocksMgr::DoBind(const char* host, int port, int protocol, int* family)
         host = "0.0.0.0"; // INADDR_ANY
     }
     sprintf(portstr, "%d", port);
-    memset(&ai_hints, 0, sizeof(ai_hints));
+    std::memset(&ai_hints, 0, sizeof(ai_hints));
     ai_hints.ai_family = AF_UNSPEC;
     if(protocol == IPPROTO_TCP){
         ai_hints.ai_socktype = SOCK_STREAM;
