@@ -37,8 +37,8 @@ MyFrame is a lightweight event-driven application framework
 #include "MyMsg.h"
 
 /*
-    该服务实现：
-        自己给自己发送一条消息
+    实现的功能：
+        自己给自己发送一条"Hello,World"消息
 */
 class MyDemo : public MyModule
 {
@@ -110,17 +110,22 @@ extern "C" void my_mod_destory(MyModule* m)
     "thread":4,
     "module_path":"../CXXService/",
     "module_inst":{
-        "libdemo.so":""
+        "demo":[
+            {
+                "name":"hello_world",
+                "params":""
+            }
+        ]
     }
 }
 
 ```
-- thread:
-    - 启动线程数
-- module_path:
-    - 模块目录
-- module_inst:
-    - 实例化的模块名:传递给实例对象参数
+- thread:启动线程数
+- module_path:模块目录
+- module_inst:需要加载的模块
+    - demo：加载模块名
+        - name：使用该模块生成的服务名
+        - param：传递给该服务的参数
 
 ## 调试日志
 * doc/debug.md

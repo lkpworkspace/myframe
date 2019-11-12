@@ -35,7 +35,9 @@ bool MyModules::LoadMod(const char* dlname)
     }
 
     full_path = m_mod_path;
+    full_path.append("lib");
     full_path.append(dlname);
+    full_path.append(".so");
 
     inst = my_dll_open(full_path.c_str());
     if(inst == nullptr){
@@ -46,9 +48,10 @@ bool MyModules::LoadMod(const char* dlname)
     return true;
 }
 
-MyModule* MyModules::CreateModInst(const char* mod_name)
+MyModule* MyModules::CreateModInst(const char* mod_name, const char* service_name)
 {
     void* handle;
+    MyModule* mod;
     if(m_mods.find(mod_name) == m_mods.end()) return nullptr;
     handle = m_mods[mod_name];
     my_mod_create_func create = (my_mod_create_func)my_dll_use(handle, "my_mod_create");
@@ -56,7 +59,10 @@ MyModule* MyModules::CreateModInst(const char* mod_name)
         BOOST_LOG_TRIVIAL(error) << "Load " << mod_name << " module my_mod_create function failed";
         return nullptr;
     }
-    return static_cast<MyModule*>(create());
+    mod = static_cast<MyModule*>(create());
+    mod->m_mod_name = std::string(mod_name);
+    mod->m_service_name = std::string(service_name);
+    return mod;
 }
 
 bool MyModules::DestoryModInst(const char* mod_name, MyModule* mod)

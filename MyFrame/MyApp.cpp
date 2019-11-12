@@ -79,7 +79,10 @@ bool MyApp::LoadFromConf(std::string& filename)
     namespace pt = boost::property_tree;
     pt::ptree tree;
     boost::system::error_code error;
-    if(false == boost::filesystem::is_regular_file(filename, error)) return false;
+    if(false == boost::filesystem::is_regular_file(filename, error)){
+        std::cout << "Not a regular file" << std::endl;
+        return false;
+    }
 
     pt::read_json(filename, tree);
     // 获得工作线程数量
@@ -96,11 +99,17 @@ bool MyApp::LoadFromConf(std::string& filename)
     for(boost::property_tree::ptree::iterator it=items.begin(); it != items.end(); ++it)
     {
         std::string m = it->first;
-        std::string p = it->second.get_value("");
-        CreateContext(m_mod_path.c_str(), m.c_str(), p.empty() ? nullptr : p.c_str());
-        m_create_mod.push_back(
-            std::make_pair(m, p)
-        );
+        std::string p;
+        std::string s;
+        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, it->second)
+        {
+            s = v.second.get<std::string>("name");
+            p = v.second.get<std::string>("params");
+            ret = CreateContext(m.c_str(), s.c_str(), p.empty() ? nullptr : p.c_str());
+            m_create_mod.push_back(
+                std::make_pair(m, p)
+            );
+        }
     }
     return ret;
 }
@@ -127,11 +136,16 @@ MyApp* MyApp::Inst()
  *      3. 注册句柄
  *      4. 初始化服务
 */
-bool MyApp::CreateContext(const char* mod_path, const char* mod_name, const char* param)
+bool MyApp::CreateContext(const char* mod_path, const char* mod_name, const char* service_name, const char* param)
 {
     m_mods->SetModPath(mod_path);
+    return CreateContext(mod_name, service_name, param);
+}
+
+bool MyApp::CreateContext(const char* mod_name, const char* service_name, const char* param)
+{
     if(false == m_mods->LoadMod(mod_name)) return false;
-    MyModule* mod_inst = m_mods->CreateModInst(mod_name);
+    MyModule* mod_inst = m_mods->CreateModInst(mod_name, service_name);
     return CreateContext(mod_inst, param);
 }
 
@@ -142,13 +156,6 @@ bool MyApp::CreateContext(MyModule* mod_inst, const char* param)
     ctx->Init(param);
     // 初始化之后, 手动将服务中发送消息队列分发出去
     ctx->m_recv.Append(&ctx->m_send);
-    return true;
-}
-
-bool MyApp::CreateContext(const char* mod_name, const char* param)
-{
-    MyModule* mod_inst = m_mods->CreateModInst(mod_name);
-    CreateContext(mod_inst, param);
     return true;
 }
 

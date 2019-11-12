@@ -29,9 +29,9 @@ public:
 
     bool ParseArg(int argc, char** argv);
 
-    bool CreateContext(const char* mod_path, const char* mod_name, const char* param);
+    bool CreateContext(const char* mod_path, const char* mod_name, const char* service_name, const char* param);
+    bool CreateContext(const char* mod_name, const char* service_name, const char* param);
     bool CreateContext(MyModule* mod_inst, const char* param);
-    bool CreateContext(const char* mod_name, const char* param);
 
     MyContext* GetContext(uint32_t handle);
     MySocksMgr* GetSocksMgr();
