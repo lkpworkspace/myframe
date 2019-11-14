@@ -12,17 +12,17 @@ MyFrame is a lightweight event-driven application framework
 ## 构建
 
 ```sh
-	mkdir build
-	cd build
-	cmake ../
-	make
+mkdir build
+cd build
+cmake ../
+make
 ```
 
 ## 运行
 
 ```sh
-	cd bin
-	./myframe --conf ../examples/config.json
+cd bin
+./myframe --conf ../examples/config.json
 ```
 
 ## 服务 Hello,World Demo
@@ -90,13 +90,13 @@ public:
     uint32_t m_handle;
 };
 
-/* 创建服务模块实例函数 */
+/* 创建服务实例函数 */
 extern "C" MyModule* my_mod_create()
 {
     return static_cast<MyModule*>(new MyDemo());
 }
 
-/* 销毁服务模块实例函数 */
+/* 销毁服务实例函数 */
 extern "C" void my_mod_destory(MyModule* m)
 {
     delete m;

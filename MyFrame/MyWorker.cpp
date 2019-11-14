@@ -71,12 +71,12 @@ int MyWorker::Work()
         if(m_context){
             // 处理工作队列中的消息交
             //  1. des == 该服务的handle，由服务进行处理
-            //  2. des != 该服务的handle，由系统进行处理
+            //  2. des != 该服务的handle，产生错误，所有系统消息都交由主线程处理
             msg = static_cast<MyMsg*>(begin);
             if(msg->destination == m_context->m_handle){
                 m_context->CB(msg);
             }else if(msg->destination == MY_FRAME_DST){
-                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a system msg";
+                BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() << " get a system msg";
                 // 处理请求消息 request msg
                 // 将处理后产生的消息放入m_send队列
                 // TODO...
@@ -84,7 +84,8 @@ int MyWorker::Work()
                 //const char* re = "system msg";
                 //my_send(my_context(msg->source), MY_FRAME_DST, msg->source, 0, 0, (void*)re, strlen(re));
             }else{
-                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a unknown msg";
+                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a unknown msg"
+                    << "src:" << msg->source << " dst:" << msg->destination;
             }
         }else{
             switch(begin->GetNodeType()){

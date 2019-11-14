@@ -279,9 +279,11 @@ void MyApp::DispatchMsg(MyList* msg_list)
         temp = begin->next;
         msg = static_cast<MyMsg*>(begin);
         if(msg->destination == MY_FRAME_DST){
-            BOOST_LOG_TRIVIAL(debug) << "Handle MY_FRAME_DST msg";
             msg_list->Del(begin);
-            m_cache_que.AddTail(begin);
+            // 在此处理系统消息，不再转发给工作线程处理
+            // TODO...
+            BOOST_LOG_TRIVIAL(debug) << "Handle MY_FRAME_DST msg";
+            //m_cache_que.AddTail(begin);
         }else{
             ctx = m_handle_mgr->GetContext(msg->destination);
             if(nullptr != ctx){
