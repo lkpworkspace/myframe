@@ -10,7 +10,7 @@ class MyMsg;
 class MyModule;
 class MyWorker;
 class MySocksMgr;
-class MyContext : public MyObj
+class MyContext : public MyNode
 {
     friend class MyHandleMgr;
     friend class MySocksMgr;
@@ -54,6 +54,8 @@ private:
     MyModule*           m_mod;
     /* 该服务的是否在工作线程的标志 */
     bool                m_in_global;
+    /* 服务是否在消息队列中 */
+    bool                m_in_msg_list;
     /* 服务分配的session ID */
     int                 m_session_id;
     my_cb               m_cb;

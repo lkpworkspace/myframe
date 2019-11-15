@@ -11,7 +11,7 @@
 #include "MyMsg.h"
 #include "MyApp.h"
 #include "MySocksMgr.h"
-
+#include "MyHandleMgr.h"
 
 
 MyWorker::MyWorker() :
@@ -58,102 +58,57 @@ void MyWorker::OnExit()
 
 int MyWorker::Work()
 {
+    MyContext* ctx;
     MyMsg* msg;
     MyEvent* event;
     MyNode* temp;
     MyNode* begin = m_que.Begin();
     MyNode* end = m_que.End();
+
     while(begin != end)
     {
         temp = begin->next;
         m_que.Del(begin,false);
 
-        if(m_context){
-            // 处理工作队列中的消息交
-            //  1. des == 该服务的handle，由服务进行处理
-            //  2. des != 该服务的handle，产生错误，所有系统消息都交由主线程处理
+        if(MyNode::NODE_MSG == begin->GetNodeType()){
             msg = static_cast<MyMsg*>(begin);
-            if(msg->destination == m_context->m_handle){
-                m_context->CB(msg);
-            }else if(msg->destination == MY_FRAME_DST){
-                BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() << " get a system msg";
-                // 处理请求消息 request msg
-                // 将处理后产生的消息放入m_send队列
-                // TODO...
-                // 此处回复一条消息给服务
-                //const char* re = "system msg";
-                //my_send(my_context(msg->source), MY_FRAME_DST, msg->source, 0, 0, (void*)re, strlen(re));
+            ctx = m_context;
+            if(ctx){
+                ctx->CB(msg);
             }else{
                 BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a unknown msg"
                     << "src:" << msg->source << " dst:" << msg->destination;
             }
-        }else{
-            switch(begin->GetNodeType()){
-            case NODE_EVENT:
-                event = static_cast<MyEvent*>(begin);
-                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
-                    << " get msg ev-type: " << event->GetEventType();
-                switch (event->GetEventType()) {
-                case EV_SOCK:{
-                    // for socket:
-                    //      判读是新连接/读事件/写事件
-                    //      处理读写事件
-                    //      处理完毕将产生的消息缓存到工作线程的发送队列
-                    int add;
-                    m_send.Append(event->CB(event, &add));
-                    if(add){
-                        MyApp::Inst()->AddEvent(event);
-                    }
-                    break;
+        }else if(MyNode::NODE_EVENT == begin->GetNodeType()){
+            event = static_cast<MyEvent*>(begin);
+            BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
+                << " get msg ev-type: " << event->GetEventType();
+            switch (event->GetEventType()) {
+            case EV_SOCK:{
+                // for socket:
+                //      判读是新连接/读事件/写事件
+                //      处理读写事件
+                //      处理完毕将产生的消息缓存到工作线程的发送队列
+                int add;
+                m_send.Append(event->CB(event, &add));
+                if(add){
+                    MyApp::Inst()->AddEvent(event);
                 }
-                default:
-                    BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() 
-                        << " get unknown msg ev-type" << event->GetEventType();
-                    exit(-1);
-                    break;
-                }
-                break;
-            case NODE_MSG:{
-                msg = static_cast<MyMsg*>(begin);
-                HandleMsg(msg);
                 break;
             }
             default:
                 BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() 
-                        << " get unknown msg ev-type" << event->GetEventType();
+                    << " get unknown msg ev-type" << event->GetEventType();
                 exit(-1);
                 break;
             }
+        }else{
+            BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() << " get unknown msg";
         }
         begin = temp;
     }
     return 0;
 }
-
-void MyWorker::HandleMsgWithCtx(MyMsg* msg)
-{
-
-}
-
-void MyWorker::HandleMsg(MyMsg* msg)
-{
-    MyMsg::MyMsgType type = msg->GetMsgType();
-    MySockMsg* smsg = nullptr;
-    struct my_sock_msg* sock_msg;
-
-    switch(type){
-    case MyMsg::MyMsgType::SOCKET:
-        // 接收一些socket的消息
-        smsg = static_cast<MySockMsg*>(msg);
-        if(smsg->GetSockMsgType() == MySockMsg::MySockMsgType::CLOSE){
-            MyApp::Inst()->GetSocksMgr()->Close(smsg->GetSockId());
-            BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
-                        << " close socket id: " << smsg->GetSockId();
-        }
-        break;
-    }
-}
-
 
 int MyWorker::GetFd()
 {

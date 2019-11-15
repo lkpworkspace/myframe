@@ -5,6 +5,7 @@
 #include "MyList.h"
 
 struct epoll_event;
+class MyMsg;
 class MyEvent;
 class MyContext;
 class MyModule;
@@ -49,12 +50,13 @@ private:
     void StartTimerTask();
     void CheckStopWorkers();
     MyContext* GetContextWithMsg();
-    void DispatchMsg(MyContext* context);
     void DispatchMsg(MyList* msg_list);
+    void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
     void ProcessWorkerEvent(MyWorker *worker);
     void ProcessTimerEvent(MyTimerTask *timer_task);
     bool LoadFromConf(std::string& filename);
+    void HandleSysMsg(MyMsg* msg);
 
     MyList              m_idle_workers;   // 空闲线程链表
     MyList              m_cache_que;      // 缓存消息队列
@@ -67,7 +69,6 @@ private:
     std::string         m_mod_path;       // 模块路径
     MySocksMgr*         m_socks_mgr;      // 套接字管理对象
     MyTimerTask*        m_timer_task;     // 定时器线程对象
-    std::vector<std::pair<std::string, std::string>> m_create_mod;
 };
 
 #endif

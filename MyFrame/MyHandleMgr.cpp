@@ -62,10 +62,40 @@ MyContext* MyHandleMgr::GetContext(uint32_t handle)
     return result;
 }
 
-MyContext* MyHandleMgr::GetNextContext()
+MyContext* MyHandleMgr::GetContext()
 {
-    if(m_ctx_count <= 0) return nullptr;
-    MyContext* ctx = m_slot[m_slot_idx % m_ctx_count];
-    m_slot_idx++;
-    return ctx;
+    if(m_msg_list.IsEmpty()) return nullptr;
+
+    bool first = true;
+    MyNode* b = m_msg_list.Begin();
+    MyNode* ctx_node = nullptr; 
+    MyContext* ctx = nullptr;
+
+    while(!m_msg_list.IsEmpty()){
+        ctx_node = m_msg_list.Begin();
+        ctx = static_cast<MyContext*>(ctx_node);
+
+        if(ctx->m_in_global == false){
+            m_msg_list.DelHead();
+            m_msg_list.AddTail(ctx_node);
+        }else{
+            m_msg_list.DelHead();
+
+            ctx->m_in_msg_list = false;
+            ctx->m_in_global = false;
+            return ctx;
+        }
+        if((b == ctx_node) && !first){
+            break;
+        } 
+        first = false;
+    }
+    return nullptr;
+}
+
+void MyHandleMgr::PushContext(MyContext* ctx)
+{
+    if(ctx->m_in_msg_list) return;
+    ctx->m_in_msg_list = true;
+    m_msg_list.AddTail(ctx);
 }

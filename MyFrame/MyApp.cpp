@@ -106,9 +106,6 @@ bool MyApp::LoadFromConf(std::string& filename)
             s = v.second.get<std::string>("name");
             p = v.second.get<std::string>("params");
             ret = CreateContext(m.c_str(), s.c_str(), p.empty() ? nullptr : p.c_str());
-            m_create_mod.push_back(
-                std::make_pair(m, p)
-            );
         }
     }
     return ret;
@@ -155,7 +152,7 @@ bool MyApp::CreateContext(MyModule* mod_inst, const char* param)
     m_handle_mgr->RegHandle(ctx);
     ctx->Init(param);
     // 初始化之后, 手动将服务中发送消息队列分发出去
-    ctx->m_recv.Append(&ctx->m_send);
+    DispatchMsg(ctx);
     return true;
 }
 
@@ -243,6 +240,7 @@ MySocksMgr* MyApp::GetSocksMgr()
 // 获得一个有消息待处理的服务(m_recv不为空的服务)
 MyContext* MyApp::GetContextWithMsg()
 {
+#if 0
     // 1. 判断是否在全局数组中
     //      - 如果不是则查找下一个
     // 2. 如果在全局数组中，查看是否有消息
@@ -262,6 +260,31 @@ MyContext* MyApp::GetContextWithMsg()
         if(temp == ctx) break;
     }
     return nullptr;
+#else
+    return m_handle_mgr->GetContext();
+#endif
+}
+
+void MyApp::HandleSysMsg(MyMsg* msg)
+{
+    MyMsg::MyMsgType type = msg->GetMsgType();
+    MySockMsg* smsg = nullptr;
+
+    switch(type){
+    case MyMsg::MyMsgType::SOCKET:
+        // 接收一些socket的消息
+        smsg = static_cast<MySockMsg*>(msg);
+        if(smsg->GetSockMsgType() == MySockMsg::MySockMsgType::CLOSE){
+            GetSocksMgr()->Close(smsg->GetSockId());
+            BOOST_LOG_TRIVIAL(debug) << "main thread " 
+                        << " close socket id: " << smsg->GetSockId();
+        }
+        break;
+    default:
+        BOOST_LOG_TRIVIAL(debug) << "main thread "
+                        << " get unknown msg type: " << (int)msg->GetMsgType();
+        break;
+    }
 }
 
 void MyApp::DispatchMsg(MyList* msg_list)
@@ -281,19 +304,20 @@ void MyApp::DispatchMsg(MyList* msg_list)
         if(msg->destination == MY_FRAME_DST){
             msg_list->Del(begin);
             // 在此处理系统消息，不再转发给工作线程处理
-            // TODO...
             BOOST_LOG_TRIVIAL(debug) << "Handle MY_FRAME_DST msg";
-            //m_cache_que.AddTail(begin);
+            HandleSysMsg(msg);
         }else{
             ctx = m_handle_mgr->GetContext(msg->destination);
             if(nullptr != ctx){
                 msg_list->Del(begin);
                 ctx->PushMsg(begin);
+                m_handle_mgr->PushContext(ctx);
             }else{
                 msg_list->Del(begin);
                 BOOST_LOG_TRIVIAL(error) << "Err msg src:" 
                     << msg->source << " dst:" << msg->destination 
                     << " session:" << msg->session;
+                delete msg;
             }
         }
         begin = temp;
@@ -304,6 +328,7 @@ void MyApp::DispatchMsg(MyList* msg_list)
 void MyApp::DispatchMsg(MyContext* context)
 {
     if(nullptr == context) return;
+    context->m_in_global = true;
     MyList* msg_list = context->GetDispatchMsgList();
     DispatchMsg(msg_list);
 }
@@ -338,7 +363,6 @@ void MyApp::CheckStopWorkers()
         list = context->GetRecvMsgList();
         if(!list->IsEmpty()){
             worker->m_que.Append(list);
-            context->m_in_global = false;
             worker->SetContext(context);
             m_idle_workers.Del(begin);
             worker->SendCmd(&cmd, sizeof(char));
@@ -445,6 +469,8 @@ int MyApp::Exec()
     struct epoll_event* evs;
 
     evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
+    // 检查所有服务发送列表，并分发消息
+
     while(m_worker_count)
     {
         // 1. 检查空闲工作线程
