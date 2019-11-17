@@ -10,6 +10,13 @@ class MyWorker : public MyThread
 {
     friend class MyApp;
 public:
+    enum class MyWorkerCmdType : char {
+        NONE            = '\0',    // 未知命令
+        IDLE            = 'i',     // 工作线程空闲
+        IDLE_ONE_THREAD = 's',     // 独立线程空闲
+        QUIT            = 'q',     // 线程退出命令
+    };
+
     MyWorker();
     ~MyWorker();
 
@@ -36,6 +43,7 @@ public:
     int SendCmd(const char* cmd, size_t len);
     int RecvCmd(char* cmd, size_t len);
 
+    void SetCmd(MyWorkerCmdType cmd){ m_cmd = cmd; }
     void SetContext(MyContext* context){ m_context = context; }
 
 private:
@@ -55,6 +63,7 @@ private:
     MyList            m_send;              // 发送消息队列(针对没有服务的消息,缓存到该队列)
     MyList            m_que;               // work queue
     MyContext*        m_context;           // 当前执行服务的指针
+    MyWorkerCmdType   m_cmd;               // 当前命令类型
 };
 
 #endif

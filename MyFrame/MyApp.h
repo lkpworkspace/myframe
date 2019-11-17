@@ -48,8 +48,8 @@ private:
     void Start(int worker_count);
     void StartWorker(int worker_count);
     void StartTimerTask();
-    void CheckStopWorkers();
-    MyContext* GetContextWithMsg();
+    void CheckStopWorkers(bool onethread = false);
+    MyContext* GetContextWithMsg(bool onethread = false);
     void DispatchMsg(MyList* msg_list);
     void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
@@ -59,6 +59,7 @@ private:
     void HandleSysMsg(MyMsg* msg);
 
     MyList              m_idle_workers;   // 空闲线程链表
+    MyList              m_iidle_workers;  // 独立线程空闲列表
     MyList              m_cache_que;      // 缓存消息队列
     int                 m_epoll_fd;       // epoll文件描述符
     int                 m_worker_count;   // 工作线程数

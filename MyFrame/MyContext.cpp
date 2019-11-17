@@ -13,6 +13,7 @@ MyContext::MyContext(MyModule* mod) :
     m_mod(mod),
     m_in_global(true),
     m_in_msg_list(false),
+    m_run_in_one_thread(false),
     m_session_id(0),
     m_cb(nullptr),
     m_ud(nullptr)

@@ -21,6 +21,8 @@ int my_send(MyContext* ctx, MyMsg* msg);
 
 uint32_t my_handle(MyContext* ctx);
 
+void my_run_in_one_thread(MyContext* ctx, bool b);
+
 int my_timeout(uint32_t handle, int time, int session);
 
 MyContext* my_context(uint32_t handle);

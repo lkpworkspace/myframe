@@ -20,6 +20,10 @@ MyLog::MyLog()
     namespace src = boost::log::sources;
     logging::core::get()->set_filter
     (
+#ifdef MYFRAME_DEBUG
         logging::trivial::severity >= logging::trivial::trace
+#else
+        logging::trivial::severity >= logging::trivial::info
+#endif
     );
 }

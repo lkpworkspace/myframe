@@ -25,6 +25,11 @@ public:
     /* 设置回调函数 */
     void SetCB(my_cb cb, void* ud);
 
+    /* 设置在独立线程中运行 */
+    void SetRunInOneThread(bool b){ m_run_in_one_thread = b; }
+
+    bool RunInOneThread(){ return m_run_in_one_thread; }
+
     /* 服务将消息添加至发送队列中 */
     int SendMsg(MyMsg* msg);
 
@@ -56,6 +61,8 @@ private:
     bool                m_in_global;
     /* 服务是否在消息队列中 */
     bool                m_in_msg_list;
+    /* 服务是否运行在一个独立线程上 */
+    bool                m_run_in_one_thread;
     /* 服务分配的session ID */
     int                 m_session_id;
     my_cb               m_cb;

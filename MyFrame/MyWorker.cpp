@@ -15,7 +15,8 @@
 
 
 MyWorker::MyWorker() :
-    m_context(nullptr)
+    m_context(nullptr),
+    m_cmd(MyWorkerCmdType::IDLE)
 {
     SetInherits("MyThread");
     CreateSockPair();
@@ -75,8 +76,10 @@ int MyWorker::Work()
             ctx = m_context;
             if(ctx){
                 ctx->CB(msg);
+                BOOST_LOG_TRIVIAL(debug) << "Worker: " << GetThreadId() << " get cmd: "
+                    << (char)m_cmd;
             }else{
-                BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " get a unknown msg"
+                BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() << " get a unknown msg"
                     << "src:" << msg->source << " dst:" << msg->destination;
             }
         }else if(MyNode::NODE_EVENT == begin->GetNodeType()){
@@ -133,7 +136,7 @@ int MyWorker::RecvCmd(char* cmd, size_t len)
 int MyWorker::Wait()
 {
     // tell MyApp, add this worker to idle worker list
-    char cmd = 'i'; // idle
+    char cmd = (char)m_cmd; // idle
     write(m_sockpair[0], &cmd, 1);
 
     // 等待主线程唤醒工作

@@ -24,6 +24,11 @@ MyContext* my_context(uint32_t handle)
     return ctx;
 }
 
+void my_run_in_one_thread(MyContext* ctx, bool b)
+{
+    ctx->SetRunInOneThread(b);
+}
+
 uint32_t my_handle(MyContext* ctx)
 {
     return ctx->GetHandle();

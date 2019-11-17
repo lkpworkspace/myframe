@@ -62,24 +62,25 @@ MyContext* MyHandleMgr::GetContext(uint32_t handle)
     return result;
 }
 
-MyContext* MyHandleMgr::GetContext()
+MyContext* MyHandleMgr::GetContext(bool onethread)
 {
-    if(m_msg_list.IsEmpty()) return nullptr;
+    MyList& msg_list = onethread ? m_imsg_list : m_msg_list;
+    if(msg_list.IsEmpty()) return nullptr;
 
     bool first = true;
-    MyNode* b = m_msg_list.Begin();
+    MyNode* b = msg_list.Begin();
     MyNode* ctx_node = nullptr; 
     MyContext* ctx = nullptr;
 
-    while(!m_msg_list.IsEmpty()){
-        ctx_node = m_msg_list.Begin();
+    while(!msg_list.IsEmpty()){
+        ctx_node = msg_list.Begin();
         ctx = static_cast<MyContext*>(ctx_node);
 
         if(ctx->m_in_global == false){
-            m_msg_list.DelHead();
-            m_msg_list.AddTail(ctx_node);
+            msg_list.DelHead();
+            msg_list.AddTail(ctx_node);
         }else{
-            m_msg_list.DelHead();
+            msg_list.DelHead();
 
             ctx->m_in_msg_list = false;
             ctx->m_in_global = false;
@@ -97,5 +98,8 @@ void MyHandleMgr::PushContext(MyContext* ctx)
 {
     if(ctx->m_in_msg_list) return;
     ctx->m_in_msg_list = true;
-    m_msg_list.AddTail(ctx);
+    if(ctx->RunInOneThread())
+        m_imsg_list.AddTail(ctx);
+    else
+        m_msg_list.AddTail(ctx);
 }

@@ -199,6 +199,11 @@ void MyApp::StartWorker(int worker_count)
         AddEvent(static_cast<MyEvent*>(worker));
         m_worker_count++;
     }
+    // 启动一个独立线程
+    MyWorker* worker = new MyWorker();
+    worker->SetCmd(MyWorker::MyWorkerCmdType::IDLE_ONE_THREAD);
+    worker->Start();
+    AddEvent(static_cast<MyEvent*>(worker));
     BOOST_LOG_TRIVIAL(debug) << "Worker start";
 }
 
@@ -238,31 +243,9 @@ MySocksMgr* MyApp::GetSocksMgr()
 { return m_socks_mgr; }
 
 // 获得一个有消息待处理的服务(m_recv不为空的服务)
-MyContext* MyApp::GetContextWithMsg()
+MyContext* MyApp::GetContextWithMsg(bool onethread)
 {
-#if 0
-    // 1. 判断是否在全局数组中
-    //      - 如果不是则查找下一个
-    // 2. 如果在全局数组中，查看是否有消息
-    //      -  有则返回，没有继续判断下一个
-    // 3. 如果遍历一遍都没有就直接返回nullptr
-    MyContext* ctx;
-    MyContext* temp;
-    ctx = temp = m_handle_mgr->GetNextContext();
-    if(ctx == nullptr) return nullptr;
-    for(;;){
-        if(ctx->m_in_global){
-            if(false == ctx->m_recv.IsEmpty()){
-                return ctx;
-            }
-        }
-        ctx = m_handle_mgr->GetNextContext();
-        if(temp == ctx) break;
-    }
-    return nullptr;
-#else
-    return m_handle_mgr->GetContext();
-#endif
+    return m_handle_mgr->GetContext(onethread);
 }
 
 void MyApp::HandleSysMsg(MyMsg* msg)
@@ -333,7 +316,7 @@ void MyApp::DispatchMsg(MyContext* context)
     DispatchMsg(msg_list);
 }
 
-void MyApp::CheckStopWorkers()
+void MyApp::CheckStopWorkers(bool onethread)
 {
     char cmd = 'y';
 
@@ -344,27 +327,28 @@ void MyApp::CheckStopWorkers()
     MyNode* temp;
     MyList* list;
 
-    begin= m_idle_workers.Begin();
-    end = m_idle_workers.End();
+    MyList& idle_workers = onethread ? m_iidle_workers : m_idle_workers;
+    begin= idle_workers.Begin();
+    end = idle_workers.End();
     for(;begin != end;)
     {
         temp = begin->next;
         worker = static_cast<MyWorker*>(begin);
         // 主线程有消息，则先派发执行主线程中消息
-        if(false == m_cache_que.IsEmpty()){
+        if(!onethread && (false == m_cache_que.IsEmpty())){
             worker->m_que.Append(&m_cache_que);
-            m_idle_workers.Del(worker);
+            idle_workers.Del(worker);
             worker->SendCmd(&cmd, sizeof(char));
             begin = temp;
             continue;
         }
         // 主线程没有消息，则派发执行服务中的消息
-        if(nullptr == (context = GetContextWithMsg())) break;
+        if(nullptr == (context = GetContextWithMsg(onethread))) break;
         list = context->GetRecvMsgList();
         if(!list->IsEmpty()){
             worker->m_que.Append(list);
             worker->SetContext(context);
-            m_idle_workers.Del(begin);
+            idle_workers.Del(begin);
             worker->SendCmd(&cmd, sizeof(char));
         }else{
             BOOST_LOG_TRIVIAL(error) << "Context has no msg";
@@ -375,7 +359,7 @@ void MyApp::CheckStopWorkers()
 
 void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
 {
-    char cmd = '\0';
+    char cmd = 'y';
     timer_task->RecvCmd(&cmd, 1);
     switch(cmd){
     case 'i': // idle
@@ -395,7 +379,7 @@ void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
 
 void MyApp::ProcessWorkerEvent(MyWorker* worker)
 {
-    char cmd = '\0';
+    char cmd = 'y';
     worker->RecvCmd(&cmd, 1);
     switch(cmd){
     case 'i': // idle
@@ -416,6 +400,12 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
             worker->Idle();
             m_idle_workers.AddTail(static_cast<MyNode*>(worker));
         }
+        break;
+    case 's': // 独立线程空闲
+        // 将服务的发送队列分发完毕
+        DispatchMsg(worker->m_context);
+        worker->Idle();
+        m_iidle_workers.AddTail(static_cast<MyNode*>(worker));
         break;
     case 'q': // quit
         // TODO...
@@ -485,7 +475,8 @@ int MyApp::Exec()
         //          - 设置工作线程要处理的服务对象指针
         //          - 唤醒工作线程并工作
         //      - 如果没有,退出检查
-        CheckStopWorkers();
+        CheckStopWorkers(true);
+        CheckStopWorkers(false);
         // 2. 等待事件
         if(0 <= (ev_count = epoll_wait(m_epoll_fd, evs, max_ev_count, time_wait))) {
             // 3. 处理事件

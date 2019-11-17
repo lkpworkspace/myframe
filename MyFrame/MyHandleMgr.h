@@ -7,12 +7,6 @@
 #define MY_HANDLE_MASK 0xffffff
 #define MY_HANDLE_REMOTE_SHIFT 24
 
-struct MyHandle
-{
-    char* name;
-    uint32_t handle;
-};
-
 class MyContext;
 class MyHandleMgr
 {
@@ -27,7 +21,7 @@ public:
     MyContext* GetContext(uint32_t handle);
     
     /* 获得一个待处理的服务 */
-    MyContext* GetContext();
+    MyContext* GetContext(bool onethread = false);
 
     /* 将有消息的服务放入链表 */
     void PushContext(MyContext* ctx);
@@ -45,6 +39,7 @@ private:
     uint32_t            m_handle_index;   // 分配的句柄
 
     MyList              m_msg_list;       // 待处理服务链表
+    MyList              m_imsg_list;      // 待处理独立服务链表
 };
 
 #endif
