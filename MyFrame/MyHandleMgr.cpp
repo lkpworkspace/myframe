@@ -4,6 +4,8 @@
 
 #include <string.h>
 
+#include <boost/log/trivial.hpp>
+
 #define MY_DEFAULT_SLOT_SIZE 4
 
 MyHandleMgr::MyHandleMgr() :
@@ -32,6 +34,11 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
 
                 handle |= m_harbor;
                 ctx->m_handle = handle;
+                if(m_named_ctxs.find(ctx->m_mod->m_service_name) == m_named_ctxs.end()){
+                    m_named_ctxs[ctx->m_mod->m_service_name] = handle;
+                }else{
+                    BOOST_LOG_TRIVIAL(warning) << "reg the same service name: " << ctx->m_mod->m_service_name;
+                }
                 m_ctx_count++;
                 return handle;
             }
@@ -49,6 +56,14 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
         m_slot_size *= 2;
     }
     return 0;
+}
+
+MyContext* MyHandleMgr::GetContext(std::string& service_name)
+{
+    if(m_named_ctxs.find(service_name) != m_named_ctxs.end()){
+        return GetContext(m_named_ctxs[service_name]);
+    }
+    return nullptr;
 }
 
 MyContext* MyHandleMgr::GetContext(uint32_t handle)

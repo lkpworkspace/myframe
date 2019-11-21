@@ -35,6 +35,7 @@ public:
     bool CreateContext(MyModule* mod_inst, const char* param);
 
     MyContext* GetContext(uint32_t handle);
+    MyContext* GetContext(std::string& service_name);
     MySocksMgr* GetSocksMgr();
     MyTimerTask* GetTimerTask() { return m_timer_task; }
 

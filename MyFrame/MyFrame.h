@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 /* 系统的句柄号 */
 #define MY_FRAME_DST 0xffffff
@@ -26,6 +27,8 @@ void my_run_in_one_thread(MyContext* ctx, bool b);
 int my_timeout(uint32_t handle, int time, int session);
 
 MyContext* my_context(uint32_t handle);
+
+MyContext* my_context_name(std::string& service_name);
 
 typedef int (*my_cb)(MyContext* context, MyMsg* msg, void* ud);
 void my_callback(MyContext* ctx, my_cb cb, void* ud);

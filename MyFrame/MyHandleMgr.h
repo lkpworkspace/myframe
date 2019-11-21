@@ -1,6 +1,8 @@
 #ifndef __MYHANDLEMGR_H__
 #define __MYHANDLEMGR_H__
 #include <stdint.h>
+#include <string>
+#include <unordered_map>
 #include "MyCommon.h"
 #include "MyList.h"
 
@@ -19,6 +21,9 @@ public:
     
     /* 获得句柄对应的服务 */
     MyContext* GetContext(uint32_t handle);
+
+    /* 获得服务名对应的服务 */
+    MyContext* GetContext(std::string& service_name);
     
     /* 获得一个待处理的服务 */
     MyContext* GetContext(bool onethread = false);
@@ -40,6 +45,7 @@ private:
 
     MyList              m_msg_list;       // 待处理服务链表
     MyList              m_imsg_list;      // 待处理独立服务链表
+    std::unordered_map<std::string, uint32_t> m_named_ctxs;
 };
 
 #endif

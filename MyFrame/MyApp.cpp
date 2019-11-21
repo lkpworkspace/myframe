@@ -239,6 +239,11 @@ MyContext* MyApp::GetContext(uint32_t handle)
     return m_handle_mgr->GetContext(handle);
 }
 
+MyContext* MyApp::GetContext(std::string& service_name)
+{
+    return m_handle_mgr->GetContext(service_name);
+}
+
 MySocksMgr* MyApp::GetSocksMgr()
 { return m_socks_mgr; }
 

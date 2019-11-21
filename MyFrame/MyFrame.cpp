@@ -24,6 +24,13 @@ MyContext* my_context(uint32_t handle)
     return ctx;
 }
 
+MyContext* my_context_name(std::string& service_name)
+{
+    MyContext* ctx = nullptr;
+    ctx = MyApp::Inst()->GetContext(service_name);
+    return ctx;
+}
+
 void my_run_in_one_thread(MyContext* ctx, bool b)
 {
     ctx->SetRunInOneThread(b);
