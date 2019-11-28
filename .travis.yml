@@ -3,11 +3,11 @@ language: cpp
 matrix:
   include:
     - os: linux
-	  dist: bionic
-	  compiler: gcc
-	  script:
-		- cmake --version
-		- mkdir ./build
-		- cd ./build
-		- cmake ..
-		- make
+      dist: bionic
+      compiler: gcc
+      script:
+        - cmake --version
+        - mkdir ./build
+        - cd ./build
+        - cmake ..
+        - make
