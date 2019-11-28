@@ -1,4 +1,4 @@
-# ![run](https://github.com/lkpworkspace/demo/blob/master/pics/icon3.png)MyFrame
+# MyFrame
 
 [![Build Status](https://travis-ci.com/lkpworkspace/MyFrame.svg?branch=master)](https://travis-ci.com/lkpworkspace/MyFrame)
 
