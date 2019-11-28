@@ -1,0 +1,17 @@
+language: cpp
+sudo: required
+dist: bionic
+compiler:
+- gcc
+os:
+- linux
+addons:
+  apt:
+    packages:
+    - libboost-all-dev
+script:
+	- cmake --version
+	- mkdir ./build
+	- cd ./build
+	- cmake ..
+	- make
