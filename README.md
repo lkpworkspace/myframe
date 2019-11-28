@@ -1,13 +1,13 @@
-# ![run](https://github.com/lkpworkspace/demo/blob/master/pics/icon3.png)MyFrame
+# MyFrame
 
-MyFrame is a lightweight event-driven application framework
+[![Build Status](https://travis-ci.com/lkpworkspace/MyFrame.svg?branch=master)](https://travis-ci.com/lkpworkspace/MyFrame)
 
 ## 概述
-	- 使用线程池实现的程序框架
-    - 基于服务的编程模式, 服务之间使用消息进行通信
-	- 支持服务间无锁通信，提高并发性能
-    - 仅支持linux
-	- No document (you can find more docs in the code)
+- 使用线程池实现的程序框架
+- 基于服务的编程模式, 服务之间使用消息进行通信
+- 支持服务间无锁通信，提高并发性能
+- 仅支持linux
+- No document (you can find more docs in the code)
 	
 ## 构建
 
@@ -125,7 +125,7 @@ extern "C" void my_mod_destory(MyModule* m)
 - module_inst:需要加载的模块
     - demo：加载模块名
         - name：使用该模块生成的服务名
-        - param：传递给该服务的参数
+        - params：传递给该服务的参数
 
 ## 调试日志
 * doc/debug.md

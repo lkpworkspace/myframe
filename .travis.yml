@@ -1,0 +1,14 @@
+language: cpp
+
+matrix:
+  include:
+    - os: linux
+      dist: bionic
+      compiler: gcc
+      install: sudo apt-get install libboost-all-dev
+      script:
+        - cmake --version
+        - mkdir ./build
+        - cd ./build
+        - cmake ..
+        - make
