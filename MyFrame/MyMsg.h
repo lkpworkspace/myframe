@@ -27,6 +27,11 @@ public:
         destination(0),
         session(0)
     {}
+    MyMsg(uint32_t dst) :
+        source(0),
+        destination(dst),
+        session(0)
+    {}
     virtual ~MyMsg(){}
 
     uint32_t    source;
@@ -50,6 +55,10 @@ class MyTextMsg : public MyMsg
 public:
     MyTextMsg() :
         m_data("")
+    {}
+    MyTextMsg(uint32_t dst, std::string dat) :
+        MyMsg(dst),
+        m_data(dat)
     {}
     virtual ~MyTextMsg(){}
 
