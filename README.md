@@ -1,14 +1,11 @@
-# MyFrame
+# myframe
 
 [![Build Status](https://travis-ci.com/lkpworkspace/MyFrame.svg?branch=master)](https://travis-ci.com/lkpworkspace/MyFrame)
+[![cpp](https://img.shields.io/badge/language-cpp-green.svg)](https://img.shields.io/badge/language-cpp-green.svg)
 
 ## 概述
-- 使用线程池实现的程序框架
-- 基于服务的编程模式, 服务之间使用消息进行通信
-- 支持服务间无锁通信，提高并发性能
-- 仅支持linux
-- No document (you can find more docs in the code)
-	
+该项目是使用C++实现的actors框架,框架中每一个actor都可以称为一个服务或者是一个组件(这里都称为服务)，你可以将每一个独立的业务逻辑都编写成一个服务，服务之间可以进行消息传递，这样一个大型的应用程序或服务器程序就可以由多个服务组成，不同服务组合使用，既可以提高代码复用，又可以极大的降低程序耦合度，提高开发效率。
+
 ## 构建
 
 ```sh
@@ -56,12 +53,7 @@ public:
         my_callback(c, CB, this);
 
         /* 构造一条文本消息发送给自己 */
-        MyTextMsg* msg = new MyTextMsg();
-        msg->source = m_handle;               // 源地址: Demo服务
-        msg->destination = m_handle;          // 目的地址: Demo服务
-        std::string s("hello,world");         // 内容: hello,world 字符串
-        msg->SetData(s);
-
+        MyTextMsg* msg = new MyTextMsg(m_handle,"hello,world");
         return my_send(c, msg);
     }
 
@@ -127,5 +119,10 @@ extern "C" void my_mod_destory(MyModule* m)
         - name：使用该模块生成的服务名
         - params：传递给该服务的参数
 
-## 调试日志
-* doc/debug.md
+## 程序接口
+- [接口列表](https://github.com/lkpworkspace/myframe/blob/master/myframe/MyFrame.h)
+
+- [服务模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/MyModule.h)
+
+## 常见问题
+- [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)

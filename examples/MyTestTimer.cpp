@@ -26,18 +26,18 @@ public:
     static int CB(MyContext* context, MyMsg* msg, void* ud)
     {
         MyTestTimer* timer = static_cast<MyTestTimer*>(ud);
-
-        /* 设置下一次超时时间 100 * 10 ms */
-        timer->m_timer = my_timeout(timer->m_handle, 100, 0xff);
-        if(timer->m_timer == -1)
-            std::cout << "Create timer failed" << std::endl;
         
-         MyRespMsg* rmsg = nullptr;
+        MyRespMsg* rmsg = nullptr;
 
-         switch(msg->GetMsgType()){
+        switch(msg->GetMsgType()){
             case MyMsg::MyMsgType::RESPONSE:
                 rmsg = static_cast<MyRespMsg*>(msg);
                 if(rmsg->GetRespMsgType() == MyRespMsg::MyRespMsgType::TIMER){
+                    /* 设置下一次超时时间 100 * 10 ms */
+                    timer->m_timer = my_timeout(timer->m_handle, 100, 0xff);
+                    if(timer->m_timer == -1)
+                        std::cout << "Create timer failed" << std::endl;
+                
                     std::cout << "----> from " << msg->source << " to " 
                         << my_handle(context) << ": " << "timeout" << std::endl;
                 }

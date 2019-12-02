@@ -25,13 +25,8 @@ public:
         /* 设置处理消息的回调函数 */
         my_callback(c, CB, this);
 
-        /* 构造一条文本消息发送给自己 */
-        MyTextMsg* msg = new MyTextMsg();
-        msg->source = m_handle;               // 源地址: Demo服务
-        msg->destination = m_handle;          // 目的地址: Demo服务
-        std::string s("hello,world");         // 内容: hello,world 字符串
-        msg->SetData(s);
-
+        /* 构造 hello,world 消息发送给自己 */
+        MyTextMsg* msg = new MyTextMsg(m_handle,"hello,world");
         return my_send(c, msg);
     }
 

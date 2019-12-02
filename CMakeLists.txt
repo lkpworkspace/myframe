@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(MyFrame)
+project(myframe)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
@@ -19,29 +19,29 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/MyFrame)
+include_directories(${PROJECT_SOURCE_DIR}/myframe)
 
 set(MYFRAME_SRCS 
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyApp.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyCUtils.c
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyContext.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyEvent.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyFrame.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyHandleMgr.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyList.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyLog.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyModules.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyMsg.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyObj.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyThread.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyWorker.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MySocksMgr.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MySock.cpp
-    ${PROJECT_SOURCE_DIR}/MyFrame/MyTimerTask.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyApp.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyCUtils.c
+    ${PROJECT_SOURCE_DIR}/myframe/MyContext.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyEvent.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyFrame.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyHandleMgr.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyList.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyLog.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyModules.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyMsg.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyObj.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyThread.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyWorker.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MySocksMgr.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MySock.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyTimerTask.cpp
 )
 
-add_subdirectory(MyFrame)
-add_subdirectory(Service)
+add_subdirectory(myframe)
+add_subdirectory(service)
 
 if(MYFRAME_EXAMPLE)
     add_subdirectory(examples)
