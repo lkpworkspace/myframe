@@ -1,6 +1,6 @@
 # myframe
 
-[![Build Status](https://travis-ci.com/lkpworkspace/MyFrame.svg?branch=master)](https://travis-ci.com/lkpworkspace/MyFrame)
+[![Build Status](https://travis-ci.com/lkpworkspace/myframe.svg?branch=master)](https://travis-ci.com/lkpworkspace/myframe)
 [![cpp](https://img.shields.io/badge/language-cpp-green.svg)](https://img.shields.io/badge/language-cpp-green.svg)
 
 ## 概述
