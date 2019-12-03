@@ -3,8 +3,6 @@
 #include <stdio.h>
 
 #include "MyModule.h"
-#include "MyFrame.h"
-#include "MyContext.h"
 #include "MyMsg.h"
 
 /*

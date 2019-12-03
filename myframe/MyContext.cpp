@@ -6,7 +6,6 @@
 
 #include "MyModule.h"
 #include "MyMsg.h"
-#include "MyFrame.h"
 
 MyContext::MyContext(MyModule* mod) :
     m_handle(0),

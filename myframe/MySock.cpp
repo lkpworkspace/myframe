@@ -7,9 +7,9 @@
 
 #include "MySocksMgr.h"
 #include "MyApp.h"
-#include "MyFrame.h"
 #include "MyMsg.h"
 #include "MyCUtils.h"
+#include "MyModule.h"
 
 #define WARNING_SIZE (1024*1024)
 #define MIN_READ_BUFFER 64

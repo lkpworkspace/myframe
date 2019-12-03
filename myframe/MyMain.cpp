@@ -1,5 +1,4 @@
 #include "MyCommon.h"
-#include "MyFrame.h"
 #include "MyApp.h"
 #include "MyLog.h"
 

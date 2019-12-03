@@ -8,8 +8,7 @@
 #include "MyCUtils.h"
 #include "MyApp.h"
 #include "MyMsg.h"
-#include "MyFrame.h"
-
+#include "MyModule.h"
 
 MyTimerMgr::MyTimerMgr()
 {

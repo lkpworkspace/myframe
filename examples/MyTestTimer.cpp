@@ -2,8 +2,6 @@
 #include <string.h>
 
 #include "MyModule.h"
-#include "MyFrame.h"
-#include "MyContext.h"
 #include "MyMsg.h"
 
 class MyTestTimer : public MyModule
@@ -15,7 +13,7 @@ public:
     virtual int Init(const char* param) override
     {
         /* 设置超时时间为 10 * 10 ms */
-        my_timeout(GetHandle(), 10, 0xff);
+        Timeout(10, 0xff);
         return 0;
     }
 
@@ -27,7 +25,7 @@ public:
                 rmsg = static_cast<MyRespMsg*>(msg);
                 if(rmsg->GetRespMsgType() == MyRespMsg::MyRespMsgType::TIMER){
                     /* 设置下一次超时时间 100 * 10 ms */
-                    my_timeout(GetHandle(), 100, 0xff);
+                    Timeout(100, 0xff);
 
                     std::cout << "----> from " << GetServiceName(msg->source) << " to " 
                         << GetServiceName() << ": " << "timeout" << std::endl;

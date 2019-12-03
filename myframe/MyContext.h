@@ -4,7 +4,6 @@
 #include "MyCommon.h"
 #include "MyList.h"
 #include "MyModule.h"
-#include "MyFrame.h"
 
 class MyMsg;
 class MyModule;
