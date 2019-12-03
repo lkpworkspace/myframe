@@ -34,8 +34,11 @@ public:
     {}
     virtual ~MyMsg(){}
 
+    /* 服务源句柄号 */
     uint32_t    source;
+    /* 服务目的句柄号 */
     uint32_t    destination;
+    /* 未使用 */
     int         session;
     MyMsgCtrl   ctrl;
 
@@ -50,6 +53,9 @@ protected:
     virtual enum ENUM_NODE_TYPE GetNodeType() override { return NODE_MSG; }
 };
 
+/**
+ * 文本消息(也可以用于传输二进制消息)
+ */
 class MyTextMsg : public MyMsg
 {
 public:
@@ -71,10 +77,15 @@ private:
     std::string         m_data;
 };
 
+/**
+ * 回复消息
+ */
 class MyRespMsg : public MyMsg
 {
 public:
+    /* 回复消息类型 */
     enum class MyRespMsgType : int {
+        /* 定时器超时 */
         TIMER            = 0,
     };
     MyRespMsg() :
@@ -95,6 +106,9 @@ private:
     MyRespMsgType       m_type;
 };
 
+/**
+ * TCP消息
+ */
 class MySockMsg : public MyMsg
 {
 public:

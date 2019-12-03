@@ -22,9 +22,6 @@ public:
 
     int Init(const char *param);
 
-    /* 设置回调函数 */
-    void SetCB(my_cb cb, void* ud);
-
     /* 设置在独立线程中运行 */
     void SetRunInOneThread(bool b){ m_run_in_one_thread = b; }
 
@@ -46,6 +43,7 @@ public:
     MyList* GetDispatchMsgList(){ return &m_send; }
 
     uint32_t GetHandle() { return m_handle; }
+    MyModule* GetModule() { return m_mod; }
 private:
     void FilterArgs(int type, int* session, void** data, size_t* sz);
     int NewSession();
@@ -65,8 +63,6 @@ private:
     bool                m_run_in_one_thread;
     /* 服务分配的session ID */
     int                 m_session_id;
-    my_cb               m_cb;
-    void*               m_ud;
 };
 
 #endif

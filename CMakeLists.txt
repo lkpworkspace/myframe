@@ -26,10 +26,10 @@ set(MYFRAME_SRCS
     ${PROJECT_SOURCE_DIR}/myframe/MyCUtils.c
     ${PROJECT_SOURCE_DIR}/myframe/MyContext.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyEvent.cpp
-    ${PROJECT_SOURCE_DIR}/myframe/MyFrame.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyHandleMgr.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyList.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyLog.cpp
+    ${PROJECT_SOURCE_DIR}/myframe/MyModule.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyModules.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyMsg.cpp
     ${PROJECT_SOURCE_DIR}/myframe/MyObj.cpp

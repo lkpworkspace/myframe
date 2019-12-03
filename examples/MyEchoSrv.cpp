@@ -9,7 +9,7 @@
 
 /*
     该服务实现:
-        在 127.0.0.1:9510 启动TCP监听
+        在 127.0.0.1:6666 启动TCP监听
         客户端连接会打印 "Client %d connected"
         客户端发送数据，服务端会把数据再回传给客户端
         客户端断开会打印 "Client %d disconnect"
@@ -20,19 +20,16 @@ public:
     MyEchoSrv(){}
     virtual ~MyEchoSrv(){}
 
-    virtual int Init(MyContext* c, const char* param) override
+    virtual int Init(const char* param) override
     {
-		uint32_t handle = my_handle(c);
-		my_callback(c, CB, this);
-        m_tcp_srv_id = my_listen(c, "127.0.0.1", 9510, 0);
+        m_tcp_srv_id = Listen("127.0.0.1", 6666, 0);
         if(m_tcp_srv_id == -1)
-            printf("Listen on port 9510 failed\n");
+            printf("Listen on port 6666 failed\n");
         return 0;
     }
 
-    static int CB(MyContext* context, MyMsg* msg, void* ud)
+    virtual int CB(MyMsg* msg) override
     {
-        MyEchoSrv* self = static_cast<MyEchoSrv*>(ud);
         MySockMsg* smsg = nullptr;
 
         switch(msg->GetMsgType()){
@@ -40,23 +37,20 @@ public:
             smsg = static_cast<MySockMsg*>(msg);
             switch(smsg->GetSockMsgType()){
             case MySockMsg::MySockMsgType::DATA:
-                my_sock_send(smsg->GetSockId(), smsg->GetData().data(), smsg->GetData().size());
+                SockSend(smsg->GetSockId(), smsg->GetData().data(), smsg->GetData().size());
                 break;
             case MySockMsg::MySockMsgType::ACCEPT:
                 printf("Client %d connected\n", smsg->GetSockId());
-                fflush(stdout);
                 break;
             case MySockMsg::MySockMsgType::CLOSE:
                 printf("Client %d disconnect\n", smsg->GetSockId());
-                fflush(stdout);
                 break;
             }
             break;
         }
-        return 0;
+        return 1;
     }
 
-    uint32_t m_handle;
     int      m_tcp_srv_id;
 };
 

@@ -14,11 +14,10 @@ MyContext::MyContext(MyModule* mod) :
     m_in_global(true),
     m_in_msg_list(false),
     m_run_in_one_thread(false),
-    m_session_id(0),
-    m_cb(nullptr),
-    m_ud(nullptr)
+    m_session_id(0)
 {
     SetInherits("MyNode");
+    m_mod->SetContext(this);
 }
 
 int MyContext::NewSession()
@@ -43,22 +42,12 @@ int MyContext::SendMsg(MyMsg* msg)
 
 int MyContext::Init(const char* param)
 {
-    return m_mod->Init(this, param);
-}
-
-void MyContext::SetCB(my_cb cb, void* ud)
-{
-    m_cb = cb;
-    m_ud = ud;
+    return m_mod->Init(param);
 }
 
 void MyContext::CB(MyMsg* msg)
 {
-    if(m_cb){
-        m_cb(this, msg, m_ud);
-    }else{
-        BOOST_LOG_TRIVIAL(warning) << "Context " << m_handle << " callback is null";
-        return;
+    if(1 == m_mod->CB(msg)){
+        delete msg;
     }
-    delete msg;
 }
