@@ -285,6 +285,7 @@ void MyApp::DispatchMsg(MyList* msg_list)
 
     begin= msg_list->Begin();
     end = msg_list->End();
+    m_mutex.lock();
     for(;begin != end;)
     {
         temp = begin->next;
@@ -310,6 +311,7 @@ void MyApp::DispatchMsg(MyList* msg_list)
         }
         begin = temp;
     }
+    m_mutex.unlock();
 }
 
 // 将获得的消息分发给其他服务
@@ -335,6 +337,7 @@ void MyApp::CheckStopWorkers(bool onethread)
     MyList& idle_workers = onethread ? m_iidle_workers : m_idle_workers;
     begin= idle_workers.Begin();
     end = idle_workers.End();
+    m_mutex.lock();
     for(;begin != end;)
     {
         temp = begin->next;
@@ -360,6 +363,7 @@ void MyApp::CheckStopWorkers(bool onethread)
         }
         begin = temp;
     }
+    m_mutex.unlock();
 }
 
 void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)

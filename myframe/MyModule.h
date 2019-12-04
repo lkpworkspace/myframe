@@ -91,6 +91,29 @@ public:
     std::string GetServiceName(uint32_t handle);
 
     /**
+     * CreateService() - 注册服务
+     * @mod_inst:         模块对象实例
+     * @params:           传递给该服务的参数
+     * 
+     *      建议不要在A服务中再注册A服务，容易形成递归注册导致程序崩溃。
+     * 
+     * @return:         成功返回：服务句柄，失败返回：0
+     */
+    uint32_t CreateService(MyModule* mod_inst, const char* params);
+
+    /**
+     * CreateService() - 注册服务
+     * @mod_inst:         模块动态库名
+     * @service_name:     服务名
+     * @params:           传递给该服务的参数
+     * 
+     *      建议不要在A服务中再注册A服务，容易形成递归注册导致程序崩溃。
+     * 
+     * @return:         成功返回：服务句柄，失败返回：0
+     */
+    uint32_t CreateService(std::string mod_name, std::string service_name, const char* params);
+
+    /**
      * RunInOneThread() - 指定该服务是否需要运行在一个单独的线程上
      * @b:              true:服务运行在单独的线程上，false:服务运行在线程池中
      * 

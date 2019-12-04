@@ -1,6 +1,7 @@
 #ifndef __MYAPP_H__
 #define __MYAPP_H__
 #include <vector>
+#include <mutex>
 #include "MyCommon.h"
 #include "MyList.h"
 
@@ -71,6 +72,7 @@ private:
     std::string         m_mod_path;       // 模块路径
     MySocksMgr*         m_socks_mgr;      // 套接字管理对象
     MyTimerTask*        m_timer_task;     // 定时器线程对象
+    std::mutex          m_mutex;
 };
 
 #endif

@@ -51,6 +51,23 @@ std::string MyModule::GetServiceName(uint32_t handle)
     return (ctx == nullptr) ? "" : ctx->GetModule()->GetServiceName();
 }
 
+uint32_t MyModule::CreateService(MyModule* mod_inst, const char* params)
+{
+    uint32_t handle = 0x00;
+    if(MyApp::Inst()->CreateContext(mod_inst, params)){
+        handle = GetHandle(mod_inst->GetServiceName());
+    }
+    return handle;
+}
+uint32_t MyModule::CreateService(std::string mod_name, std::string service_name, const char* params)
+{
+    uint32_t handle = 0x00;
+    if(MyApp::Inst()->CreateContext(mod_name.c_str(), service_name.c_str(), params)){
+        handle = GetHandle(service_name);
+    }
+    return handle;
+}
+
 void MyModule::SetRunInOneThread(bool b)
 {
     m_ctx->SetRunInOneThread(b);

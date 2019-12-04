@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
+#include <pthread.h>
 #include "MyCommon.h"
 #include "MyList.h"
 
@@ -45,6 +46,7 @@ private:
 
     MyList              m_msg_list;       // 待处理服务链表
     MyList              m_imsg_list;      // 待处理独立服务链表
+    pthread_rwlock_t    m_rw;
     std::unordered_map<std::string, uint32_t> m_named_ctxs;
 };
 

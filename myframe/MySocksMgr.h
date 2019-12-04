@@ -4,18 +4,6 @@
 #include <unordered_map>
 #include <pthread.h>
 
-struct requ_send {
-    int id;
-};
-
-struct my_requ_pkg{
-    uint8_t   head;
-    union{
-       char buffer[256];
-       struct requ_send send;
-    }u;
-};
-
 
 class MySock;
 class MyContext;

@@ -15,14 +15,19 @@ MyHandleMgr::MyHandleMgr() :
     m_ctx_count(0),
     m_handle_index(0)
 {
+    pthread_rwlock_init(&m_rw, NULL);
     m_slot = (MyContext**)malloc(sizeof(MyContext*) * m_slot_size);
     memset(m_slot, 0, sizeof(MyContext*) * m_slot_size);
 }
 
-MyHandleMgr::~MyHandleMgr(){}
+MyHandleMgr::~MyHandleMgr()
+{
+    pthread_rwlock_destroy(&m_rw);
+}
 
 uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
 {
+    pthread_rwlock_wrlock(&m_rw);
     for (;;) {
         int i;
         for (i = 0; i < m_slot_size; i++) {
@@ -40,6 +45,7 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
                     BOOST_LOG_TRIVIAL(warning) << "reg the same service name: " << ctx->m_mod->m_service_name;
                 }
                 m_ctx_count++;
+                pthread_rwlock_unlock(&m_rw);
                 return handle;
             }
         }
@@ -55,25 +61,33 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
         m_slot = new_slot;
         m_slot_size *= 2;
     }
+    pthread_rwlock_unlock(&m_rw);
     return 0;
 }
 
 MyContext* MyHandleMgr::GetContext(std::string& service_name)
 {
+    uint32_t handle = 0x00;
+    pthread_rwlock_rdlock(&m_rw);
     if(m_named_ctxs.find(service_name) != m_named_ctxs.end()){
-        return GetContext(m_named_ctxs[service_name]);
+        handle = m_named_ctxs[service_name];
+        pthread_rwlock_unlock(&m_rw);
+        return GetContext(handle);
     }
+    pthread_rwlock_unlock(&m_rw);
     return nullptr;
 }
 
 MyContext* MyHandleMgr::GetContext(uint32_t handle)
 {
     MyContext* result = nullptr;
+    pthread_rwlock_rdlock(&m_rw);
     uint32_t hash = handle & (m_slot_size-1);
     MyContext* ctx = m_slot[hash];
     if (ctx && ctx->m_handle == handle) {
         result = ctx;
     }
+    pthread_rwlock_unlock(&m_rw);
     return result;
 }
 
