@@ -54,6 +54,11 @@ bool MyModules::LoadMod(const char* dlname)
     return true;
 }
 
+bool MyModules::IsLoad(const char* dlname)
+{
+    return m_mods.find(dlname) != m_mods.end();
+}
+
 bool MyModules::UnloadMod(const char* dlname)
 {
     pthread_rwlock_wrlock(&m_rw);

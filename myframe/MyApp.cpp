@@ -101,6 +101,7 @@ bool MyApp::LoadFromConf(std::string& filename)
         std::string m = it->first;
         std::string p;
         std::string s;
+        m_mods->LoadMod(m.c_str());
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, it->second)
         {
             s = v.second.get<std::string>("name");
@@ -124,6 +125,11 @@ MyApp* MyApp::Inst()
     return s_inst;
 }
 
+bool MyApp::LoadMod(const char* mod_name)
+{
+    return m_mods->LoadMod(mod_name);
+}
+
 /**
  * 创建一个新的服务:
  *      1. 从MyModules中获得对应模块对象
@@ -141,7 +147,7 @@ bool MyApp::CreateContext(const char* mod_path, const char* mod_name, const char
 
 bool MyApp::CreateContext(const char* mod_name, const char* service_name, const char* param)
 {
-    if(false == m_mods->LoadMod(mod_name)) return false;
+    if(false == m_mods->IsLoad(mod_name)) return false;
     MyModule* mod_inst = m_mods->CreateModInst(mod_name, service_name);
     return CreateContext(mod_inst, param);
 }

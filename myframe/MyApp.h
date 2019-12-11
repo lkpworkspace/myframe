@@ -35,6 +35,7 @@ public:
     bool CreateContext(const char* mod_name, const char* service_name, const char* param);
     bool CreateContext(MyModule* mod_inst, const char* param);
 
+    bool LoadMod(const char* mod_name);
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
     MySocksMgr* GetSocksMgr();

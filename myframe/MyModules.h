@@ -13,6 +13,8 @@ public:
 
     // 设置模块路径
     void SetModPath(const char* dl_path);
+    // 是否已经加载动态库
+    bool IsLoad(const char* dlname);
     // 加载模块动态库
     bool LoadMod(const char* dlname);
     // 卸载模块动态库
