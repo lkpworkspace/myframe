@@ -111,5 +111,8 @@ extern "C" void my_mod_destory(MyModule* m)
 
 - [消息类型](https://github.com/lkpworkspace/myframe/blob/master/myframe/MyMsg.h)
 
+## 文档
+- [文档入口](https://github.com/lkpworkspace/myframe/wiki)
+
 ## 常见问题
 - [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)
