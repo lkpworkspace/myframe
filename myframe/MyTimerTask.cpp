@@ -3,8 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <boost/log/trivial.hpp>
-
+#include "MyLog.h"
 #include "MyCUtils.h"
 #include "MyApp.h"
 #include "MyMsg.h"
@@ -146,7 +145,7 @@ MyList* MyTimerMgr::Updatetime()
 {
     uint64_t cp = my_gettime_ms() / MY_RESOLUTION_MS;
     if(cp < m_cur_point){
-        BOOST_LOG_TRIVIAL(error) << "Future time: " << cp << ":" << m_cur_point;
+        LOG(ERROR) << "Future time: " << cp << ":" << m_cur_point;
         m_cur_point = cp;
     }else if(cp != m_cur_point){
         uint32_t diff = (uint32_t)(cp - m_cur_point);
@@ -184,12 +183,12 @@ void MyTimerTask::Run()
 void MyTimerTask::OnInit()
 {
     MyThread::OnInit();
-    BOOST_LOG_TRIVIAL(debug) << "Timer task " << GetThreadId() << " init";
+    LOG(INFO) << "Timer task " << GetThreadId() << " init";
 }
 
 void MyTimerTask::OnExit()
 {
-    BOOST_LOG_TRIVIAL(debug) << "Timer task " << GetThreadId() << " exit";
+    LOG(INFO) << "Timer task " << GetThreadId() << " exit";
 
     MyThread::OnExit();
 }
@@ -233,17 +232,17 @@ bool MyTimerTask::CreateSockPair()
 
     res = socketpair(AF_UNIX,SOCK_DGRAM,0,m_sockpair);
     if(res == -1) {
-        BOOST_LOG_TRIVIAL(error) << "Timer create sockpair failed";
+        LOG(ERROR) << "Timer create sockpair failed";
         return false;
     }
     ret = my_set_nonblock(m_sockpair[0], false);
     if(!ret) {
-        BOOST_LOG_TRIVIAL(error) << "Timer set sockpair[0] block failed";
+        LOG(ERROR) << "Timer set sockpair[0] block failed";
         return ret;
     }
     ret = my_set_nonblock(m_sockpair[1], false);
     if(!ret) {
-        BOOST_LOG_TRIVIAL(error) << "Timer set sockpair[1] block failed";
+        LOG(ERROR) << "Timer set sockpair[1] block failed";
         return ret;
     }
     return ret;
@@ -252,9 +251,9 @@ bool MyTimerTask::CreateSockPair()
 void MyTimerTask::CloseSockPair()
 {
     if(-1 == close(m_sockpair[0])){
-        BOOST_LOG_TRIVIAL(error) << "Timer close sockpair[0]: " << my_get_error();
+        LOG(ERROR) << "Timer close sockpair[0]: " << my_get_error();
     }
     if(-1 == close(m_sockpair[1])){
-        BOOST_LOG_TRIVIAL(error) << "Timer close sockpair[1]: " << my_get_error();
+        LOG(ERROR) << "Timer close sockpair[1]: " << my_get_error();
     }
 }

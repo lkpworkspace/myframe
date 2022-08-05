@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string.h>
 
-#include "MyModule.h"
-#include "MyMsg.h"
+#include "myframe/MyModule.h"
+#include "myframe/MyMsg.h"
 
 class MyTestTimer : public MyModule
 {
@@ -40,12 +40,6 @@ public:
     }
 };
 
-extern "C" MyModule* my_mod_create()
-{
-    return static_cast<MyModule*>(new MyTestTimer());
-}
-
-extern "C" void my_mod_destory(MyModule* m)
-{
-    delete m;
+extern "C" std::shared_ptr<MyModule> my_mod_create() {
+    return std::make_shared<MyTestTimer>();
 }

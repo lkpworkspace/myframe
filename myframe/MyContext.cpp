@@ -2,12 +2,11 @@
 
 #include <assert.h>
 
-#include <boost/log/trivial.hpp>
-
+#include "MyLog.h"
 #include "MyModule.h"
 #include "MyMsg.h"
 
-MyContext::MyContext(MyModule* mod) :
+MyContext::MyContext(std::shared_ptr<MyModule>& mod) :
     m_handle(0),
     m_mod(mod),
     m_in_global(true),
@@ -32,7 +31,7 @@ int MyContext::NewSession()
 int MyContext::SendMsg(MyMsg* msg)
 {
     if(nullptr == msg) return -1;
-    BOOST_LOG_TRIVIAL(debug) << "Service " << m_handle << " send message type: " << (int)msg->GetMsgType();
+    LOG(INFO) << "Service " << m_handle << " send message type: " << (int)msg->GetMsgType();
     if(msg->source == 0) msg->source = m_handle;
     if((int)msg->GetCtrl() & (int)MyMsg::MyMsgCtrl::ALLOC_SESSION) msg->session = NewSession();
     m_send.AddTail(static_cast<MyNode*>(msg));

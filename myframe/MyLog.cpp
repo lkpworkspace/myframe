@@ -1,29 +1,24 @@
 #include "MyLog.h"
-
-#include <iostream>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include "MyFlags.h"
 
 MyLog::MyLog()
 {
-    namespace logging = boost::log;
-    namespace keywords = boost::log::keywords;
-    namespace expr = boost::log::expressions;
-    namespace attrs = boost::log::attributes;
-    namespace src = boost::log::sources;
-    logging::core::get()->set_filter
-    (
-#ifdef MYFRAME_DEBUG
-        logging::trivial::severity >= logging::trivial::trace
-#else
-        logging::trivial::severity >= logging::trivial::info
-#endif
-    );
+    // output log immediately
+    FLAGS_logbufsecs = 0;
+    // set the log file to 100MB
+    FLAGS_max_log_size = 100;
+    FLAGS_stop_logging_if_full_disk = true;
+    // init glog
+    google::InitGoogleLogging("myframe");
+    // log with level >=ERROR is output to stderr
+    google::SetStderrLogging(google::GLOG_FATAL);
+    // set the path for the log file
+    std::string dest_dir = FLAGS_myframe_root + "/log/info";
+    google::SetLogDestination(google::GLOG_INFO, dest_dir.c_str());
+    dest_dir = FLAGS_myframe_root + "/log/warning";
+    google::SetLogDestination(google::GLOG_WARNING, dest_dir.c_str());
+    dest_dir = FLAGS_myframe_root + "/log/error";
+    google::SetLogDestination(google::GLOG_ERROR, dest_dir.c_str());
+    dest_dir = FLAGS_myframe_root + "/log/fatal";
+    google::SetLogDestination(google::GLOG_FATAL, dest_dir.c_str());
 }

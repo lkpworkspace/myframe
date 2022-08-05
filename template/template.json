@@ -1,0 +1,12 @@
+{
+    "type":"library",
+    "lib":"libtemplate.so",
+    "service":{
+        "template":[
+            {
+                "instance_name":"hello_world",
+                "instance_params":""
+            }
+        ]
+    }
+}

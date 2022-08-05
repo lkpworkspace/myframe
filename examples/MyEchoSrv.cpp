@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "MyModule.h"
-#include "MyMsg.h"
+#include "myframe/MyModule.h"
+#include "myframe/MyMsg.h"
 
 /*
     该服务实现:
@@ -52,12 +52,6 @@ public:
     int      m_tcp_srv_id;
 };
 
-extern "C" MyModule* my_mod_create()
-{
-    return static_cast<MyModule*>(new MyEchoSrv());
-}
-
-extern "C" void my_mod_destory(MyModule* m)
-{
-    delete m;
+extern "C" std::shared_ptr<MyModule> my_mod_create() {
+    return std::make_shared<MyEchoSrv>();
 }

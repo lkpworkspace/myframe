@@ -4,22 +4,23 @@
 [![cpp](https://img.shields.io/badge/language-cpp-green.svg)](https://img.shields.io/badge/language-cpp-green.svg)
 
 ## 概述
-该项目是使用C++实现的actors框架,框架中每一个actor都可以称为一个服务或者是一个组件(这里都称为服务)，你可以将每一个独立的业务逻辑都编写成一个服务，服务之间可以进行消息传递，这样一个大型的应用程序或服务器程序就可以由多个服务组成，不同服务组合使用，既可以提高代码复用，又可以极大的降低程序耦合度，提高开发效率。
+C++实现的actors框架,框架中每一个actor都可以称为一个服务或者是一个组件(这里都称为服务)，你可以将每一个独立的业务逻辑都编写成一个服务，服务之间可以进行消息传递，这样一个大型的应用程序或服务器程序就可以由多个服务组成，不同服务组合使用，既可以提高代码复用，又可以极大的降低程序耦合度，提高开发效率。
 
+## 安装依赖
 ## 构建
 
 ```sh
 mkdir build
 cd build
-cmake ../
-make
+cmake ..
+sudo make install
 ```
 
 ## 运行
 
 ```sh
-cd bin
-./myframe --conf ../examples/config.json
+cd /opt/myframe/bin
+sudo nohup LD_LIBRARY_PATH=/opt/myframe/lib /opt/myframe/bin/myframe_main &
 ```
 
 ## 服务 Hello,World Demo
@@ -69,15 +70,8 @@ public:
 };
 
 /* 创建服务模块实例函数 */
-extern "C" MyModule* my_mod_create()
-{
-    return static_cast<MyModule*>(new MyDemo());
-}
-
-/* 销毁服务模块实例函数 */
-extern "C" void my_mod_destory(MyModule* m)
-{
-    delete m;
+extern "C" std::shared_ptr<MyModule> my_mod_create() {
+    return std::make_shared<MyDemo>();
 }
 
 ```
@@ -85,25 +79,23 @@ extern "C" void my_mod_destory(MyModule* m)
 ## 服务配置文件
 ```json
 {
-    "thread":4,
-    "module_path":"../CXXService/",
-    "module_inst":{
-        "demo":[
+    "type":"library",
+    "lib":"libtemplate.so",
+    "service":{
+        "template":[
             {
-                "name":"hello_world",
-                "params":""
+                "instance_name":"hello_world",
+                "instance_params":""
             }
         ]
     }
 }
-
 ```
-- thread:启动线程数
-- module_path:模块目录
-- module_inst:需要加载的模块
-    - demo：加载模块名
-        - name：使用该模块生成的服务名
-        - params：传递给该服务的参数
+- type: [ library | class ]
+- lib: 库名称
+- template:服务名称
+    - instance_name：实例名称
+    - instance_params：实例参数
 
 ## 程序接口
 

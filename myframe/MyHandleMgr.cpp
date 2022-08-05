@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include <boost/log/trivial.hpp>
+#include "MyLog.h"
 
 #define MY_DEFAULT_SLOT_SIZE 4
 
@@ -42,7 +42,7 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
                 if(m_named_ctxs.find(ctx->m_mod->m_service_name) == m_named_ctxs.end()){
                     m_named_ctxs[ctx->m_mod->m_service_name] = handle;
                 }else{
-                    BOOST_LOG_TRIVIAL(warning) << "reg the same service name: " << ctx->m_mod->m_service_name;
+                    LOG(WARNING) << "reg the same service name: " << ctx->m_mod->m_service_name;
                 }
                 m_ctx_count++;
                 pthread_rwlock_unlock(&m_rw);

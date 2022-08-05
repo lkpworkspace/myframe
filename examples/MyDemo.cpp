@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string.h>
 
-#include "MyModule.h"
-#include "MyMsg.h"
+#include "myframe/MyModule.h"
+#include "myframe/MyMsg.h"
 
 /*
     该服务实现：
@@ -42,13 +42,6 @@ public:
 };
 
 /* 创建服务模块实例函数 */
-extern "C" MyModule* my_mod_create()
-{
-    return static_cast<MyModule*>(new MyDemo());
-}
-
-/* 销毁服务模块实例函数 */
-extern "C" void my_mod_destory(MyModule* m)
-{
-    delete m;
+extern "C" std::shared_ptr<MyModule> my_mod_create() {
+    return std::make_shared<MyDemo>();
 }

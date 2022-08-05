@@ -1,5 +1,6 @@
 #ifndef __MYCONTEXT_H__
 #define __MYCONTEXT_H__
+#include <memory>
 
 #include "MyCommon.h"
 #include "MyList.h"
@@ -16,7 +17,7 @@ class MyContext : public MyNode
     friend class MyWorker;
     friend class MyApp;
 public:
-    MyContext(MyModule* mod);
+    MyContext(std::shared_ptr<MyModule>& mod);
     virtual ~MyContext(){}
 
     int Init(const char *param);
@@ -42,7 +43,9 @@ public:
     MyList* GetDispatchMsgList(){ return &m_send; }
 
     uint32_t GetHandle() { return m_handle; }
-    MyModule* GetModule() { return m_mod; }
+
+    std::shared_ptr<MyModule> GetModule() { return m_mod; }
+
 private:
     void FilterArgs(int type, int* session, void** data, size_t* sz);
     int NewSession();
@@ -53,7 +56,6 @@ private:
     MyList              m_recv;
     /* 服务发送给别的服务的消息链表，工作线程处理该服务时可以操作该链表, 空闲时主线程操作该链表 */
     MyList              m_send;
-    MyModule*           m_mod;
     /* 该服务的是否在工作线程的标志 */
     bool                m_in_global;
     /* 服务是否在消息队列中 */
@@ -62,6 +64,8 @@ private:
     bool                m_run_in_one_thread;
     /* 服务分配的session ID */
     int                 m_session_id;
+    std::shared_ptr<MyModule> m_mod;
+
 };
 
 #endif

@@ -3,8 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <boost/log/trivial.hpp>
-
+#include "MyLog.h"
 #include "MySocksMgr.h"
 #include "MyApp.h"
 #include "MyMsg.h"
@@ -55,7 +54,7 @@ int MySock::Send(const void* buffer, int sz)
 {
     int ret = write(m_fd, buffer, sz);
     if(ret == -1)
-        BOOST_LOG_TRIVIAL(error) << my_get_error();
+        LOG(ERROR) << my_get_error();
     return ret;
 }
 
@@ -81,10 +80,10 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
     case SOCK_STATE_LISTEN: { // 有新的客户端连接
         MySock* client_sock = MyApp::Inst()->GetSocksMgr()->Accept(this);
         if(client_sock == nullptr){
-            BOOST_LOG_TRIVIAL(error) << "Accept error";
+            LOG(ERROR) << "Accept error";
             return &m_send;
         }else{
-            BOOST_LOG_TRIVIAL(debug) << "New connect " << client_sock->m_id;
+            LOG(INFO) << "New connect " << client_sock->m_id;
         }
         smsg->SetSockId(client_sock->m_id);
         smsg->SetSockMsgType(MySockMsg::MySockMsgType::ACCEPT);
@@ -104,13 +103,13 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                 buffer = nullptr;
                 switch(errno) {
                 case EINTR:
-                    BOOST_LOG_TRIVIAL(debug) << "socket-server: read EINTR capture";
+                    LOG(INFO) << "socket-server: read EINTR capture";
                     break;
                 case EAGAIN:
-                    BOOST_LOG_TRIVIAL(debug) << "socket-server: read EAGAIN capture";
+                    LOG(INFO) << "socket-server: read EAGAIN capture";
                     break;
                 default:
-                    BOOST_LOG_TRIVIAL(error) << "socket-server: read error: " << errno;
+                    LOG(ERROR) << "socket-server: read error: " << errno;
                     // close socket when error
                     // 发送错误消息给服务
                     // TODO...
@@ -121,7 +120,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
                 return &m_send;
             }
             if (n==0) {
-                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " read 0 byte";
+                LOG(INFO) << "Sock id:" << m_id << " read 0 byte";
                 free(buffer);
                 buffer = nullptr;
                 // close socket
@@ -132,7 +131,7 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
             }
 
             if (m_state == SOCK_STATE_HALFCLOSE) {
-                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " HALFCLOSE";
+                LOG(INFO) << "Sock id:" << m_id << " HALFCLOSE";
                 // discard recv data
                 free(buffer);
                 buffer = nullptr;
@@ -140,12 +139,12 @@ MyList *MySock::CB(MyEvent* ev, int* ud)
             }
             if (n == sz) {
                 m_rd_size *= 2;
-                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << "rd size change " << m_rd_size;
+                LOG(INFO) << "Sock id:" << m_id << "rd size change " << m_rd_size;
             } else if (sz > MIN_READ_BUFFER && n*2 < sz) {
                 m_rd_size /= 2;
-                BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << "rd size change " << m_rd_size;
+                LOG(INFO) << "Sock id:" << m_id << "rd size change " << m_rd_size;
             }
-            BOOST_LOG_TRIVIAL(debug) << "Sock id:" << m_id << " get msg type:" << (int)socket_type;
+            LOG(INFO) << "Sock id:" << m_id << " get msg type:" << (int)socket_type;
 
             if(buffer != nullptr){
                 smsg->SetData(buffer, n);

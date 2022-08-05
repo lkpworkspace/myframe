@@ -1,6 +1,5 @@
 #include "MyThread.h"
-
-#include <boost/log/trivial.hpp>
+#include "MyLog.h"
 
 MyThread::MyThread() :
     m_posix_thread_id(-1),
@@ -25,14 +24,14 @@ void MyThread::Start()
         if(res != 0)
         {
             m_runing = false;
-            BOOST_LOG_TRIVIAL(error) << "pthread create failed";
+            LOG(ERROR) << "pthread create failed";
             return;
         }
         res = pthread_detach(m_posix_thread_id);
         if(res != 0)
         {
             m_runing = false;
-            BOOST_LOG_TRIVIAL(error) << "pthread detach failed";
+            LOG(ERROR) << "pthread detach failed";
             return;
         }
     }

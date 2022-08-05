@@ -1,5 +1,6 @@
 #ifndef __MYAPP_H__
 #define __MYAPP_H__
+#include <memory>
 #include <vector>
 #include <mutex>
 #include "MyCommon.h"
@@ -10,7 +11,7 @@ class MyMsg;
 class MyEvent;
 class MyContext;
 class MyModule;
-class MyModules;
+class MyModManager;
 class MySocksMgr;
 class MyHandleMgr;
 class MyWorker;
@@ -29,16 +30,15 @@ public:
     static MyApp* Create();
     static MyApp* Inst();
 
-    bool ParseArg(int argc, char** argv);
+    bool Init();
 
     bool CreateContext(const char* mod_path, const char* mod_name, const char* service_name, const char* param);
     bool CreateContext(const char* mod_name, const char* service_name, const char* param);
-    bool CreateContext(MyModule* mod_inst, const char* param);
+    bool CreateContext(std::shared_ptr<MyModule>& mod_inst, const char* param);
 
-    bool LoadMod(const char* mod_name);
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
-    MySocksMgr* GetSocksMgr();
+    std::shared_ptr<MySocksMgr> GetSocksMgr();
     MyTimerTask* GetTimerTask() { return m_timer_task; }
 
     bool AddEvent(MyEvent *ev);
@@ -48,6 +48,7 @@ public:
     void Quit();                          // exit this app
 
 private:
+    bool LoadServiceFormConf();
     void Start(int worker_count);
     void StartWorker(int worker_count);
     void StartTimerTask();
@@ -61,18 +62,17 @@ private:
     bool LoadFromConf(std::string& filename);
     void HandleSysMsg(MyMsg* msg);
 
-    MyList              m_idle_workers;   // 空闲线程链表
-    MyList              m_iidle_workers;  // 独立线程空闲列表
-    MyList              m_cache_que;      // 缓存消息队列
-    int                 m_epoll_fd;       // epoll文件描述符
-    int                 m_worker_count;   // 工作线程数
-    int                 m_worker_count_conf;
-    bool                m_quit;           // 退出标志
-    MyHandleMgr*        m_handle_mgr;     // 句柄管理对象
-    MyModules*          m_mods;           // 模块管理对象
-    std::string         m_mod_path;       // 模块路径
-    MySocksMgr*         m_socks_mgr;      // 套接字管理对象
-    MyTimerTask*        m_timer_task;     // 定时器线程对象
+    MyList              m_idle_workers;       // 空闲线程链表
+    MyList              m_iidle_workers;      // 独立线程空闲列表
+    MyList              m_cache_que;          // 缓存消息队列
+    int                 m_epoll_fd;           // epoll文件描述符
+    int                 m_cur_worker_count;   // 工作线程数
+    bool                m_quit;               // 退出标志
+    std::shared_ptr<MyHandleMgr> _handle_mgr; // 句柄管理对象
+    std::shared_ptr<MyModManager> _mods;      // 模块管理对象
+    std::shared_ptr<MySocksMgr> _socks_mgr;   // 套接字管理对象
+    std::string         m_mod_path;           // 模块路径
+    MyTimerTask*        m_timer_task;         // 定时器线程对象
     std::mutex          m_mutex;
 };
 

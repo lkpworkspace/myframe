@@ -7,8 +7,8 @@
 #include <unistd.h>
 
 #include <cstring>
-#include <boost/log/trivial.hpp>
 
+#include "MyLog.h"
 #include "MySock.h"
 #include "MyContext.h"
 #include "MyApp.h"
@@ -40,7 +40,7 @@ uint32_t MySocksMgr::RegId(MySock* sock)
     pthread_rwlock_wrlock(&m_rw);
     id = m_alloc_id;
     if(m_ids.end() != m_ids.find(id)){
-        BOOST_LOG_TRIVIAL(error) << "Alloc id:" << id << " failed";
+        LOG(ERROR) << "Alloc id:" << id << " failed";
         exit(-1);
     }
     m_ids[m_alloc_id] = sock;

@@ -1,5 +1,6 @@
 #ifndef __MYCOMMON_H__
 #define __MYCOMMON_H__
+#include "MyLog.h"
 
 #ifdef GTEST
 #define private    public

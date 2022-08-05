@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <memory>
 #include <string>
 
 /* 系统的句柄号 */
@@ -20,11 +21,11 @@ class MyContext;
 class MyModule
 {
     friend class MyContext;
-    friend class MyModules;
+    friend class MyModLib;
     friend class MyHandleMgr;
 public:
     MyModule();
-    MyModule(std::string mod_name, std::string service_name);
+    MyModule(const std::string& mod_name, const std::string& service_name);
 
     virtual ~MyModule();
 
@@ -92,17 +93,6 @@ public:
 
     /**
      * CreateService() - 注册服务
-     * @mod_inst:         模块对象实例
-     * @params:           传递给该服务的参数
-     * 
-     *      建议不要在A服务中再注册A服务，容易形成递归注册导致程序崩溃。
-     * 
-     * @return:         成功返回：服务句柄，失败返回：0
-     */
-    uint32_t CreateService(MyModule* mod_inst, const char* params);
-
-    /**
-     * CreateService() - 注册服务
      * @mod_inst:         模块动态库名
      * @service_name:     服务名
      * @params:           传递给该服务的参数
@@ -163,13 +153,15 @@ public:
 
 private:
     void SetContext(MyContext*);
-
+    bool _is_from_lib = false;
     std::string m_mod_name;
     std::string m_service_name;
+    std::string m_instance_name;
     MyContext*  m_ctx;
 };
 
-typedef MyModule* (*my_mod_create_func)(void);
-typedef void (*my_mod_destory_func)(MyModule*);
+extern "C" {
+    typedef std::shared_ptr<MyModule> (*my_mod_create_func)(const std::string&);
+} // extern "C"
 
 #endif

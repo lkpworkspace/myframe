@@ -4,8 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <boost/log/trivial.hpp>
-
+#include "MyLog.h"
 #include "MyCUtils.h"
 #include "MyContext.h"
 #include "MyMsg.h"
@@ -46,13 +45,13 @@ void MyWorker::OnInit()
     MyThread::OnInit();
 
     // TODO...
-    BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " init";
+    LOG(INFO) << "Worker " << GetThreadId() << " init";
 }
 
 void MyWorker::OnExit()
 {
     // TODO...
-    BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() << " exit";
+    LOG(INFO) << "Worker " << GetThreadId() << " exit";
 
     MyThread::OnExit();
 }
@@ -76,15 +75,15 @@ int MyWorker::Work()
             ctx = m_context;
             if(ctx){
                 ctx->CB(msg);
-                BOOST_LOG_TRIVIAL(debug) << "Worker: " << GetThreadId() << " get cmd: "
+                LOG(INFO) << "Worker: " << GetThreadId() << " get cmd: "
                     << (char)m_cmd;
             }else{
-                BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() << " get a unknown msg"
+                LOG(ERROR) << "Worker " << GetThreadId() << " get a unknown msg"
                     << "src:" << msg->source << " dst:" << msg->destination;
             }
         }else if(MyNode::NODE_EVENT == begin->GetNodeType()){
             event = static_cast<MyEvent*>(begin);
-            BOOST_LOG_TRIVIAL(debug) << "Worker " << GetThreadId() 
+            LOG(INFO) << "Worker " << GetThreadId() 
                 << " get msg ev-type: " << event->GetEventType();
             switch (event->GetEventType()) {
             case EV_SOCK:{
@@ -100,13 +99,13 @@ int MyWorker::Work()
                 break;
             }
             default:
-                BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() 
+                LOG(ERROR) << "Worker " << GetThreadId() 
                     << " get unknown msg ev-type" << event->GetEventType();
                 exit(-1);
                 break;
             }
         }else{
-            BOOST_LOG_TRIVIAL(error) << "Worker " << GetThreadId() << " get unknown msg";
+            LOG(ERROR) << "Worker " << GetThreadId() << " get unknown msg";
         }
         begin = temp;
     }
@@ -150,17 +149,17 @@ bool MyWorker::CreateSockPair()
 
     res = socketpair(AF_UNIX,SOCK_DGRAM,0,m_sockpair);
     if(res == -1) {
-        BOOST_LOG_TRIVIAL(error) << "Worker create sockpair failed";
+        LOG(ERROR) << "Worker create sockpair failed";
         return false;
     }
     ret = my_set_nonblock(m_sockpair[0], false);
     if(!ret) {
-        BOOST_LOG_TRIVIAL(error) << "Worker set sockpair[0] block failed";
+        LOG(ERROR) << "Worker set sockpair[0] block failed";
         return ret;
     }
     ret = my_set_nonblock(m_sockpair[1], false);
     if(!ret) {
-        BOOST_LOG_TRIVIAL(error) << "Worker set sockpair[1] block failed";
+        LOG(ERROR) << "Worker set sockpair[1] block failed";
         return ret;
     }
     return ret;
@@ -169,9 +168,9 @@ bool MyWorker::CreateSockPair()
 void MyWorker::CloseSockPair()
 {
     if(-1 == close(m_sockpair[0])){
-        BOOST_LOG_TRIVIAL(error) << "Worker close sockpair[0]: " << my_get_error();
+        LOG(ERROR) << "Worker close sockpair[0]: " << my_get_error();
     }
     if(-1 == close(m_sockpair[1])){
-        BOOST_LOG_TRIVIAL(error) << "Worker close sockpair[1]: " << my_get_error();
+        LOG(ERROR) << "Worker close sockpair[1]: " << my_get_error();
     }
 }
