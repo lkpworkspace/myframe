@@ -5,17 +5,13 @@ MyThread::MyThread() :
     m_posix_thread_id(-1),
     m_thread_id(-1),
     m_runing(false)
-{
-    SetInherits("MyEvent");
-}
+{}
 
-MyThread::~MyThread()
-{
+MyThread::~MyThread() {
     Stop();
 }
 
-void MyThread::Start()
-{
+void MyThread::Start() {
     int res = 0;
     if(m_runing == false)
     {
@@ -37,13 +33,11 @@ void MyThread::Start()
     }
 }
 
-void MyThread::Stop()
-{
+void MyThread::Stop() {
     m_runing = false;
 }
 
-void* MyThread::ListenThread(void* obj)
-{
+void* MyThread::ListenThread(void* obj) {
     MyThread* t = static_cast<MyThread*>(obj);
     t->OnInit();
     while (t->m_runing)

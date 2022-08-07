@@ -12,7 +12,6 @@ class MyEvent;
 class MyContext;
 class MyModule;
 class MyModManager;
-class MySocksMgr;
 class MyHandleMgr;
 class MyWorker;
 class MyTimerTask;
@@ -41,13 +40,14 @@ public:
 
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
-    std::shared_ptr<MySocksMgr> GetSocksMgr();
-    MyTimerTask* GetTimerTask() { return m_timer_task; }
+
+    // MyTimerTask* GetTimerTask() { return m_timer_task; }
 
     bool AddEvent(MyEvent *ev);
     bool DelEvent(MyEvent *ev);
 
     int Exec();                           // mainloop
+
 public: // for ut
     bool LoadModsFromConf(const std::string& path);
 
@@ -60,31 +60,41 @@ private:
         const Json::Value& root, 
         const Json::Value& service_list, 
         const std::string& service_name);
+    /// worker
     void Start(int worker_count);
-    void StartWorker(int worker_count);
-    void StartTimerTask();
-    void CheckStopWorkers(bool onethread = false);
-    MyContext* GetContextWithMsg(bool onethread = false);
-    void DispatchMsg(MyList* msg_list);
+    void StartCommonWorker(int worker_count);
+    void StartTimerWorker();
+
+    /// 获取有消息的服务
+    MyContext* GetContextWithMsg();
+    /// 通知执行事件
+    void CheckStopWorkers();
+    /// 分发事件
+    void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
     void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
     void ProcessWorkerEvent(MyWorker *worker);
     void ProcessTimerEvent(MyTimerTask *timer_task);
-    bool LoadFromConf(std::string& filename);
-    void HandleSysMsg(MyMsg* msg);
+    void HandleSysMsg(std::shared_ptr<MyMsg>& msg);
 
-    MyList              m_idle_workers;       // 空闲线程链表
-    MyList              m_iidle_workers;      // 独立线程空闲列表
-    MyList              m_cache_que;          // 缓存消息队列
-    int                 m_epoll_fd;           // epoll文件描述符
-    int                 m_cur_worker_count;   // 工作线程数
-    bool                m_quit;               // 退出标志
-    std::shared_ptr<MyHandleMgr> _handle_mgr; // 句柄管理对象
-    std::shared_ptr<MyModManager> _mods;      // 模块管理对象
-    std::shared_ptr<MySocksMgr> _socks_mgr;   // 套接字管理对象
-    std::string         m_mod_path;           // 模块路径
-    MyTimerTask*        m_timer_task;         // 定时器线程对象
+    /// 退出标志
+    bool _quit;
+    /// epoll文件描述符
+    int _epoll_fd;
+    /// 工作线程数
+    int _cur_worker_count;
+    /// 空闲线程链表
+    MyList _idle_workers;
+    /// 缓存消息队列
+    std::list<std::shared_ptr<MyMsg>> _cache_que;          
+    /// 句柄管理对象
+    std::shared_ptr<MyHandleMgr> _handle_mgr; 
+    /// 模块管理对象
+    std::shared_ptr<MyModManager> _mods;
+    /// 定时器线程对象      
+    // MyTimerTask*        m_timer_task;         
     std::mutex          m_mutex;
+
 };
 
 #endif

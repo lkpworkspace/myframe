@@ -8,15 +8,14 @@
 
 #include <jsoncpp/json/json.h>
 
+#include "MyCUtils.h"
 #include "MyFlags.h"
 #include "MyLog.h"
-#include "MyWorker.h"
-#include "MyCUtils.h"
-#include "MyContext.h"
 #include "MyMsg.h"
 #include "MyModule.h"
+#include "MyContext.h"
+#include "MyWorker.h"
 #include "MyHandleMgr.h"
-#include "MySocksMgr.h"
 #include "MyModManager.h"
 #include "MyTimerTask.h"
 
@@ -34,9 +33,9 @@ MyApp* MyApp::Inst() {
 }
 
 MyApp::MyApp() :
-    m_epoll_fd(-1),
-    m_cur_worker_count(0),
-    m_quit(true) {
+    _epoll_fd(-1),
+    _cur_worker_count(0),
+    _quit(true) {
     SetInherits("MyObj");
     s_inst = this;
 }
@@ -47,15 +46,14 @@ MyApp::~MyApp()
 bool MyApp::Init() {
     _handle_mgr = std::make_shared<MyHandleMgr>();
     _mods = std::make_shared<MyModManager>();
-    _socks_mgr = std::make_shared<MySocksMgr>();
+
+    /// start worker
+    Start(FLAGS_worker_count);
 
     /// load modules
     if (!LoadModsFromConf(FLAGS_service_desc_path)) {
         return false;
     }
-
-    /// start worker
-    Start(FLAGS_worker_count);
     return true;
 }
 
@@ -180,8 +178,7 @@ bool MyApp::CreateContext(
     return CreateContext(mod_inst, params);
 }
 
-bool MyApp::CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string& params)
-{
+bool MyApp::CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string& params) {
     MyContext* ctx = new MyContext(mod_inst);
     _handle_mgr->RegHandle(ctx);
     ctx->Init(params.c_str());
@@ -190,174 +187,115 @@ bool MyApp::CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string
     return true;
 }
 
-bool MyApp::AddEvent(MyEvent* ev)
-{
-    int ret = true;
-    int res;
+bool MyApp::AddEvent(MyEvent* ev) {
     struct epoll_event event;
-
     event.data.ptr = ev;
-    event.events = ev->GetEpollEventType();
-
-    LOG(INFO) << ev->GetObjName() << " reg event fd: " << ev->GetFd();
+    event.events = ev->ListenEpollEventType();
+    int res = 0;
     // 如果该事件已经注册，就修改事件类型
-    if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_MOD,ev->GetFd(),&event))) {
+    if(-1 == (res = epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, ev->GetFd(), &event))) {
         // 没有注册就添加至epoll
-        if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
-            ret = false;
+        if(-1 == (res = epoll_ctl(_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
             LOG(ERROR) << "epoll " << my_get_error();
+            return false;
         }
     }else{
-        LOG(WARNING) << ev->GetObjName() << " has already reg ev " 
+        LOG(WARNING) << " has already reg ev " 
             << ev->GetFd() << ": " << my_get_error();
+        return false;
     }
-    return ret;
+    return true;
 }
 
-bool MyApp::DelEvent(MyEvent *ev)
-{
-    int ret = true;
-    if(-1 == epoll_ctl(m_epoll_fd,EPOLL_CTL_DEL,ev->GetFd(),NULL)){
-        ret = false;
-        LOG(ERROR) << ev->GetObjName() << " del event " 
+bool MyApp::DelEvent(MyEvent *ev) {
+    if(-1 == epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, ev->GetFd(), NULL)){
+        LOG(ERROR) << "del event " 
             << ev->GetFd() << ": " << my_get_error();
+        return false;
     }
-    return ret;
+    return true;
 }
 
-void MyApp::StartWorker(int worker_count)
-{
+void MyApp::StartCommonWorker(int worker_count) {
     for(int i = 0; i < worker_count; ++i){
         MyWorker* worker = new MyWorker();
         worker->Start();
         AddEvent(static_cast<MyEvent*>(worker));
-        m_cur_worker_count++;
+        _cur_worker_count++;
     }
-    // 启动一个独立线程
-    MyWorker* worker = new MyWorker();
-    worker->SetCmd(MyWorker::MyWorkerCmdType::IDLE_ONE_THREAD);
-    worker->Start();
-    AddEvent(static_cast<MyEvent*>(worker));
     LOG(INFO) << "Common worker start";
 }
 
-void MyApp::StartTimerTask()
-{
-    m_timer_task = new MyTimerTask();
-    m_timer_task->Start();
-    AddEvent(static_cast<MyEvent*>(m_timer_task));
-    LOG(INFO) << "Timer worker start";
+void MyApp::StartTimerWorker() {
+    // m_timer_task = new MyTimerTask();
+    // m_timer_task->Start();
+    // AddEvent(static_cast<MyEvent*>(m_timer_task));
+    // LOG(INFO) << "Timer worker start";
 }
 
-void MyApp::Start(int worker_count)
-{
-    m_epoll_fd = epoll_create(1024);
-    if(-1 == m_epoll_fd){
+void MyApp::Start(int worker_count) {
+    _epoll_fd = epoll_create(1024);
+    if(-1 == _epoll_fd){
         LOG(ERROR) << my_get_error();
         return;
     }
-    LOG(INFO) << "Create epoll fd " << m_epoll_fd;
+    LOG(INFO) << "Create epoll fd " << _epoll_fd;
 
-    StartWorker(worker_count);
-    StartTimerTask();
+    StartCommonWorker(worker_count);
+    StartTimerWorker();
 
     // ingore SIGPIPE signal
     signal(SIGPIPE,SIG_IGN);
     LOG(INFO) << "Ingore SIGPIPE signal";
-    m_quit = false;
+    _quit = false;
 }
 
-MyContext* MyApp::GetContext(uint32_t handle)
-{
+MyContext* MyApp::GetContext(uint32_t handle) {
     return _handle_mgr->GetContext(handle);
 }
 
-MyContext* MyApp::GetContext(std::string& service_name)
-{
+MyContext* MyApp::GetContext(std::string& service_name) {
     return _handle_mgr->GetContext(service_name);
 }
 
-std::shared_ptr<MySocksMgr> MyApp::GetSocksMgr()
-{ return _socks_mgr; }
-
-// 获得一个有消息待处理的服务(m_recv不为空的服务)
-MyContext* MyApp::GetContextWithMsg(bool onethread)
-{
-    return _handle_mgr->GetContext(onethread);
+MyContext* MyApp::GetContextWithMsg() {
+    return _handle_mgr->GetContext();
 }
 
-void MyApp::HandleSysMsg(MyMsg* msg)
-{
-    MyMsg::MyMsgType type = msg->GetMsgType();
-    MySockMsg* smsg = nullptr;
-
-    switch(type){
-    case MyMsg::MyMsgType::SOCKET:
-        // 接收一些socket的消息
-        smsg = static_cast<MySockMsg*>(msg);
-        if(smsg->GetSockMsgType() == MySockMsg::MySockMsgType::CLOSE){
-            GetSocksMgr()->Close(smsg->GetSockId());
-            LOG(INFO) << "main thread " 
-                        << " close socket id: " << smsg->GetSockId();
-        }
-        break;
-    default:
-        LOG(INFO) << "main thread "
-                        << " get unknown msg type: " << (int)msg->GetMsgType();
-        break;
-    }
+void MyApp::HandleSysMsg(std::shared_ptr<MyMsg>& msg) {
+    LOG(INFO) << "main thread get unknown msg type: " << (int)msg->GetMsgType();
 }
 
-void MyApp::DispatchMsg(MyList* msg_list)
-{
-    MyMsg* msg;
-    MyContext* ctx;
-    MyNode* begin;
-    MyNode* end;
-    MyNode* temp;
-
-    begin= msg_list->Begin();
-    end = msg_list->End();
+void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
     m_mutex.lock();
-    for(;begin != end;)
-    {
-        temp = begin->next;
-        msg = static_cast<MyMsg*>(begin);
+    for (auto& msg : msg_list) {
         if(msg->destination == MY_FRAME_DST){
-            msg_list->Del(begin);
-            // 在此处理系统消息，不再转发给工作线程处理
-            LOG(INFO) << "Handle MY_FRAME_DST msg";
             HandleSysMsg(msg);
-        }else{
-            ctx = _handle_mgr->GetContext(msg->destination);
-            if(nullptr != ctx){
-                msg_list->Del(begin);
-                ctx->PushMsg(begin);
-                _handle_mgr->PushContext(ctx);
-            }else{
-                msg_list->Del(begin);
-                LOG(ERROR) << "Err msg src:" 
-                    << msg->source << " dst:" << msg->destination 
-                    << " session:" << msg->session;
-                delete msg;
-            }
+            continue;
         }
-        begin = temp;
+        auto ctx = _handle_mgr->GetContext(msg->destination);
+        if(nullptr == ctx){
+            LOG(ERROR) << "msg src:" 
+                << msg->source << " dst:" << msg->destination 
+                << " session:" << msg->session;
+            continue;
+        }
+        ctx->PushMsg(msg);
+        _handle_mgr->PushContext(ctx);
     }
+    msg_list.clear();
     m_mutex.unlock();
 }
 
 // 将获得的消息分发给其他服务
-void MyApp::DispatchMsg(MyContext* context)
-{
+void MyApp::DispatchMsg(MyContext* context) {
     if(nullptr == context) return;
     context->m_in_global = true;
-    MyList* msg_list = context->GetDispatchMsgList();
+    auto& msg_list = context->GetDispatchMsgList();
     DispatchMsg(msg_list);
 }
 
-void MyApp::CheckStopWorkers(bool onethread)
-{
+void MyApp::CheckStopWorkers() {
     char cmd = 'y';
 
     MyWorker* worker;
@@ -365,9 +303,8 @@ void MyApp::CheckStopWorkers(bool onethread)
     MyNode* begin;
     MyNode* end;
     MyNode* temp;
-    MyList* list;
 
-    MyList& idle_workers = onethread ? m_iidle_workers : m_idle_workers;
+    MyList& idle_workers = _idle_workers;
     begin= idle_workers.Begin();
     end = idle_workers.End();
     m_mutex.lock();
@@ -375,19 +312,13 @@ void MyApp::CheckStopWorkers(bool onethread)
     {
         temp = begin->next;
         worker = static_cast<MyWorker*>(begin);
-        // 主线程有消息，则先派发执行主线程中消息
-        if(!onethread && (false == m_cache_que.IsEmpty())){
-            worker->m_que.Append(&m_cache_que);
-            idle_workers.Del(worker);
-            worker->SendCmd(&cmd, sizeof(char));
-            begin = temp;
-            continue;
+        if(nullptr == (context = GetContextWithMsg())) {
+            LOG(INFO) << "no msg need process";
+            break;
         }
-        // 主线程没有消息，则派发执行服务中的消息
-        if(nullptr == (context = GetContextWithMsg(onethread))) break;
-        list = context->GetRecvMsgList();
-        if(!list->IsEmpty()){
-            worker->m_que.Append(list);
+        auto& msg_list = context->GetRecvMsgList();
+        if(!msg_list.empty()){
+            MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
             idle_workers.Del(begin);
             worker->SendCmd(&cmd, sizeof(char));
@@ -401,22 +332,22 @@ void MyApp::CheckStopWorkers(bool onethread)
 
 void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
 {
-    char cmd = 'y';
-    timer_task->RecvCmd(&cmd, 1);
-    switch(cmd){
-    case 'i': // idle
-        // 将定时器线程的发送队列分发完毕
-        DispatchMsg(&timer_task->m_send);
-        timer_task->SendCmd(&cmd, sizeof(char));
-        break;
-    case 'q': // quit
-        // TODO...
-        LOG(WARNING) << "Unimplement timer task quit: " << cmd;
-        break;
-    default:
-        LOG(WARNING) << "Unknown timer task cmd: " << cmd;
-        break;
-    }
+    // char cmd = 'y';
+    // timer_task->RecvCmd(&cmd, 1);
+    // switch(cmd){
+    // case 'i': // idle
+    //     // 将定时器线程的发送队列分发完毕
+    //     DispatchMsg(timer_task->_send);
+    //     timer_task->SendCmd(&cmd, sizeof(char));
+    //     break;
+    // case 'q': // quit
+    //     // TODO...
+    //     LOG(WARNING) << "Unimplement timer task quit: " << cmd;
+    //     break;
+    // default:
+    //     LOG(WARNING) << "Unknown timer task cmd: " << cmd;
+    //     break;
+    // }
 }
 
 void MyApp::ProcessWorkerEvent(MyWorker* worker)
@@ -425,32 +356,22 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
     worker->RecvCmd(&cmd, 1);
     switch(cmd){
     case 'i': // idle
+        // 将主线程的缓存消息分发完毕
+        DispatchMsg(_cache_que);
+
         // 将工作线程的发送队列分发完毕
-        DispatchMsg(&worker->m_send);
+        DispatchMsg(worker->_send);
 
         // 将服务的发送队列分发完毕
-        DispatchMsg(worker->m_context);
+        DispatchMsg(worker->_context);
 
-        if(false == m_cache_que.IsEmpty()){
-            // 检查主线程消息缓存队列，如果有消息就分发给工作线程, 唤醒并执行
-            worker->Idle();
-            worker->m_que.Append(&m_cache_que);
-            worker->SendCmd(&cmd, sizeof(char));
-        }else{
-            // 将工作线程中的服务状态设置为全局状态
-            // 将线程加入空闲队列
-            worker->Idle();
-            m_idle_workers.AddTail(static_cast<MyNode*>(worker));
-        }
-        break;
-    case 's': // 独立线程空闲
-        // 将服务的发送队列分发完毕
-        DispatchMsg(worker->m_context);
+        // 将工作线程中的服务状态设置为全局状态
+        // 将线程加入空闲队列
         worker->Idle();
-        m_iidle_workers.AddTail(static_cast<MyNode*>(worker));
+        _idle_workers.AddTail(static_cast<MyNode*>(worker));
+    
         break;
     case 'q': // quit
-        // TODO...
         LOG(WARNING) << "Unimplement worker quit: " << cmd;
         break;
     default:
@@ -466,7 +387,7 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
     for(int i = 0; i < ev_count; ++i)
     {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
-        ev_obj->SetEpollEvents(evs[i].events);
+        ev_obj->RetEpollEventType(evs[i].events);
         if(MyNode::NODE_EVENT == ev_obj->GetNodeType()){
             switch(ev_obj->GetEventType()){
             case MyEvent::EV_WORKER:
@@ -475,13 +396,6 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
             case MyEvent::EV_TIMER:
                 // 分发超时消息
                 ProcessTimerEvent(static_cast<MyTimerTask*>(ev_obj));
-                break;
-            case MyEvent::EV_SOCK:
-                // socket可读可写事件
-                //      如果不是 EPOLLONESHOT 类型， 需要调用 DelEvent() 删除该监听事件
-                //      将事件缓存到主线程的消息队列
-                DelEvent(ev_obj);
-                m_cache_que.AddTail(ev_obj);
                 break;
             default:
                 LOG(WARNING) << "Unknown event";
@@ -499,44 +413,23 @@ int MyApp::Exec()
     int max_ev_count = 64;
     int time_wait = 100;
     struct epoll_event* evs;
-
     evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
-    // 检查所有服务发送列表，并分发消息
-
-    while(m_cur_worker_count)
-    {
-        // 1. 检查空闲工作线程
-        //  - 检查队列是否有空闲线程
-        //      - 如果有就找到一个有消息的服务:
-        //          - 将发送消息队列分发至其他服务
-        //              - 如果是申请系统操作消息(dst id: 0xffffff)
-        //                  - 由主线程处理该消息(如: 创建服务， 删除服务， 。。。)
-        //              - 如果是普通消息，就分发就行
-        //          - 将接收消息链表移动至工作线程
-        //          - 标记服务进入工作线程
-        //          - 设置工作线程要处理的服务对象指针
-        //          - 唤醒工作线程并工作
-        //      - 如果没有,退出检查
-        CheckStopWorkers(true);
-        CheckStopWorkers(false);
-        // 2. 等待事件
-        if(0 <= (ev_count = epoll_wait(m_epoll_fd, evs, max_ev_count, time_wait))) {
-            // 3. 处理事件
-            //  - 获得事件区分事件类型
-            //      - 线程事件
-            //      - timer事件
-            //      - socket事件
-            ProcessEvent(evs, ev_count);
-        }else{
-            LOG(ERROR) << my_get_error();
+    
+    while(_cur_worker_count) {
+        /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的服务处理
+        CheckStopWorkers();
+        /// 等待事件
+        if(0 > (ev_count = epoll_wait(_epoll_fd, evs, max_ev_count, time_wait))) {
+            LOG(ERROR) << "epoll wait error: " << my_get_error();
         }
-        // 4. loop
+        /// 处理事件
+        ProcessEvent(evs, ev_count);
     }
 
     // quit MyApp
     free(evs);
-    close(m_epoll_fd);
+    close(_epoll_fd);
 
-    LOG(INFO) << "MyFrame Exit";
+    LOG(INFO) << "myframe exit";
     return 0;
 }

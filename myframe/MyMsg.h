@@ -4,9 +4,8 @@
 #include <string>
 
 #include "MyCommon.h"
-#include "MyList.h"
 
-class MyMsg : public MyNode
+class MyMsg
 {
 public:
 
@@ -46,11 +45,6 @@ public:
     void SetCtrl(MyMsgCtrl c) { ctrl = c; }
 
     virtual MyMsgType GetMsgType() { return MyMsgType::NONE; }
-
-protected:
-
-    /* 节点类型 */
-    virtual enum ENUM_NODE_TYPE GetNodeType() override { return NODE_MSG; }
 };
 
 /**
@@ -104,42 +98,6 @@ public:
 private:
     std::string         m_data;
     MyRespMsgType       m_type;
-};
-
-/**
- * TCP消息
- */
-class MySockMsg : public MyMsg
-{
-public:
-    enum class MySockMsgType :int {
-        NONE           = -1,    // 未知类型
-        DATA           = 1,     // 数据
-        CONNECT        = 2,     // 套接字连接
-        CLOSE          = 3,     // 套接字关闭
-        ACCEPT         = 4,     // 新的客户端连接
-        ERROR          = 5,     // 套接字错误
-        UDP            = 6,     // udp数据
-        WARNING        = 7,     // 警告，例如 缓存超过 1MB 警告
-    };
-    MySockMsg();
-    virtual ~MySockMsg(){}
-
-    virtual MyMsgType GetMsgType() override { return MyMsgType::SOCKET; }
-
-    MySockMsgType GetSockMsgType() { return m_type; }
-    void SetSockMsgType(MySockMsgType type) { m_type = type; }
-
-    int GetSockId() { return m_id; }
-    void SetSockId(int id) { m_id = id; }
-
-    void SetData(const char* data, int len);
-    void SetData(std::string& data);
-    std::string& GetData() { return m_data; }
-private:
-    int                 m_id;
-    MySockMsgType       m_type;
-    std::string         m_data;
 };
 
 #endif // __MYEVENT_H__

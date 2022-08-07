@@ -27,27 +27,31 @@ public:
     MyContext* GetContext(std::string& service_name);
     
     /* 获得一个待处理的服务 */
-    MyContext* GetContext(bool onethread = false);
+    MyContext* GetContext();
 
     /* 将有消息的服务放入链表 */
     void PushContext(MyContext* ctx);
+
 private:
-    uint32_t            m_harbor;         // 暂时没用
-
-    int                 m_slot_size;      // 当前服务数组大小
-
-    uint32_t            m_slot_idx;       // 当前要处理消息的服务下标
-
-    MyContext**         m_slot;           // 服务数组
-
-    uint32_t            m_ctx_count;      // 当前注册服务数量
-
-    uint32_t            m_handle_index;   // 分配的句柄
-
-    MyList              m_msg_list;       // 待处理服务链表
-    MyList              m_imsg_list;      // 待处理独立服务链表
+    /// 暂时没用
+    uint32_t            m_harbor;
+    /// 当前服务数组大小
+    int                 m_slot_size;
+    /// 当前要处理消息的服务下标
+    uint32_t            m_slot_idx;
+    /// 服务数组
+    MyContext**         m_slot;
+    /// 当前注册服务数量
+    uint32_t            m_ctx_count;
+    /// 分配的句柄
+    uint32_t            m_handle_index;
+    /// 待处理服务链表
+    MyList              m_msg_list;
+    /// 读写锁
     pthread_rwlock_t    m_rw;
+    /// handle/name 映射表
     std::unordered_map<std::string, uint32_t> m_named_ctxs;
+
 };
 
 #endif

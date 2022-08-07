@@ -43,7 +43,7 @@ public:
      *  
      * @return:   1: 由myframe删除msg消息， 0: 由服务删除msg消息
      */
-    virtual int CB(MyMsg* msg) = 0;
+    virtual void CB(std::shared_ptr<MyMsg>& msg) = 0;
 
     /**
      * Send() - 发送消息给别的服务
@@ -53,7 +53,7 @@ public:
      * 
      * @return:         成功 0， 失败 -1
      */
-    int Send(MyMsg* msg);
+    int Send(std::shared_ptr<MyMsg> msg);
 
     /**
      * GetHandle() - 获得该服务的句柄号
@@ -72,17 +72,6 @@ public:
     std::string GetServiceName();
 
     /**
-     * RunInOneThread() - 指定该服务是否需要运行在一个单独的线程上
-     * @b:              true:服务运行在单独的线程上，false:服务运行在线程池中
-     * 
-     *      一些业务逻辑的上下文状态只能运行在单个线程上，可以设置该服务运行在单个线程上，
-     *      在服务的Init()函数中调用此函数，设置服务运行方式。
-     * 
-     * @return:         void
-     */
-    void SetRunInOneThread(bool b = false);
-
-    /**
      * Timeout() - 设置定时器
      * @time:           超时时间(单位:10ms, 比如 time = 1, 那么超时时间就是10ms)
      * @session:        设置定时器标识
@@ -94,30 +83,6 @@ public:
      * @return:         成功返回: session值, 失败返回: -1
      */
     int Timeout(int time, int session);
-
-    /**
-     * Listen() - 设置TCP服务器
-     * @addr:           TCP的IP地址
-     * @port:           监听的端口号
-     * @backlog:        See listen()
-     * 
-     *      设置TCP监听后，该服务就会收到客户端的连接/退出/数据消息。
-     * 
-     * @return:         成功返回: 监听文件描述符, 失败返回: -1
-     */
-    int Listen(const char* addr, int port, int backlog);
-
-    /**
-     * SockSend() - 向TCP客户端发送数据
-     * @id:            客户端连接id
-     * @buf:           发送的数据
-     * @sz:            数据长度
-     * 
-     *      设置TCP监听后，该服务就会收到客户端的连接/退出/数据消息。
-     * 
-     * @return:         成功返回: 监听文件描述符, 失败返回: -1
-     */
-    int SockSend(uint32_t id, const void* buf, int sz);
 
 private:
     bool IsFromLib() { return _is_from_lib; }

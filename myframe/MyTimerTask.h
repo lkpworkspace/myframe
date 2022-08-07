@@ -68,28 +68,23 @@ public:
 
     int SetTimeout(uint32_t handle, int time, int session);
 
-    //void StartTimer(uint32_t id);
-    //void StopTimer(uint32_t id);
-
     /**
      * override MyThread virtual method
      */
-    virtual void Run() override;
-    virtual void OnInit() override;
-    virtual void OnExit() override;
+    void Run() override;
+    void OnInit() override;
+    void OnExit() override;
 
     /**
      * override MyEvent virtual method
      */
-    virtual int GetEventType() override
+    int GetEventType() override
     { return EV_TIMER; }
-    virtual int GetFd() override
+    int GetFd() override
     { return m_sockpair[1]; }
-    virtual unsigned int GetEpollEventType() override
+    unsigned int ListenEpollEventType() override
     { return EPOLLIN; }
-    virtual MyList* CB(MyEvent*, int*) override
-    { return nullptr; }
-    virtual void SetEpollEvents(uint32_t ev) override
+    void RetEpollEventType(uint32_t ev) override
     { ev = ev; }
 
     // 主线程调用该函数与工作线程通信
@@ -104,7 +99,10 @@ private:
     void CloseSockPair();
 
     MyTimerMgr        m_timer_mgr;
-    MyList            m_send;              // timer定时通知消息队列
+    // timer定时通知消息队列
+    MyList            m_send;
+    // TODO imp it
+    std::list<std::shared_ptr<MyMsg>> _send;
     /* idx: 0 used by MyWorker, 1 used by MyApp */
     int               m_sockpair[2];
 };

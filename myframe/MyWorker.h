@@ -13,7 +13,6 @@ public:
     enum class MyWorkerCmdType : char {
         NONE            = '\0',    // 未知命令
         IDLE            = 'i',     // 工作线程空闲
-        IDLE_ONE_THREAD = 's',     // 独立线程空闲
         QUIT            = 'q',     // 线程退出命令
     };
 
@@ -23,28 +22,26 @@ public:
     /**
      * override MyThread virtual method
      */
-    virtual void Run() override;
-    virtual void OnInit() override;
-    virtual void OnExit() override;
+    void Run() override;
+    void OnInit() override;
+    void OnExit() override;
 
     /**
      * override MyEvent virtual method
      */
-    virtual int GetEventType() override
+    int GetEventType() override
     { return EV_WORKER; }
-    virtual int GetFd() override;
-    virtual unsigned int GetEpollEventType() override;
-    virtual MyList* CB(MyEvent*, int*) override
-    { return nullptr; }
-    virtual void SetEpollEvents(uint32_t ev) override
+    int GetFd() override;
+    unsigned int ListenEpollEventType() override;
+    void RetEpollEventType(uint32_t ev) override
     { ev = ev; }
 
     // 主线程调用该函数与工作线程通信
     int SendCmd(const char* cmd, size_t len);
     int RecvCmd(char* cmd, size_t len);
 
-    void SetCmd(MyWorkerCmdType cmd){ m_cmd = cmd; }
-    void SetContext(MyContext* context){ m_context = context; }
+    void SetCmd(MyWorkerCmdType cmd){ _cmd = cmd; }
+    void SetContext(MyContext* context){ _context = context; }
 
 private:
     /* 等待主线程唤醒工作 */
@@ -57,13 +54,16 @@ private:
     bool CreateSockPair();
     void CloseSockPair();
 
-    /* idx: 0 used by MyWorker, 1 used by MyApp */
-    int               m_sockpair[2];
-
-    MyList            m_send;              // 发送消息队列(针对没有服务的消息,缓存到该队列)
-    MyList            m_que;               // work queue
-    MyContext*        m_context;           // 当前执行服务的指针
-    MyWorkerCmdType   m_cmd;               // 当前命令类型
+    /// idx: 0 used by MyWorker, 1 used by MyApp
+    int _sockpair[2];
+    /// 发送消息队列(针对没有服务的消息,缓存到该队列)
+    std::list<std::shared_ptr<MyMsg>> _send;
+    /// 运行时消息队列
+    std::list<std::shared_ptr<MyMsg>> _que;
+    //// 当前执行服务的指针
+    MyContext* _context;
+    /// 当前命令类型
+    MyWorkerCmdType _cmd;
 };
 
 #endif

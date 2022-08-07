@@ -114,3 +114,10 @@ extern "C" std::shared_ptr<MyModule> my_mod_create() {
 
 ## 常见问题
 - [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)
+
+### TODOLIST
+定时器
+编码规范
+删除MyList
+解决addevent(MyEvent*)
+添加自定义worker

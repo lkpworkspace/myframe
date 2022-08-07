@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 ### source
 aux_source_directory(. MYFRAME_SRCS)
 list(FILTER MYFRAME_SRCS EXCLUDE REGEX ".*main.cpp$")
+list(FILTER MYFRAME_SRCS EXCLUDE REGEX ".*MyTimerTask.cpp$")
 set(MYFRAME_MAIN main.cpp)
 
 ### lib

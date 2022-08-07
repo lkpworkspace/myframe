@@ -1,9 +1,9 @@
+#include <string.h>
+#include <assert.h>
+
 #include "MyHandleMgr.h"
 #include "MyContext.h"
-#include "assert.h"
-
-#include <string.h>
-
+#include "MyModule.h"
 #include "MyLog.h"
 
 #define MY_DEFAULT_SLOT_SIZE 4
@@ -39,10 +39,10 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
 
                 handle |= m_harbor;
                 ctx->m_handle = handle;
-                if(m_named_ctxs.find(ctx->m_mod->GetServiceName()) == m_named_ctxs.end()){
-                    m_named_ctxs[ctx->m_mod->GetServiceName()] = handle;
+                if(m_named_ctxs.find(ctx->_mod->GetServiceName()) == m_named_ctxs.end()){
+                    m_named_ctxs[ctx->_mod->GetServiceName()] = handle;
                 }else{
-                    LOG(WARNING) << "reg the same service name: " << ctx->m_mod->GetServiceName();
+                    LOG(WARNING) << "reg the same service name: " << ctx->_mod->GetServiceName();
                 }
                 m_ctx_count++;
                 pthread_rwlock_unlock(&m_rw);
@@ -91,9 +91,9 @@ MyContext* MyHandleMgr::GetContext(uint32_t handle)
     return result;
 }
 
-MyContext* MyHandleMgr::GetContext(bool onethread)
+MyContext* MyHandleMgr::GetContext()
 {
-    MyList& msg_list = onethread ? m_imsg_list : m_msg_list;
+    MyList& msg_list = m_msg_list;
     if(msg_list.IsEmpty()) return nullptr;
 
     bool first = true;
@@ -127,8 +127,5 @@ void MyHandleMgr::PushContext(MyContext* ctx)
 {
     if(ctx->m_in_msg_list) return;
     ctx->m_in_msg_list = true;
-    if(ctx->RunInOneThread())
-        m_imsg_list.AddTail(ctx);
-    else
-        m_msg_list.AddTail(ctx);
+    m_msg_list.AddTail(ctx);
 }
