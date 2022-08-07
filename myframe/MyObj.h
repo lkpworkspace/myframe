@@ -14,6 +14,7 @@ public:
     virtual ~MyObj();
 
     bool Inherits(const char* classname);
+    void SetObjName(const std::string& obj_name) { m_obj_name = obj_name; }
     std::string& GetObjName() { return m_obj_name; }
 protected:
 

@@ -39,10 +39,10 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
 
                 handle |= m_harbor;
                 ctx->m_handle = handle;
-                if(m_named_ctxs.find(ctx->m_mod->m_service_name) == m_named_ctxs.end()){
-                    m_named_ctxs[ctx->m_mod->m_service_name] = handle;
+                if(m_named_ctxs.find(ctx->m_mod->GetServiceName()) == m_named_ctxs.end()){
+                    m_named_ctxs[ctx->m_mod->GetServiceName()] = handle;
                 }else{
-                    LOG(WARNING) << "reg the same service name: " << ctx->m_mod->m_service_name;
+                    LOG(WARNING) << "reg the same service name: " << ctx->m_mod->GetServiceName();
                 }
                 m_ctx_count++;
                 pthread_rwlock_unlock(&m_rw);

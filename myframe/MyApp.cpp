@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <jsoncpp/json/json.h>
+
 #include "MyFlags.h"
 #include "MyLog.h"
 #include "MyWorker.h"
@@ -19,6 +21,17 @@
 #include "MyTimerTask.h"
 
 MyApp* MyApp::s_inst = nullptr;
+
+MyApp* MyApp::Create() {
+    if(s_inst == nullptr){
+        s_inst = new MyApp();
+    }
+    return s_inst;
+}
+
+MyApp* MyApp::Inst() {
+    return s_inst;
+}
 
 MyApp::MyApp() :
     m_epoll_fd(-1),
@@ -36,9 +49,8 @@ bool MyApp::Init() {
     _mods = std::make_shared<MyModManager>();
     _socks_mgr = std::make_shared<MySocksMgr>();
 
-    /// load service
-    if (!LoadServiceFormConf()) {
-        LOG(ERROR) << "load mods failed";
+    /// load modules
+    if (!LoadModsFromConf(FLAGS_service_desc_path)) {
         return false;
     }
 
@@ -47,24 +59,102 @@ bool MyApp::Init() {
     return true;
 }
 
-bool MyApp::LoadServiceFormConf() {
-    // get service conf list
-    // parse and load
-    // TODO...
-    return false;
-}
-
-MyApp* MyApp::Create()
-{
-    if(s_inst == nullptr){
-        s_inst = new MyApp();
+bool MyApp::LoadModsFromConf(const std::string& path) {
+    auto service_conf_list = MyCommon::GetDirFiles(path);
+    LOG(INFO) << "Search " << service_conf_list.size() << " service conf";
+    if (service_conf_list.size() <= 0) {
+        LOG(WARNING) << "Search service failed, exit";
+        return false;
     }
-    return s_inst;
+    bool res = false;
+    for (const auto& it : service_conf_list) {
+        LOG(INFO) << "Load " << it << " ...";
+        auto root = MyCommon::LoadJsonFromFile(it);
+        if (root.isNull()) {
+            LOG(ERROR) << it <<" parse failed, skip";
+            continue;
+        }
+        if (!root.isMember("type") || !root["type"].isString()) {
+            LOG(ERROR) << it <<" key \"type\": no key or not string, skip";
+            continue;
+        }
+        const auto& type = root["type"].asString();
+        // load service
+        if (root.isMember("service") && root["service"].isObject()) {
+            const auto& service_list = root["service"];
+            Json::Value::Members service_name_list = service_list.getMemberNames();
+            for (auto inst_name_it = service_name_list.begin(); inst_name_it != service_name_list.end(); ++inst_name_it) {
+                LOG(INFO) << "Load service " << *inst_name_it << " ...";
+                if (type == "library") {
+                    res |= LoadServiceFromLib(root, service_list, *inst_name_it);
+                } else if (type == "class") {
+                    res |= LoadServiceFromClass(root, service_list, *inst_name_it);
+                } else {
+                    LOG(ERROR) << "Unknown type " << type;
+                }
+            }
+        }
+        // TODO worker
+    }
+    return res;
 }
 
-MyApp* MyApp::Inst()
-{
-    return s_inst;
+bool MyApp::LoadServiceFromLib(
+    const Json::Value& root, 
+    const Json::Value& service_list, 
+    const std::string& service_name) {
+    if (!root.isMember("lib") || !root["lib"].isString()) {
+        LOG(ERROR) << "service " << service_name <<" key \"lib\": no key or not string, skip";
+        return false;
+    }
+    const auto& lib_name = root["lib"].asString();
+    if (!_mods->LoadMod(FLAGS_service_lib_path + lib_name)) {
+        LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
+        return false;
+    }
+    
+    const auto& insts = service_list[service_name];
+    bool res = false;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create instance " << service_name << ": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "service " << service_name <<" key \"instance_name\": no key, skip";
+            return false;
+        }
+        if (!inst.isMember("instance_params")) {
+            LOG(ERROR) << "service " << service_name <<" key \"instance_params\": no key, skip";
+            return false;
+        }
+        res |= CreateContext(
+            lib_name, service_name, 
+            inst["instance_name"].asString(), 
+            inst["instance_params"].asString());
+    }
+    return res;
+}
+
+bool MyApp::LoadServiceFromClass(
+    const Json::Value& root, 
+    const Json::Value& service_list, 
+    const std::string& service_name) {
+    const auto& insts = service_list[service_name];
+    bool res = false;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create instance class" << ": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "service " << service_name <<" key \"instance_name\": no key, skip";
+            return false;
+        }
+        if (!inst.isMember("instance_params")) {
+            LOG(ERROR) << "service " << service_name <<" key \"instance_params\": no key, skip";
+            return false;
+        }
+        res |= CreateContext(
+            "class", service_name, 
+            inst["instance_name"].asString(), 
+            inst["instance_params"].asString());
+    }
+    return res;
 }
 
 /**
@@ -72,25 +162,29 @@ MyApp* MyApp::Inst()
  *      1. 从MyModManager中获得对应模块对象
  *      2. 生成MyContext
  *      3. 将模块对象加入MyContext对象
- *      4. 并MyContext加入Context数组
+ *      4. 将MyContext加入Context数组
  *      3. 注册句柄
  *      4. 初始化服务
 */
-bool MyApp::CreateContext(const char* mod_name, const char* service_name, const char* param)
-{
+bool MyApp::CreateContext(
+    const std::string& mod_name, 
+    const std::string& service_name, 
+    const std::string& instance_name, 
+    const std::string& params) {
     auto mod_inst = _mods->CreateModInst(mod_name, service_name);
     if(mod_inst == nullptr) {
         LOG(ERROR) << "Create mod " << mod_name << "." << service_name << " failed";
         return false;
     }
-    return CreateContext(mod_inst, param);
+    mod_inst->m_instance_name = instance_name;
+    return CreateContext(mod_inst, params);
 }
 
-bool MyApp::CreateContext(std::shared_ptr<MyModule>& mod_inst, const char* param)
+bool MyApp::CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string& params)
 {
     MyContext* ctx = new MyContext(mod_inst);
     _handle_mgr->RegHandle(ctx);
-    ctx->Init(param);
+    ctx->Init(params.c_str());
     // 初始化之后, 手动将服务中发送消息队列分发出去
     DispatchMsg(ctx);
     return true;
@@ -144,7 +238,7 @@ void MyApp::StartWorker(int worker_count)
     worker->SetCmd(MyWorker::MyWorkerCmdType::IDLE_ONE_THREAD);
     worker->Start();
     AddEvent(static_cast<MyEvent*>(worker));
-    LOG(INFO) << "Worker start";
+    LOG(INFO) << "Common worker start";
 }
 
 void MyApp::StartTimerTask()
@@ -152,8 +246,7 @@ void MyApp::StartTimerTask()
     m_timer_task = new MyTimerTask();
     m_timer_task->Start();
     AddEvent(static_cast<MyEvent*>(m_timer_task));
-
-    LOG(INFO) << "Timer task start";
+    LOG(INFO) << "Timer worker start";
 }
 
 void MyApp::Start(int worker_count)
@@ -446,11 +539,4 @@ int MyApp::Exec()
 
     LOG(INFO) << "MyFrame Exit";
     return 0;
-}
-
-
-void MyApp::Quit()
-{
-    // TODO...
-    return;
 }

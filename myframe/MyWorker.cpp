@@ -17,6 +17,7 @@ MyWorker::MyWorker() :
     m_context(nullptr),
     m_cmd(MyWorkerCmdType::IDLE)
 {
+    SetObjName("MyWorker");
     SetInherits("MyThread");
     CreateSockPair();
 }

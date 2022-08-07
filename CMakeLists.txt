@@ -29,5 +29,7 @@ add_subdirectory(examples)
 add_subdirectory(test)
 
 ### install dir
+install(DIRECTORY templates DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY tools DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/log)
 install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/service)

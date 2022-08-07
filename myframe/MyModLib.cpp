@@ -40,6 +40,7 @@ bool MyModLib::LoadMod(const std::string& dlpath)
     }
     _mods[dlname] = dll_handle;
     pthread_rwlock_unlock(&_rw);
+    LOG(INFO) << "Load lib " << dlpath;
     return true;
 }
 

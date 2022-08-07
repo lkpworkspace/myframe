@@ -20,13 +20,12 @@ class MyContext;
  */
 class MyModule
 {
+    friend class MyApp;
     friend class MyContext;
     friend class MyModLib;
     friend class MyHandleMgr;
 public:
     MyModule();
-    MyModule(const std::string& mod_name, const std::string& service_name);
-
     virtual ~MyModule();
 
     /**
@@ -66,42 +65,11 @@ public:
     uint32_t GetHandle();
 
     /**
-     * my_handle_name() - 由服务名获得该服务的句柄号
-     * @service_name:   服务名称
-     * 
-     *      服务句柄主要用于在给另一个服务发送消息时，指定另一个服务的句柄号时会用到,
-     *      服务名主要在配置文件中指定，每个服务名称不能同名，否则会有未知结果发生。
-     * 
-     * @return:         成功返回: 服务句柄, 失败返回: -1
-     */
-    uint32_t GetHandle(std::string service_name);
-
-    /**
      * GetServiceName() - 获得该服务的服务名
      * 
      * @return:         成功返回：服务名，失败返回：空字符串
      */
     std::string GetServiceName();
-
-    /**
-     * GetServiceName() - 获得服务句柄对应的服务名
-     * @handle:         服务句柄
-     * 
-     * @return:         成功返回：服务名，失败返回：空字符串
-     */
-    std::string GetServiceName(uint32_t handle);
-
-    /**
-     * CreateService() - 注册服务
-     * @mod_inst:         模块动态库名
-     * @service_name:     服务名
-     * @params:           传递给该服务的参数
-     * 
-     *      建议不要在A服务中再注册A服务，容易形成递归注册导致程序崩溃。
-     * 
-     * @return:         成功返回：服务句柄，失败返回：0
-     */
-    uint32_t CreateService(std::string mod_name, std::string service_name, const char* params);
 
     /**
      * RunInOneThread() - 指定该服务是否需要运行在一个单独的线程上
@@ -152,6 +120,7 @@ public:
     int SockSend(uint32_t id, const void* buf, int sz);
 
 private:
+    bool IsFromLib() { return _is_from_lib; }
     void SetContext(MyContext*);
     bool _is_from_lib = false;
     std::string m_mod_name;

@@ -23,7 +23,12 @@ cd /opt/myframe/bin
 sudo nohup LD_LIBRARY_PATH=/opt/myframe/lib /opt/myframe/bin/myframe_main &
 ```
 
-## 服务 Hello,World Demo
+## 创建模块工程
+```sh
+python3 /opt/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_name"
+```
+
+### 服务 Hello,World Demo 示例
 
 ```c
 #include <iostream>
@@ -76,13 +81,13 @@ extern "C" std::shared_ptr<MyModule> my_mod_create() {
 
 ```
 
-## 服务配置文件
+### 服务配置文件
 ```json
 {
     "type":"library",
-    "lib":"libtemplate.so",
+    "lib":"libdemo.so",
     "service":{
-        "template":[
+        "demo":[
             {
                 "instance_name":"hello_world",
                 "instance_params":""
@@ -93,9 +98,10 @@ extern "C" std::shared_ptr<MyModule> my_mod_create() {
 ```
 - type: [ library | class ]
 - lib: 库名称
-- template:服务名称
-    - instance_name：实例名称
-    - instance_params：实例参数
+- service: 需要创建的服务列表
+    - demo: 服务名
+        - instance_name：实例名称
+        - instance_params：实例参数
 
 ## 程序接口
 

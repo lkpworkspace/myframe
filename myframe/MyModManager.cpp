@@ -22,4 +22,5 @@ std::shared_ptr<MyModule> MyModManager::CreateModInst(const std::string& mod_or_
     if (_class_mods.find(mod_or_class_name) != _class_mods.end()) {
         return _class_mods[mod_or_class_name](service_name);
     }
+    return nullptr;
 }

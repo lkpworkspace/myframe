@@ -1,29 +1,23 @@
 #include <iostream>
 #include <string.h>
 
-#include "myframe/MyModule.h"
-#include "myframe/MyMsg.h"
+#include "MyModule.h"
+#include "MyMsg.h"
 
-/*
-    该服务实现：
-        自己给自己发送一条消息
-*/
-class MyDemo : public MyModule
+class @template_name@ : public MyModule
 {
 public:
-    MyDemo(){}
-    virtual ~MyDemo(){}
+    @template_name@(){}
+    virtual ~@template_name@(){}
 
     /* 服务模块加载完毕后调用 */
-    virtual int Init(const char* param) override
-    {
+    int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
         MyTextMsg* msg = new MyTextMsg(GetHandle(),"hello,world");
         return Send(msg);
     }
 
-    virtual int CB(MyMsg* msg) override
-    {
+    int CB(MyMsg* msg) override {
         MyTextMsg* tmsg = nullptr;
         switch(msg->GetMsgType()){
             case MyMsg::MyMsgType::TEXT:
@@ -42,6 +36,6 @@ public:
 };
 
 /* 创建服务模块实例函数 */
-extern "C" std::shared_ptr<MyModule> my_mod_create() {
-    return std::make_shared<MyDemo>();
+extern "C" std::shared_ptr<MyModule> my_mod_create(const std::string& service_name) {
+    return std::make_shared<@template_name@>();
 }

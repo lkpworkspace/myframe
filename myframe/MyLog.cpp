@@ -15,10 +15,4 @@ MyLog::MyLog()
     // set the path for the log file
     std::string dest_dir = FLAGS_myframe_root + "/log/info";
     google::SetLogDestination(google::GLOG_INFO, dest_dir.c_str());
-    dest_dir = FLAGS_myframe_root + "/log/warning";
-    google::SetLogDestination(google::GLOG_WARNING, dest_dir.c_str());
-    dest_dir = FLAGS_myframe_root + "/log/error";
-    google::SetLogDestination(google::GLOG_ERROR, dest_dir.c_str());
-    dest_dir = FLAGS_myframe_root + "/log/fatal";
-    google::SetLogDestination(google::GLOG_FATAL, dest_dir.c_str());
 }

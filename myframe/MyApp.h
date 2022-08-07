@@ -32,9 +32,12 @@ public:
 
     bool Init();
 
-    bool CreateContext(const char* mod_path, const char* mod_name, const char* service_name, const char* param);
-    bool CreateContext(const char* mod_name, const char* service_name, const char* param);
-    bool CreateContext(std::shared_ptr<MyModule>& mod_inst, const char* param);
+    bool CreateContext(
+        const std::string& mod_name, 
+        const std::string& service_name, 
+        const std::string& instance_name, 
+        const std::string& params);
+    bool CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string& params);
 
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
@@ -45,10 +48,18 @@ public:
     bool DelEvent(MyEvent *ev);
 
     int Exec();                           // mainloop
-    void Quit();                          // exit this app
+public: // for ut
+    bool LoadModsFromConf(const std::string& path);
 
 private:
-    bool LoadServiceFormConf();
+    bool LoadServiceFromLib(
+        const Json::Value& root, 
+        const Json::Value& service_list, 
+        const std::string& service_name);
+    bool LoadServiceFromClass(
+        const Json::Value& root, 
+        const Json::Value& service_list, 
+        const std::string& service_name);
     void Start(int worker_count);
     void StartWorker(int worker_count);
     void StartTimerTask();

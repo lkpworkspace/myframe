@@ -5,22 +5,12 @@
 #include "MySock.h"
 #include "MySocksMgr.h"
 
-MyModule::MyModule() :
-    m_ctx(nullptr)
-{}
-
-MyModule::MyModule(const std::string& mod_name, const std::string& service_name) : 
-    m_mod_name(mod_name),
-    m_service_name(service_name),
-    m_ctx(nullptr)
-{
-
+MyModule::MyModule() : 
+    m_ctx(nullptr){
 }
 
 MyModule::~MyModule()
-{
-
-}
+{}
 
 int MyModule::Send(MyMsg* msg)
 {
@@ -32,32 +22,9 @@ uint32_t MyModule::GetHandle()
     return m_ctx->GetHandle();
 }
 
-uint32_t MyModule::GetHandle(std::string service_name)
-{
-    MyContext* ctx = nullptr;
-    ctx = MyApp::Inst()->GetContext(service_name);
-    return (ctx == nullptr) ? -1 : ctx->GetHandle();
-}
-
 std::string MyModule::GetServiceName()
 {
-    return m_service_name;
-}
-
-std::string MyModule::GetServiceName(uint32_t handle)
-{
-    MyContext* ctx = nullptr;
-    ctx = MyApp::Inst()->GetContext(handle);
-    return (ctx == nullptr) ? "" : ctx->GetModule()->GetServiceName();
-}
-
-uint32_t MyModule::CreateService(std::string mod_name, std::string service_name, const char* params)
-{
-    uint32_t handle = 0x00;
-    if(MyApp::Inst()->CreateContext(mod_name.c_str(), service_name.c_str(), params)){
-        handle = GetHandle(service_name);
-    }
-    return handle;
+    return m_service_name + "." + m_instance_name;
 }
 
 void MyModule::SetRunInOneThread(bool b)

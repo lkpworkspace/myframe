@@ -27,7 +27,7 @@ public:
                     /* 设置下一次超时时间 100 * 10 ms */
                     Timeout(100, 0xff);
 
-                    std::cout << "----> from " << GetServiceName(msg->source) << " to " 
+                    std::cout << "----> from " << msg->source << " to " 
                         << GetServiceName() << ": " << "timeout" << std::endl;
                 }
                 break;

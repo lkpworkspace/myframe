@@ -162,6 +162,7 @@ MyList* MyTimerMgr::Updatetime()
 
 MyTimerTask::MyTimerTask()
 {
+    SetObjName("MyTimerTask");
     SetInherits("MyThread");
     CreateSockPair();
 }

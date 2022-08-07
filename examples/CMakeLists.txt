@@ -1,3 +1,4 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 ### service
 add_library(demo SHARED MyDemo.cpp)
@@ -5,6 +6,15 @@ add_library(test_timer SHARED MyTestTimer.cpp)
 add_library(echo_tcp_server SHARED MyEchoSrv.cpp)
 
 ### install
+FILE(GLOB conf_files "*.json")
+INSTALL(FILES 
+    ${conf_files}
+    PERMISSIONS
+    OWNER_READ
+    GROUP_READ
+    WORLD_READ
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/service
+)
 INSTALL(TARGETS demo
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib

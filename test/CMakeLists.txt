@@ -1,5 +1,6 @@
-AUX_SOURCE_DIRECTORY(. TEST_SRCS)
+cmake_minimum_required(VERSION 3.10)
 
+AUX_SOURCE_DIRECTORY(. TEST_SRCS)
 ADD_EXECUTABLE(myframe_test ${TEST_SRCS})
 target_link_libraries(myframe_test
     GTest::GTest

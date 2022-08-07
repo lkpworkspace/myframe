@@ -1,10 +1,10 @@
 {
     "type":"library",
-    "lib":"libtemplate.so",
+    "lib":"libdemo.so",
     "service":{
-        "template":[
+        "demo":[
             {
-                "instance_name":"hello_world",
+                "instance_name":"echo_hello_world",
                 "instance_params":""
             }
         ]
