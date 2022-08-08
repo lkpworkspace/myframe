@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <mutex>
+
 #include "MyCommon.h"
 #include "MyList.h"
 
@@ -14,7 +15,7 @@ class MyModule;
 class MyModManager;
 class MyHandleMgr;
 class MyWorker;
-class MyTimerTask;
+class MyTimerWorker;
 
 /**
  * 该类为单例类，不允许创建多个
@@ -41,7 +42,7 @@ public:
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
 
-    // MyTimerTask* GetTimerTask() { return m_timer_task; }
+    MyTimerWorker* GetTimerWorker() { return _timer_worker; }
 
     bool AddEvent(MyEvent *ev);
     bool DelEvent(MyEvent *ev);
@@ -74,7 +75,7 @@ private:
     void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
     void ProcessWorkerEvent(MyWorker *worker);
-    void ProcessTimerEvent(MyTimerTask *timer_task);
+    void ProcessTimerEvent(MyTimerWorker *timer_task);
     void HandleSysMsg(std::shared_ptr<MyMsg>& msg);
 
     /// 退出标志
@@ -92,8 +93,7 @@ private:
     /// 模块管理对象
     std::shared_ptr<MyModManager> _mods;
     /// 定时器线程对象      
-    // MyTimerTask*        m_timer_task;         
-    std::mutex          m_mutex;
+    MyTimerWorker* _timer_worker;
 
 };
 

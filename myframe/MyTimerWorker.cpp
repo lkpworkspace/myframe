@@ -1,8 +1,7 @@
-#include "MyTimerTask.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "MyTimerWorker.h"
 #include "MyLog.h"
 #include "MyCUtils.h"
 #include "MyApp.h"
@@ -61,7 +60,6 @@ int MyTimerMgr::Timeout(uint32_t handle, int time, int session)
 
 void MyTimerMgr::_Dispath(MyList* cur)
 {
-    MyRespMsg* msg;
     MyTimer* timer;
     MyNode* begin;
     MyNode* end;
@@ -74,13 +72,13 @@ void MyTimerMgr::_Dispath(MyList* cur)
         temp = begin->next;
         cur->Del(begin);
         timer = static_cast<MyTimer*>(begin);
-        msg = new MyRespMsg();
+        auto msg = std::make_shared<MyRespMsg>();
         msg->source = MY_FRAME_DST;
         msg->destination = timer->m_handle;
         msg->session = timer->m_session;
         msg->SetRespMsgType(MyRespMsg::MyRespMsgType::TIMER);
         delete begin;
-        m_timeout.AddTail(msg);
+        m_timeout.emplace_back(msg);
         begin = temp;
     }
 }
@@ -141,7 +139,7 @@ void MyTimerMgr::_Updatetime()
     _Execute();
     m_mutex.unlock();
 }
-MyList* MyTimerMgr::Updatetime()
+std::list<std::shared_ptr<MyMsg>>& MyTimerMgr::Updatetime()
 {
     uint64_t cp = my_gettime_ms() / MY_RESOLUTION_MS;
     if(cp < m_cur_point){
@@ -155,24 +153,24 @@ MyList* MyTimerMgr::Updatetime()
             _Updatetime();
         }
     }
-    return &m_timeout;
+    return m_timeout;
 }
 
 //////////////////////////////////////////////////////
 
-MyTimerTask::MyTimerTask()
+MyTimerWorker::MyTimerWorker()
 {
-    SetObjName("MyTimerTask");
+    SetObjName("MyTimerWorker");
     SetInherits("MyThread");
     CreateSockPair();
 }
 
-MyTimerTask::~MyTimerTask()
+MyTimerWorker::~MyTimerWorker()
 {
     CloseSockPair();
 }
 
-void MyTimerTask::Run()
+void MyTimerWorker::Run()
 {
     int wait = 0;
     wait = Work();
@@ -181,42 +179,41 @@ void MyTimerTask::Run()
     usleep(2500);
 }
 
-void MyTimerTask::OnInit()
+void MyTimerWorker::OnInit()
 {
     MyThread::OnInit();
     LOG(INFO) << "Timer task " << GetThreadId() << " init";
 }
 
-void MyTimerTask::OnExit()
+void MyTimerWorker::OnExit()
 {
     LOG(INFO) << "Timer task " << GetThreadId() << " exit";
 
     MyThread::OnExit();
 }
-int MyTimerTask::SetTimeout(uint32_t handle, int time, int session)
+int MyTimerWorker::SetTimeout(uint32_t handle, int time, int session)
 {
     return m_timer_mgr.Timeout(handle, time, session);
 }
 
-int MyTimerTask::Work()
+int MyTimerWorker::Work()
 {
-    MyList* timeout;
-    timeout = m_timer_mgr.Updatetime();
-    m_send.Append(timeout);
-    return (m_send.IsEmpty() == false) ? 1 : 0;
+    auto& timeout_list = m_timer_mgr.Updatetime();
+    MyListAppend(_send, timeout_list);
+    return (_send.empty() == false) ? 1 : 0;
 }
 
-int MyTimerTask::SendCmd(const char* cmd, size_t len)
+int MyTimerWorker::SendCmd(const char* cmd, size_t len)
 {
     return write(m_sockpair[1], cmd, len);
 }
 
-int MyTimerTask::RecvCmd(char* cmd, size_t len)
+int MyTimerWorker::RecvCmd(char* cmd, size_t len)
 {
     return read(m_sockpair[1], cmd, len);
 }
 
-int MyTimerTask::Wait()
+int MyTimerWorker::Wait()
 {
     // tell MyApp, dispatch timeout msg to service
     char cmd = 'i';
@@ -226,7 +223,7 @@ int MyTimerTask::Wait()
     return read(m_sockpair[0], &cmd, 1);
 }
 
-bool MyTimerTask::CreateSockPair()
+bool MyTimerWorker::CreateSockPair()
 {
     int res = -1;
     bool ret = true;
@@ -249,7 +246,7 @@ bool MyTimerTask::CreateSockPair()
     return ret;
 }
 
-void MyTimerTask::CloseSockPair()
+void MyTimerWorker::CloseSockPair()
 {
     if(-1 == close(m_sockpair[0])){
         LOG(ERROR) << "Timer close sockpair[0]: " << my_get_error();

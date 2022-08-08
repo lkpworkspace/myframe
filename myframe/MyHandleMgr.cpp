@@ -38,11 +38,11 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
                 m_handle_index = handle + 1;
 
                 handle |= m_harbor;
-                ctx->m_handle = handle;
-                if(m_named_ctxs.find(ctx->_mod->GetServiceName()) == m_named_ctxs.end()){
-                    m_named_ctxs[ctx->_mod->GetServiceName()] = handle;
+                ctx->SetHandle(handle);
+                if(m_named_ctxs.find(ctx->GetModule()->GetServiceName()) == m_named_ctxs.end()){
+                    m_named_ctxs[ctx->GetModule()->GetServiceName()] = handle;
                 }else{
-                    LOG(WARNING) << "reg the same service name: " << ctx->_mod->GetServiceName();
+                    LOG(WARNING) << "reg the same service name: " << ctx->GetModule()->GetServiceName();
                 }
                 m_ctx_count++;
                 pthread_rwlock_unlock(&m_rw);
@@ -84,20 +84,18 @@ MyContext* MyHandleMgr::GetContext(uint32_t handle)
     pthread_rwlock_rdlock(&m_rw);
     uint32_t hash = handle & (m_slot_size-1);
     MyContext* ctx = m_slot[hash];
-    if (ctx && ctx->m_handle == handle) {
+    if (ctx && ctx->GetHandle() == handle) {
         result = ctx;
     }
     pthread_rwlock_unlock(&m_rw);
     return result;
 }
 
-MyContext* MyHandleMgr::GetContext()
+MyContext* MyHandleMgr::GetContextWithMsg()
 {
     MyList& msg_list = m_msg_list;
     if(msg_list.IsEmpty()) return nullptr;
 
-    bool first = true;
-    MyNode* b = msg_list.Begin();
     MyNode* ctx_node = nullptr; 
     MyContext* ctx = nullptr;
 
@@ -105,27 +103,22 @@ MyContext* MyHandleMgr::GetContext()
         ctx_node = msg_list.Begin();
         ctx = static_cast<MyContext*>(ctx_node);
 
-        if(ctx->m_in_global == false){
+        if(ctx->IsRuning()){
             msg_list.DelHead();
-            msg_list.AddTail(ctx_node);
         }else{
             msg_list.DelHead();
 
-            ctx->m_in_msg_list = false;
-            ctx->m_in_global = false;
+            ctx->SetOutOfRunQueueFlag();
+            ctx->SetRunFlag();
             return ctx;
         }
-        if((b == ctx_node) && !first){
-            break;
-        } 
-        first = false;
     }
     return nullptr;
 }
 
 void MyHandleMgr::PushContext(MyContext* ctx)
 {
-    if(ctx->m_in_msg_list) return;
-    ctx->m_in_msg_list = true;
+    if(ctx->IsInRunQueue()) return;
+    ctx->SetInRunQueueFlag();
     m_msg_list.AddTail(ctx);
 }

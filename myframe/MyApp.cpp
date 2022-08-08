@@ -1,5 +1,3 @@
-#include "MyApp.h"
-
 #include <errno.h>
 #include <signal.h>
 #include <sys/epoll.h>
@@ -8,6 +6,7 @@
 
 #include <jsoncpp/json/json.h>
 
+#include "MyApp.h"
 #include "MyCUtils.h"
 #include "MyFlags.h"
 #include "MyLog.h"
@@ -17,12 +16,12 @@
 #include "MyWorker.h"
 #include "MyHandleMgr.h"
 #include "MyModManager.h"
-#include "MyTimerTask.h"
+#include "MyTimerWorker.h"
 
 MyApp* MyApp::s_inst = nullptr;
 
 MyApp* MyApp::Create() {
-    if(s_inst == nullptr){
+    if (s_inst == nullptr) {
         s_inst = new MyApp();
     }
     return s_inst;
@@ -227,10 +226,10 @@ void MyApp::StartCommonWorker(int worker_count) {
 }
 
 void MyApp::StartTimerWorker() {
-    // m_timer_task = new MyTimerTask();
-    // m_timer_task->Start();
-    // AddEvent(static_cast<MyEvent*>(m_timer_task));
-    // LOG(INFO) << "Timer worker start";
+    _timer_worker = new MyTimerWorker();
+    _timer_worker->Start();
+    AddEvent(static_cast<MyEvent*>(_timer_worker));
+    LOG(INFO) << "Timer worker start";
 }
 
 void MyApp::Start(int worker_count) {
@@ -259,7 +258,7 @@ MyContext* MyApp::GetContext(std::string& service_name) {
 }
 
 MyContext* MyApp::GetContextWithMsg() {
-    return _handle_mgr->GetContext();
+    return _handle_mgr->GetContextWithMsg();
 }
 
 void MyApp::HandleSysMsg(std::shared_ptr<MyMsg>& msg) {
@@ -267,7 +266,6 @@ void MyApp::HandleSysMsg(std::shared_ptr<MyMsg>& msg) {
 }
 
 void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
-    m_mutex.lock();
     for (auto& msg : msg_list) {
         if(msg->destination == MY_FRAME_DST){
             HandleSysMsg(msg);
@@ -284,13 +282,12 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
         _handle_mgr->PushContext(ctx);
     }
     msg_list.clear();
-    m_mutex.unlock();
 }
 
 // 将获得的消息分发给其他服务
 void MyApp::DispatchMsg(MyContext* context) {
     if(nullptr == context) return;
-    context->m_in_global = true;
+    context->SetWaitFlag();
     auto& msg_list = context->GetDispatchMsgList();
     DispatchMsg(msg_list);
 }
@@ -307,7 +304,6 @@ void MyApp::CheckStopWorkers() {
     MyList& idle_workers = _idle_workers;
     begin= idle_workers.Begin();
     end = idle_workers.End();
-    m_mutex.lock();
     for(;begin != end;)
     {
         temp = begin->next;
@@ -327,31 +323,28 @@ void MyApp::CheckStopWorkers() {
         }
         begin = temp;
     }
-    m_mutex.unlock();
 }
 
-void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
-{
-    // char cmd = 'y';
-    // timer_task->RecvCmd(&cmd, 1);
-    // switch(cmd){
-    // case 'i': // idle
-    //     // 将定时器线程的发送队列分发完毕
-    //     DispatchMsg(timer_task->_send);
-    //     timer_task->SendCmd(&cmd, sizeof(char));
-    //     break;
-    // case 'q': // quit
-    //     // TODO...
-    //     LOG(WARNING) << "Unimplement timer task quit: " << cmd;
-    //     break;
-    // default:
-    //     LOG(WARNING) << "Unknown timer task cmd: " << cmd;
-    //     break;
-    // }
+void MyApp::ProcessTimerEvent(MyTimerWorker *timer_worker) {
+    char cmd = 'y';
+    timer_worker->RecvCmd(&cmd, 1);
+    switch(cmd){
+    case 'i': // idle
+        // 将定时器线程的发送队列分发完毕
+        DispatchMsg(timer_worker->_send);
+        timer_worker->SendCmd(&cmd, sizeof(char));
+        break;
+    case 'q': // quit
+        // TODO...
+        LOG(WARNING) << "Unimplement timer task quit: " << cmd;
+        break;
+    default:
+        LOG(WARNING) << "Unknown timer task cmd: " << cmd;
+        break;
+    }
 }
 
-void MyApp::ProcessWorkerEvent(MyWorker* worker)
-{
+void MyApp::ProcessWorkerEvent(MyWorker* worker) {
     char cmd = 'y';
     worker->RecvCmd(&cmd, 1);
     switch(cmd){
@@ -380,35 +373,30 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker)
     }
 }
 
-void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
-{
+void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
     MyEvent* ev_obj;
 
     for(int i = 0; i < ev_count; ++i)
     {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
         ev_obj->RetEpollEventType(evs[i].events);
-        if(MyNode::NODE_EVENT == ev_obj->GetNodeType()){
-            switch(ev_obj->GetEventType()){
-            case MyEvent::EV_WORKER:
-                // 工作线程事件
-                ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));break;
-            case MyEvent::EV_TIMER:
-                // 分发超时消息
-                ProcessTimerEvent(static_cast<MyTimerTask*>(ev_obj));
-                break;
-            default:
-                LOG(WARNING) << "Unknown event";
-                break;
-            }
-        }else{
-            LOG(WARNING) << "Unknown event node";
+        switch(ev_obj->GetEventType()){
+        case MyEvent::EV_WORKER:
+            // 工作线程事件
+            ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));
+            break;
+        case MyEvent::EV_TIMER:
+            // 分发超时消息
+            ProcessTimerEvent(static_cast<MyTimerWorker*>(ev_obj));
+            break;
+        default:
+            LOG(WARNING) << "Unknown event";
+            break;
         }
     }
 }
 
-int MyApp::Exec()
-{
+int MyApp::Exec() {
     int ev_count = 0;
     int max_ev_count = 64;
     int time_wait = 100;

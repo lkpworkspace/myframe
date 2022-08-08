@@ -1,9 +1,12 @@
-#ifndef __MYTIMERTASK_H__
-#define __MYTIMERTASK_H__
-#include <map>
+#ifndef __MYTIMERWORKER_H__
+#define __MYTIMERWORKER_H__
 #include <mutex>
+#include <memory>
+#include <list>
+
 #include "MyCommon.h"
 #include "MyThread.h"
+#include "MyMsg.h"
 
 #define TVN_BITS 6
 #define TVR_BITS 8
@@ -35,7 +38,7 @@ public:
 
     int Timeout(uint32_t handle, int time, int session);
 
-    MyList *Updatetime();
+    std::list<std::shared_ptr<MyMsg>>& Updatetime();
 
 private:
     void _AddTimerNode(MyTimer* node);
@@ -55,16 +58,16 @@ private:
     uint32_t          m_time;
     uint64_t          m_cur_point;
 
-    MyList            m_timeout;
+    std::list<std::shared_ptr<MyMsg>> m_timeout;
     std::mutex        m_mutex;
 };
 
-class MyTimerTask : public MyThread
+class MyTimerWorker : public MyThread
 {
     friend class MyApp;
 public:
-    MyTimerTask();
-    virtual ~MyTimerTask();
+    MyTimerWorker();
+    virtual ~MyTimerWorker();
 
     int SetTimeout(uint32_t handle, int time, int session);
 
@@ -100,8 +103,6 @@ private:
 
     MyTimerMgr        m_timer_mgr;
     // timer定时通知消息队列
-    MyList            m_send;
-    // TODO imp it
     std::list<std::shared_ptr<MyMsg>> _send;
     /* idx: 0 used by MyWorker, 1 used by MyApp */
     int               m_sockpair[2];

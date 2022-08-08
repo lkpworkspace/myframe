@@ -23,7 +23,7 @@ MyWorker::~MyWorker() {
 
 void MyWorker::Idle() {
     if(_context){
-        _context->m_in_global = true;
+        _context->SetWaitFlag();
         _context = nullptr;
     }
 }

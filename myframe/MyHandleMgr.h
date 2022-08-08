@@ -27,7 +27,7 @@ public:
     MyContext* GetContext(std::string& service_name);
     
     /* 获得一个待处理的服务 */
-    MyContext* GetContext();
+    MyContext* GetContextWithMsg();
 
     /* 将有消息的服务放入链表 */
     void PushContext(MyContext* ctx);

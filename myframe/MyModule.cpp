@@ -1,6 +1,6 @@
 #include "MyModule.h"
 #include "MyContext.h"
-#include "MyTimerTask.h"
+#include "MyTimerWorker.h"
 #include "MyApp.h"
 
 MyModule::MyModule() : 
@@ -23,8 +23,7 @@ std::string MyModule::GetServiceName() {
 }
 
 int MyModule::Timeout(int time, int session) {
-    // return MyApp::Inst()->GetTimerTask()->SetTimeout(GetHandle(), time, session);
-    return 0;
+    return MyApp::Inst()->GetTimerWorker()->SetTimeout(GetHandle(), time, session);
 }
 
 void MyModule::SetContext(MyContext* c) {

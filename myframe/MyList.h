@@ -10,13 +10,6 @@
 class MyNode : public MyObj
 {
 public:
-
-    enum ENUM_NODE_TYPE{
-        NODE_MSG,
-        NODE_EVENT,
-        NODE_NONE,
-    };
-
     MyNode() :
         prev(nullptr),
         next(nullptr)
@@ -24,13 +17,9 @@ public:
         SetInherits("MyObj");
     }
 
-    virtual ~MyNode(){}
-
     MyNode* prev;
 
     MyNode* next;
-
-    virtual enum ENUM_NODE_TYPE GetNodeType() { return NODE_NONE; }
 };
 
 class MyList : public MyObj

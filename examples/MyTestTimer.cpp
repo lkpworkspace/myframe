@@ -10,19 +10,16 @@ public:
     MyTestTimer(){}
     virtual ~MyTestTimer(){}
 
-    virtual int Init(const char* param) override
-    {
+    int Init(const char* param) override {
         /* 设置超时时间为 10 * 10 ms */
         Timeout(10, 0xff);
         return 0;
     }
 
-    virtual int CB(MyMsg* msg) override
-    {
-        MyRespMsg* rmsg = nullptr;
+    void CB(std::shared_ptr<MyMsg>& msg) override {
         switch(msg->GetMsgType()){
-            case MyMsg::MyMsgType::RESPONSE:
-                rmsg = static_cast<MyRespMsg*>(msg);
+            case MyMsg::MyMsgType::RESPONSE: {
+                auto rmsg = std::dynamic_pointer_cast<MyRespMsg>(msg);
                 if(rmsg->GetRespMsgType() == MyRespMsg::MyRespMsgType::TIMER){
                     /* 设置下一次超时时间 100 * 10 ms */
                     Timeout(100, 0xff);
@@ -31,15 +28,15 @@ public:
                         << GetServiceName() << ": " << "timeout" << std::endl;
                 }
                 break;
+            }
             default:
                 /* 忽略其它消息 */
                 std::cout << "Unknown msg type" << std::endl;
                 break;
         }
-        return 1;
     }
 };
 
-extern "C" std::shared_ptr<MyModule> my_mod_create() {
+extern "C" std::shared_ptr<MyModule> my_mod_create(const std::string& service_name) {
     return std::make_shared<MyTestTimer>();
 }

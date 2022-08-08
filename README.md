@@ -34,8 +34,8 @@ python3 /opt/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mo
 #include <iostream>
 #include <string.h>
 
-#include "MyModule.h"
-#include "MyMsg.h"
+#include "myframe/MyModule.h"
+#include "myframe/MyMsg.h"
 
 /*
     该服务实现：
@@ -44,38 +44,32 @@ python3 /opt/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mo
 class MyDemo : public MyModule
 {
 public:
-    MyDemo(){}
-    virtual ~MyDemo(){}
-
     /* 服务模块加载完毕后调用 */
-    virtual int Init(const char* param) override
-    {
+    int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
-        MyTextMsg* msg = new MyTextMsg(GetHandle(),"hello,world");
+        auto msg = std::make_shared<MyTextMsg>(GetHandle(),"hello,world");
         return Send(msg);
     }
 
-    virtual int CB(MyMsg* msg) override
-    {
-        MyTextMsg* tmsg = nullptr;
+    void CB(std::shared_ptr<MyMsg>& msg) override {
         switch(msg->GetMsgType()){
-            case MyMsg::MyMsgType::TEXT:
+            case MyMsg::MyMsgType::TEXT: {
                 /* 获得文本消息， 打印 源服务地址 目的服务地址 消息内容*/
-                tmsg = static_cast<MyTextMsg*>(msg);
-                std::cout << "----> from \"" << GetServiceName(tmsg->source) << "\" to \"" 
+                auto tmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
+                std::cout << "----> from \"" << tmsg->source << "\" to \"" 
                     << GetServiceName() << "\": " << tmsg->GetData() << std::endl;
                 break;
+            }
             default:
                 /* 忽略其它消息 */
                 std::cout << "Unknown msg type" << std::endl;
                 break;
         }
-        return 1;
     }
 };
 
 /* 创建服务模块实例函数 */
-extern "C" std::shared_ptr<MyModule> my_mod_create() {
+extern "C" std::shared_ptr<MyModule> my_mod_create(const std::string& service_name) {
     return std::make_shared<MyDemo>();
 }
 
@@ -116,8 +110,10 @@ extern "C" std::shared_ptr<MyModule> my_mod_create() {
 - [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)
 
 ### TODOLIST
-定时器
-编码规范
-删除MyList
-解决addevent(MyEvent*)
-添加自定义worker
+减少继承
+接口界面全部使用service name
+全部使用智能指针
+    解决addevent(MyEvent*)
+抽象worker
+    支持自定义worker
+    使用list存储
