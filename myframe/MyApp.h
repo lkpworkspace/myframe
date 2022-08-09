@@ -13,9 +13,9 @@ class MyEvent;
 class MyContext;
 class MyModule;
 class MyModManager;
-class MyHandleMgr;
-class MyWorker;
-class MyTimerWorker;
+class MyHandleManager;
+class MyWorkerCommon;
+class MyWorkerTimer;
 
 /**
  * 该类为单例类，不允许创建多个
@@ -42,7 +42,7 @@ public:
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
 
-    MyTimerWorker* GetTimerWorker() { return _timer_worker; }
+    MyWorkerTimer* GetTimerWorker() { return _timer_worker; }
 
     bool AddEvent(MyEvent *ev);
     bool DelEvent(MyEvent *ev);
@@ -74,8 +74,8 @@ private:
     void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
     void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
-    void ProcessWorkerEvent(MyWorker *worker);
-    void ProcessTimerEvent(MyTimerWorker *timer_task);
+    void ProcessWorkerEvent(MyWorkerCommon *worker);
+    void ProcessTimerEvent(MyWorkerTimer *timer_task);
     void HandleSysMsg(std::shared_ptr<MyMsg>& msg);
 
     /// 退出标志
@@ -89,11 +89,11 @@ private:
     /// 缓存消息队列
     std::list<std::shared_ptr<MyMsg>> _cache_que;          
     /// 句柄管理对象
-    std::shared_ptr<MyHandleMgr> _handle_mgr; 
+    std::shared_ptr<MyHandleManager> _handle_mgr; 
     /// 模块管理对象
     std::shared_ptr<MyModManager> _mods;
     /// 定时器线程对象      
-    MyTimerWorker* _timer_worker;
+    MyWorkerTimer* _timer_worker;
 
 };
 

@@ -1,5 +1,4 @@
-#ifndef __MYHANDLEMGR_H__
-#define __MYHANDLEMGR_H__
+#pragma once
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
@@ -11,11 +10,11 @@
 #define MY_HANDLE_REMOTE_SHIFT 24
 
 class MyContext;
-class MyHandleMgr
+class MyHandleManager
 {
 public:
-    MyHandleMgr();
-    virtual ~MyHandleMgr();
+    MyHandleManager();
+    virtual ~MyHandleManager();
 
     /* 给服务分配句柄，并进行管理 */
     uint32_t RegHandle(MyContext* ctx);
@@ -53,5 +52,3 @@ private:
     std::unordered_map<std::string, uint32_t> m_named_ctxs;
 
 };
-
-#endif

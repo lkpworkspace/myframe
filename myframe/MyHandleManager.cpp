@@ -1,14 +1,14 @@
 #include <string.h>
 #include <assert.h>
 
-#include "MyHandleMgr.h"
+#include "MyHandleManager.h"
 #include "MyContext.h"
 #include "MyModule.h"
 #include "MyLog.h"
 
 #define MY_DEFAULT_SLOT_SIZE 4
 
-MyHandleMgr::MyHandleMgr() :
+MyHandleManager::MyHandleManager() :
     m_harbor(0),
     m_slot_size(MY_DEFAULT_SLOT_SIZE),
     m_slot_idx(0),
@@ -20,12 +20,12 @@ MyHandleMgr::MyHandleMgr() :
     memset(m_slot, 0, sizeof(MyContext*) * m_slot_size);
 }
 
-MyHandleMgr::~MyHandleMgr()
+MyHandleManager::~MyHandleManager()
 {
     pthread_rwlock_destroy(&m_rw);
 }
 
-uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
+uint32_t MyHandleManager::RegHandle(MyContext* ctx)
 {
     pthread_rwlock_wrlock(&m_rw);
     for (;;) {
@@ -65,7 +65,7 @@ uint32_t MyHandleMgr::RegHandle(MyContext* ctx)
     return 0;
 }
 
-MyContext* MyHandleMgr::GetContext(std::string& service_name)
+MyContext* MyHandleManager::GetContext(std::string& service_name)
 {
     uint32_t handle = 0x00;
     pthread_rwlock_rdlock(&m_rw);
@@ -78,7 +78,7 @@ MyContext* MyHandleMgr::GetContext(std::string& service_name)
     return nullptr;
 }
 
-MyContext* MyHandleMgr::GetContext(uint32_t handle)
+MyContext* MyHandleManager::GetContext(uint32_t handle)
 {
     MyContext* result = nullptr;
     pthread_rwlock_rdlock(&m_rw);
@@ -91,7 +91,7 @@ MyContext* MyHandleMgr::GetContext(uint32_t handle)
     return result;
 }
 
-MyContext* MyHandleMgr::GetContextWithMsg()
+MyContext* MyHandleManager::GetContextWithMsg()
 {
     MyList& msg_list = m_msg_list;
     if(msg_list.IsEmpty()) return nullptr;
@@ -116,7 +116,7 @@ MyContext* MyHandleMgr::GetContextWithMsg()
     return nullptr;
 }
 
-void MyHandleMgr::PushContext(MyContext* ctx)
+void MyHandleManager::PushContext(MyContext* ctx)
 {
     if(ctx->IsInRunQueue()) return;
     ctx->SetInRunQueueFlag();

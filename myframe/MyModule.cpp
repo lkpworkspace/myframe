@@ -1,6 +1,6 @@
 #include "MyModule.h"
 #include "MyContext.h"
-#include "MyTimerWorker.h"
+#include "MyWorkerTimer.h"
 #include "MyApp.h"
 
 MyModule::MyModule() : 

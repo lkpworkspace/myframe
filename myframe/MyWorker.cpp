@@ -1,87 +1,86 @@
-#include "MyWorker.h"
-
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "MyWorker.h"
 #include "MyLog.h"
 #include "MyCUtils.h"
-#include "MyContext.h"
-#include "MyMsg.h"
-#include "MyApp.h"
-#include "MyHandleMgr.h"
 
 MyWorker::MyWorker() :
-    _context(nullptr),
-    _cmd(MyWorkerCmdType::IDLE) {
+    _posix_thread_id(-1),
+    _runing(false) {
     CreateSockPair();
 }
 
 MyWorker::~MyWorker() {
+    Stop();
     CloseSockPair();
 }
 
-void MyWorker::Idle() {
-    if(_context){
-        _context->SetWaitFlag();
-        _context = nullptr;
+void MyWorker::Start() {
+    int res = 0;
+    if(_runing == false) {
+        _runing = true;
+        res = pthread_create(&_posix_thread_id, NULL, &MyWorker::ListenThread, this);
+        if(res != 0) {
+            _runing = false;
+            LOG(ERROR) << "pthread create failed";
+            return;
+        }
+        res = pthread_detach(_posix_thread_id);
+        if(res != 0) {
+            _runing = false;
+            LOG(ERROR) << "pthread detach failed";
+            return;
+        }
     }
 }
 
-void MyWorker::Run() {
-    Wait();
-    Work();
+void MyWorker::Stop() {
+    _runing = false;
 }
 
-void MyWorker::OnInit() {
-    MyThread::OnInit();
-    LOG(INFO) << "Worker " << GetThreadId() << " init";
+void* MyWorker::ListenThread(void* obj) {
+    MyWorker* t = static_cast<MyWorker*>(obj);
+    t->OnInit();
+    while (t->_runing)
+		t->Run();
+	t->OnExit();
+    return nullptr;
 }
 
-void MyWorker::OnExit() {
-    MyThread::OnExit();
-    LOG(INFO) << "Worker " << GetThreadId() << " exit";
+int MyWorker::SendCmdToMain(const MyWorkerCmd& cmd) {
+    char cmd_char = (char)cmd;
+    return write(_sockpair[0], &cmd_char, 1);
 }
 
-int MyWorker::Work() {
-    MyContext* ctx = _context;
-    if (ctx == nullptr) {
-        LOG(ERROR) << "context is nullptr";
-        return -1;
-    }
-
-    for (auto msg : _que) {
-        ctx->CB(msg);
-        LOG(INFO) << "Worker: " << GetThreadId() << " get cmd: "
-            << (char)_cmd;
-    }
-    _que.clear();
-    return 0;
+int MyWorker::SendCmdToWorker(const MyWorkerCmd& cmd) {
+    char cmd_char = (char)cmd;
+    return write(_sockpair[1], &cmd_char, 1);
 }
 
-int MyWorker::GetFd() {
-    return _sockpair[1];
+int MyWorker::RecvCmdFromMain(MyWorkerCmd& cmd) {
+    char cmd_char;
+    int ret = read(_sockpair[0], &cmd_char, 1);
+    cmd = (MyWorkerCmd)cmd_char;
+    return ret;
 }
 
-unsigned int MyWorker::ListenEpollEventType() {
-    return EPOLLIN;
+int MyWorker::RecvCmdFromWorker(MyWorkerCmd& cmd) {
+    char cmd_char;
+    int ret = read(_sockpair[1], &cmd_char, 1);
+    cmd = (MyWorkerCmd)cmd_char;
+    return ret;
 }
 
-int MyWorker::SendCmd(const char* cmd, size_t len) {
-    return write(_sockpair[1], cmd, len);
-}
+void MyWorker::PushMsg(std::shared_ptr<MyMsg> msg) {
+    _send.emplace_back(msg);
+}   
 
-int MyWorker::RecvCmd(char* cmd, size_t len) {
-    return read(_sockpair[1], cmd, len);
-}
-
-int MyWorker::Wait() {
-    // tell MyApp, add this worker to idle worker list
-    char cmd = (char)_cmd; // idle
-    write(_sockpair[0], &cmd, 1);
-
-    // 等待主线程唤醒工作
-    return read(_sockpair[0], &cmd, 1);
+int MyWorker::DispatchMsg() {
+    MyWorkerCmd cmd = MyWorkerCmd::IDLE;
+    SendCmdToMain(cmd);
+    return RecvCmdFromMain(cmd);
 }
 
 bool MyWorker::CreateSockPair() {

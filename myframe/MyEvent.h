@@ -6,22 +6,20 @@
 #include "MyCommon.h"
 #include "MyList.h"
 
+enum class MyEventType : int {
+    EV_WORKER,
+    EV_TIMER,
+    EV_USER,
+};
+
 class MyEvent : public MyNode
 {
-public:
-    enum ENUM_EVENT_TYPE{
-        EV_THREAD,
-        EV_WORKER,
-        EV_TIMER,
-        EV_NONE
-    };
-
 public:
     MyEvent() {}
     virtual ~MyEvent() {}
 
     /* 事件类型 */
-    virtual int GetEventType() = 0;
+    virtual MyEventType GetMyEventType() = 0;
 
     /* 获得当前事件的文件描述符 */
     virtual int GetFd(){ return -1; }

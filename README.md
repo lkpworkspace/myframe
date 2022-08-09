@@ -4,7 +4,11 @@
 [![cpp](https://img.shields.io/badge/language-cpp-green.svg)](https://img.shields.io/badge/language-cpp-green.svg)
 
 ## 概述
-C++实现的actors框架,框架中每一个actor都可以称为一个服务或者是一个组件(这里都称为服务)，你可以将每一个独立的业务逻辑都编写成一个服务，服务之间可以进行消息传递，这样一个大型的应用程序或服务器程序就可以由多个服务组成，不同服务组合使用，既可以提高代码复用，又可以极大的降低程序耦合度，提高开发效率。
+C++实现的actors框架,框架中每一个actor都可以称为一个服务或者是一个组件(这里都称为服务)，你可以将每一个独立的业务逻辑都编写成一个服务,服务基于消息驱动,服务之间可以进行消息传递，这样一个大型的应用程序或服务器程序就可以由多个服务组成，不同服务组合使用，既可以提高代码复用，又可以极大的降低程序耦合度，提高开发效率。
+- 服务(service): 线程池执行单位
+    - service之间可以相互传递消息，线程池可以高并发的处理收到消息的服务；
+- 工作者(worker): 独立线程
+    - worker可以发送消息给service。
 
 ## 安装依赖
 ## 构建
@@ -114,6 +118,4 @@ extern "C" std::shared_ptr<MyModule> my_mod_create(const std::string& service_na
 接口界面全部使用service name
 全部使用智能指针
     解决addevent(MyEvent*)
-抽象worker
-    支持自定义worker
-    使用list存储
+提供解析worker配置代码

@@ -23,7 +23,6 @@ class MyModule
     friend class MyApp;
     friend class MyContext;
     friend class MyModLib;
-    friend class MyHandleMgr;
 public:
     MyModule();
     virtual ~MyModule();
@@ -40,8 +39,7 @@ public:
     /**
      * CB() - 回调函数
      * @msg:      服务收到的消息
-     *  
-     * @return:   1: 由myframe删除msg消息， 0: 由服务删除msg消息
+     * 
      */
     virtual void CB(std::shared_ptr<MyMsg>& msg) = 0;
 

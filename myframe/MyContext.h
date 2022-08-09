@@ -8,11 +8,11 @@
 
 class MyMsg;
 class MyModule;
-class MyWorker;
+class MyWorkerCommon;
 class MyContext : public MyNode
 {
-    friend class MyHandleMgr;
-    friend class MyWorker;
+    friend class MyHandleManager;
+    friend class MyWorkerCommon;
     friend class MyApp;
 public:
     MyContext(std::shared_ptr<MyModule>& mod);

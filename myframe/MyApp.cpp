@@ -13,10 +13,10 @@
 #include "MyMsg.h"
 #include "MyModule.h"
 #include "MyContext.h"
-#include "MyWorker.h"
-#include "MyHandleMgr.h"
+#include "MyHandleManager.h"
 #include "MyModManager.h"
-#include "MyTimerWorker.h"
+#include "MyWorkerCommon.h"
+#include "MyWorkerTimer.h"
 
 MyApp* MyApp::s_inst = nullptr;
 
@@ -43,7 +43,7 @@ MyApp::~MyApp()
 {}
 
 bool MyApp::Init() {
-    _handle_mgr = std::make_shared<MyHandleMgr>();
+    _handle_mgr = std::make_shared<MyHandleManager>();
     _mods = std::make_shared<MyModManager>();
 
     /// start worker
@@ -217,7 +217,7 @@ bool MyApp::DelEvent(MyEvent *ev) {
 
 void MyApp::StartCommonWorker(int worker_count) {
     for(int i = 0; i < worker_count; ++i){
-        MyWorker* worker = new MyWorker();
+        MyWorkerCommon* worker = new MyWorkerCommon();
         worker->Start();
         AddEvent(static_cast<MyEvent*>(worker));
         _cur_worker_count++;
@@ -226,7 +226,7 @@ void MyApp::StartCommonWorker(int worker_count) {
 }
 
 void MyApp::StartTimerWorker() {
-    _timer_worker = new MyTimerWorker();
+    _timer_worker = new MyWorkerTimer();
     _timer_worker->Start();
     AddEvent(static_cast<MyEvent*>(_timer_worker));
     LOG(INFO) << "Timer worker start";
@@ -295,7 +295,7 @@ void MyApp::DispatchMsg(MyContext* context) {
 void MyApp::CheckStopWorkers() {
     char cmd = 'y';
 
-    MyWorker* worker;
+    MyWorkerCommon* worker;
     MyContext* context;
     MyNode* begin;
     MyNode* end;
@@ -307,7 +307,7 @@ void MyApp::CheckStopWorkers() {
     for(;begin != end;)
     {
         temp = begin->next;
-        worker = static_cast<MyWorker*>(begin);
+        worker = static_cast<MyWorkerCommon*>(begin);
         if(nullptr == (context = GetContextWithMsg())) {
             LOG(INFO) << "no msg need process";
             break;
@@ -317,7 +317,7 @@ void MyApp::CheckStopWorkers() {
             MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
             idle_workers.Del(begin);
-            worker->SendCmd(&cmd, sizeof(char));
+            worker->SendCmdToWorker(MyWorkerCmd::RUN);
         }else{
             LOG(ERROR) << "Context has no msg";
         }
@@ -325,35 +325,35 @@ void MyApp::CheckStopWorkers() {
     }
 }
 
-void MyApp::ProcessTimerEvent(MyTimerWorker *timer_worker) {
-    char cmd = 'y';
-    timer_worker->RecvCmd(&cmd, 1);
+void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
+    MyWorkerCmd cmd;
+    timer_worker->RecvCmdFromWorker(cmd);
     switch(cmd){
-    case 'i': // idle
+    case MyWorkerCmd::IDLE: // idle
         // 将定时器线程的发送队列分发完毕
-        DispatchMsg(timer_worker->_send);
-        timer_worker->SendCmd(&cmd, sizeof(char));
+        DispatchMsg(timer_worker->GetMsgList());
+        timer_worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
-    case 'q': // quit
+    case MyWorkerCmd::QUIT: // quit
         // TODO...
-        LOG(WARNING) << "Unimplement timer task quit: " << cmd;
+        LOG(WARNING) << "Unimplement timer task quit: " << (char)cmd;
         break;
     default:
-        LOG(WARNING) << "Unknown timer task cmd: " << cmd;
+        LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
         break;
     }
 }
 
-void MyApp::ProcessWorkerEvent(MyWorker* worker) {
-    char cmd = 'y';
-    worker->RecvCmd(&cmd, 1);
+void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
+    MyWorkerCmd cmd;
+    worker->RecvCmdFromWorker(cmd);
     switch(cmd){
-    case 'i': // idle
+    case MyWorkerCmd::IDLE: // idle
         // 将主线程的缓存消息分发完毕
         DispatchMsg(_cache_que);
 
         // 将工作线程的发送队列分发完毕
-        DispatchMsg(worker->_send);
+        DispatchMsg(worker->GetMsgList());
 
         // 将服务的发送队列分发完毕
         DispatchMsg(worker->_context);
@@ -364,11 +364,11 @@ void MyApp::ProcessWorkerEvent(MyWorker* worker) {
         _idle_workers.AddTail(static_cast<MyNode*>(worker));
     
         break;
-    case 'q': // quit
-        LOG(WARNING) << "Unimplement worker quit: " << cmd;
+    case MyWorkerCmd::QUIT: // quit
+        LOG(WARNING) << "Unimplement worker quit: " << (char)cmd;
         break;
     default:
-        LOG(WARNING) << "Unknown worker cmd: " << cmd;
+        LOG(WARNING) << "Unknown worker cmd: " << (char)cmd;
         break;
     }
 }
@@ -380,14 +380,14 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
     {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
         ev_obj->RetEpollEventType(evs[i].events);
-        switch(ev_obj->GetEventType()){
-        case MyEvent::EV_WORKER:
+        switch(ev_obj->GetMyEventType()){
+        case MyEventType::EV_WORKER:
             // 工作线程事件
-            ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));
+            ProcessWorkerEvent(static_cast<MyWorkerCommon*>(ev_obj));
             break;
-        case MyEvent::EV_TIMER:
+        case MyEventType::EV_TIMER:
             // 分发超时消息
-            ProcessTimerEvent(static_cast<MyTimerWorker*>(ev_obj));
+            ProcessTimerEvent(static_cast<MyWorkerTimer*>(ev_obj));
             break;
         default:
             LOG(WARNING) << "Unknown event";
