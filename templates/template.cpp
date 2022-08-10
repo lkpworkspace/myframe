@@ -10,7 +10,7 @@
 class @template_name@Actor : public MyActor
 {
 public:
-    /* 服务模块加载完毕后调用 */
+    /* actor模块加载完毕后调用 */
     int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
         return Send("@template_name@.@template_name@1", std::make_shared<MyTextMsg>("hello,world"));
@@ -18,10 +18,10 @@ public:
 
     void CB(std::shared_ptr<MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
-            /* 获得文本消息， 打印 源服务地址 目的服务地址 消息内容*/
+            /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
             auto tmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
             std::cout << "----> from \"" << tmsg->GetSrc() << "\" to \"" 
-                << GetServiceName() << "\": " << tmsg->GetData() << std::endl;
+                << GetActorName() << "\": " << tmsg->GetData() << std::endl;
         }
     }
 };
@@ -40,8 +40,8 @@ public:
     }
 };
 
-/* 创建服务实例函数 */
-extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& service_name) {
+/* 创建actor实例函数 */
+extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
     return std::make_shared<@template_name@Actor>();
 }
 

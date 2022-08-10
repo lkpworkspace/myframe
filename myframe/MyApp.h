@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 #include <mutex>
+#include <list>
 
-#include "MyCommon.h"
-#include "MyList.h"
+#include <jsoncpp/json/json.h>
 
 struct epoll_event;
 class MyMsg;
@@ -35,13 +35,13 @@ public:
 
     bool CreateContext(
         const std::string& mod_name, 
-        const std::string& service_name, 
+        const std::string& actor_name, 
         const std::string& instance_name, 
         const std::string& params);
     bool CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params);
 
     MyContext* GetContext(uint32_t handle);
-    MyContext* GetContext(std::string& service_name);
+    MyContext* GetContext(std::string& actor_name);
 
     MyWorkerTimer* GetTimerWorker() { return _timer_worker; }
 
@@ -54,14 +54,14 @@ public: // for ut
     bool LoadModsFromConf(const std::string& path);
 
 private:
-    bool LoadServiceFromLib(
+    bool LoadActorFromLib(
         const Json::Value& root, 
-        const Json::Value& service_list, 
-        const std::string& service_name);
-    bool LoadServiceFromClass(
+        const Json::Value& actor_list, 
+        const std::string& actor_name);
+    bool LoadActorFromClass(
         const Json::Value& root, 
-        const Json::Value& service_list, 
-        const std::string& service_name);
+        const Json::Value& actor_list, 
+        const std::string& actor_name);
     bool LoadWorkerFromLib(
         const Json::Value& root, 
         const Json::Value& worker_list, 
@@ -75,7 +75,7 @@ private:
     void StartCommonWorker(int worker_count);
     void StartTimerWorker();
 
-    /// 获取有消息的服务
+    /// 获取有消息的actor
     MyContext* GetContextWithMsg();
     /// 通知执行事件
     void CheckStopWorkers();

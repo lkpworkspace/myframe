@@ -1,5 +1,4 @@
 #pragma once
-#include "MyCommon.h"
 
 enum class MyEventType : int {
     EV_WORKER,

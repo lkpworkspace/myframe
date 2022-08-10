@@ -89,23 +89,23 @@ MyWorker* MyModLib::CreateWorkerInst(
     return worker;
 }
 
-std::shared_ptr<MyActor> MyModLib::CreateActorInst(const std::string& mod_name, const std::string& service_name) {
+std::shared_ptr<MyActor> MyModLib::CreateActorInst(const std::string& mod_name, const std::string& actor_name) {
     pthread_rwlock_rdlock(&_rw);
     if(_mods.find(mod_name) == _mods.end()) {
-        LOG(ERROR) << "Find " << mod_name << "." << service_name << " failed";
+        LOG(ERROR) << "Find " << mod_name << "." << actor_name << " failed";
         return nullptr;
     }
     void* handle = _mods[mod_name];
     my_actor_create_func create = (my_actor_create_func)dlsym(handle, "my_actor_create");
     if(nullptr == create){
         pthread_rwlock_unlock(&_rw);
-        LOG(ERROR) << "Load " << mod_name << "." << service_name << " module my_actor_create function failed";
+        LOG(ERROR) << "Load " << mod_name << "." << actor_name << " module my_actor_create function failed";
         return nullptr;
     }
-    auto mod = create(service_name);
+    auto mod = create(actor_name);
     mod->_is_from_lib = true;
     mod->m_mod_name = mod_name;
-    mod->m_service_name = service_name;
+    mod->m_actor_name = actor_name;
     pthread_rwlock_unlock(&_rw);
     return mod;
 }

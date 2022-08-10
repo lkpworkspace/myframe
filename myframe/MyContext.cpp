@@ -16,7 +16,7 @@ MyContext::MyContext(std::shared_ptr<MyActor>& mod) :
 
 int MyContext::SendMsg(std::shared_ptr<MyMsg>& msg) {
     if(nullptr == msg) return -1;
-    LOG(INFO) << "Service \"" << _mod->GetServiceName() << "\" send message type: " << msg->GetMsgType();
+    LOG(INFO) << "actor \"" << _mod->GetActorName() << "\" send message type: " << msg->GetMsgType();
     _send.emplace_back(msg);
     return 0;
 }

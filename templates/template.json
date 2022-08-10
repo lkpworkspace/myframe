@@ -1,7 +1,7 @@
 {
     "type":"library",
     "lib":"lib@template_name@.so",
-    "service":{
+    "actor":{
         "@template_name@":[
             {
                 "instance_name":"@template_name@1",

@@ -13,7 +13,13 @@ add_executable(myframe_main ${MYFRAME_MAIN})
 target_link_libraries(myframe_main myframe)
 
 ### install
-FILE(GLOB header_files "*.h")
+FILE(GLOB header_files 
+    "MyMsg.h",
+    "MyActor.h",
+    "MyEvent.h",
+    "MyWorker.h",
+    "MyApp.h",
+)
 INSTALL(FILES 
     ${header_files}
     PERMISSIONS

@@ -24,12 +24,12 @@ bool MyModManager::RegWorker(const std::string& class_name, std::function<MyWork
     return true;
 }
 
-std::shared_ptr<MyActor> MyModManager::CreateActorInst(const std::string& mod_or_class_name, const std::string& service_name) {
+std::shared_ptr<MyActor> MyModManager::CreateActorInst(const std::string& mod_or_class_name, const std::string& actor_name) {
     if (_lib_mods.IsLoad(mod_or_class_name)) {
-        return _lib_mods.CreateActorInst(mod_or_class_name, service_name);
+        return _lib_mods.CreateActorInst(mod_or_class_name, actor_name);
     }
     if (_class_actors.find(mod_or_class_name) != _class_actors.end()) {
-        return _class_actors[mod_or_class_name](service_name);
+        return _class_actors[mod_or_class_name](actor_name);
     }
     return nullptr;
 }

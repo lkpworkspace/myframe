@@ -29,6 +29,6 @@ private:
     void Idle();
     /// 运行时消息队列
     std::list<std::shared_ptr<MyMsg>> _que;
-    //// 当前执行服务的指针
+    //// 当前执行actor的指针
     MyContext* _context;
 };

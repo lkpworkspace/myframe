@@ -31,15 +31,15 @@ public:
     bool LoadMod(const std::string& dlpath);
     
     /**
-     * @brief 创建服务实例
+     * @brief 创建actor实例
      * 
      * @param mod_name eg: libtest.so
-     * @param service_name eg: /my/test
+     * @param actor_name eg: /my/test
      * @return std::shared_ptr<MyActor> 
      */
     std::shared_ptr<MyActor> CreateActorInst(
         const std::string& mod_name,
-        const std::string& service_name);
+        const std::string& actor_name);
 
     /**
      * @brief 创建Worker实例

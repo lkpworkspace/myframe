@@ -4,8 +4,6 @@
 
 #include <iostream>
 
-#include <jsoncpp/json/json.h>
-
 #include "MyApp.h"
 #include "MyCUtils.h"
 #include "MyFlags.h"
@@ -49,21 +47,21 @@ bool MyApp::Init() {
     Start(FLAGS_worker_count);
 
     /// load actor and worker
-    if (!LoadModsFromConf(FLAGS_service_desc_path)) {
+    if (!LoadModsFromConf(FLAGS_actor_desc_path)) {
         return false;
     }
     return true;
 }
 
 bool MyApp::LoadModsFromConf(const std::string& path) {
-    auto service_conf_list = MyCommon::GetDirFiles(path);
-    LOG(INFO) << "Search " << service_conf_list.size() << " service conf";
-    if (service_conf_list.size() <= 0) {
-        LOG(WARNING) << "Search service failed, exit";
+    auto actor_conf_list = MyCommon::GetDirFiles(path);
+    LOG(INFO) << "Search " << actor_conf_list.size() << " actor conf";
+    if (actor_conf_list.size() <= 0) {
+        LOG(WARNING) << "Search actor failed, exit";
         return false;
     }
     bool res = false;
-    for (const auto& it : service_conf_list) {
+    for (const auto& it : actor_conf_list) {
         LOG(INFO) << "Load " << it << " ...";
         auto root = MyCommon::LoadJsonFromFile(it);
         if (root.isNull()) {
@@ -75,16 +73,16 @@ bool MyApp::LoadModsFromConf(const std::string& path) {
             continue;
         }
         const auto& type = root["type"].asString();
-        // load service
-        if (root.isMember("service") && root["service"].isObject()) {
-            const auto& service_list = root["service"];
-            Json::Value::Members service_name_list = service_list.getMemberNames();
-            for (auto inst_name_it = service_name_list.begin(); inst_name_it != service_name_list.end(); ++inst_name_it) {
-                LOG(INFO) << "Load service " << *inst_name_it << " ...";
+        // load actor
+        if (root.isMember("actor") && root["actor"].isObject()) {
+            const auto& actor_list = root["actor"];
+            Json::Value::Members actor_name_list = actor_list.getMemberNames();
+            for (auto inst_name_it = actor_name_list.begin(); inst_name_it != actor_name_list.end(); ++inst_name_it) {
+                LOG(INFO) << "Load actor " << *inst_name_it << " ...";
                 if (type == "library") {
-                    res |= LoadServiceFromLib(root, service_list, *inst_name_it);
+                    res |= LoadActorFromLib(root, actor_list, *inst_name_it);
                 } else if (type == "class") {
-                    res |= LoadServiceFromClass(root, service_list, *inst_name_it);
+                    res |= LoadActorFromClass(root, actor_list, *inst_name_it);
                 } else {
                     LOG(ERROR) << "Unknown type " << type;
                 }
@@ -109,58 +107,58 @@ bool MyApp::LoadModsFromConf(const std::string& path) {
     return res;
 }
 
-bool MyApp::LoadServiceFromLib(
+bool MyApp::LoadActorFromLib(
     const Json::Value& root, 
-    const Json::Value& service_list, 
-    const std::string& service_name) {
+    const Json::Value& actor_list, 
+    const std::string& actor_name) {
     if (!root.isMember("lib") || !root["lib"].isString()) {
-        LOG(ERROR) << "service " << service_name <<" key \"lib\": no key or not string, skip";
+        LOG(ERROR) << "actor " << actor_name <<" key \"lib\": no key or not string, skip";
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_service_lib_path + lib_name)) {
+    if (!_mods->LoadMod(FLAGS_actor_lib_path + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
     
-    const auto& insts = service_list[service_name];
+    const auto& insts = actor_list[actor_name];
     bool res = false;
     for (const auto& inst : insts) {
-        LOG(INFO) << "create service instance \"" << service_name << "\": " << inst.toStyledString();
+        LOG(INFO) << "create actor instance \"" << actor_name << "\": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
-            LOG(ERROR) << "service " << service_name <<" key \"instance_name\": no key, skip";
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_name\": no key, skip";
             return false;
         }
         if (!inst.isMember("instance_params")) {
-            LOG(ERROR) << "service " << service_name <<" key \"instance_params\": no key, skip";
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_params\": no key, skip";
             return false;
         }
         res |= CreateContext(
-            lib_name, service_name, 
+            lib_name, actor_name, 
             inst["instance_name"].asString(), 
             inst["instance_params"].asString());
     }
     return res;
 }
 
-bool MyApp::LoadServiceFromClass(
+bool MyApp::LoadActorFromClass(
     const Json::Value& root, 
-    const Json::Value& service_list, 
-    const std::string& service_name) {
-    const auto& insts = service_list[service_name];
+    const Json::Value& actor_list, 
+    const std::string& actor_name) {
+    const auto& insts = actor_list[actor_name];
     bool res = false;
     for (const auto& inst : insts) {
         LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
-            LOG(ERROR) << "service " << service_name <<" key \"instance_name\": no key, skip";
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_name\": no key, skip";
             return false;
         }
         if (!inst.isMember("instance_params")) {
-            LOG(ERROR) << "service " << service_name <<" key \"instance_params\": no key, skip";
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_params\": no key, skip";
             return false;
         }
         res |= CreateContext(
-            "class", service_name, 
+            "class", actor_name, 
             inst["instance_name"].asString(), 
             inst["instance_params"].asString());
     }
@@ -176,7 +174,7 @@ bool MyApp::LoadWorkerFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_service_lib_path + lib_name)) {
+    if (!_mods->LoadMod(FLAGS_actor_lib_path + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -186,7 +184,7 @@ bool MyApp::LoadWorkerFromLib(
     for (const auto& inst : insts) {
         LOG(INFO) << "create worker instance \"" << worker_name << "\": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
-            LOG(ERROR) << "service " << worker_name <<" key \"instance_name\": no key, skip";
+            LOG(ERROR) << "actor " << worker_name <<" key \"instance_name\": no key, skip";
             return false;
         }
         MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
@@ -220,22 +218,22 @@ bool MyApp::LoadWorkerFromClass(
 }
 
 /**
- * 创建一个新的服务:
+ * 创建一个新的actor:
  *      1. 从MyModManager中获得对应模块对象
  *      2. 生成MyContext
  *      3. 将模块对象加入MyContext对象
  *      4. 将MyContext加入Context数组
  *      3. 注册句柄
- *      4. 初始化服务
+ *      4. 初始化actor
 */
 bool MyApp::CreateContext(
     const std::string& mod_name, 
-    const std::string& service_name, 
+    const std::string& actor_name, 
     const std::string& instance_name, 
     const std::string& params) {
-    auto mod_inst = _mods->CreateActorInst(mod_name, service_name);
+    auto mod_inst = _mods->CreateActorInst(mod_name, actor_name);
     if(mod_inst == nullptr) {
-        LOG(ERROR) << "Create mod " << mod_name << "." << service_name << " failed";
+        LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
         return false;
     }
     mod_inst->m_instance_name = instance_name;
@@ -246,7 +244,7 @@ bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string&
     MyContext* ctx = new MyContext(mod_inst);
     _handle_mgr->RegHandle(ctx);
     ctx->Init(params.c_str());
-    // 初始化之后, 手动将服务中发送消息队列分发出去
+    // 初始化之后, 手动将actor中发送消息队列分发出去
     DispatchMsg(ctx);
     return true;
 }
@@ -318,8 +316,8 @@ MyContext* MyApp::GetContext(uint32_t handle) {
     return _handle_mgr->GetContext(handle);
 }
 
-MyContext* MyApp::GetContext(std::string& service_name) {
-    return _handle_mgr->GetContext(service_name);
+MyContext* MyApp::GetContext(std::string& actor_name) {
+    return _handle_mgr->GetContext(actor_name);
 }
 
 MyContext* MyApp::GetContextWithMsg() {
@@ -348,7 +346,7 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
     msg_list.clear();
 }
 
-// 将获得的消息分发给其他服务
+// 将获得的消息分发给其他actor
 void MyApp::DispatchMsg(MyContext* context) {
     if(nullptr == context) return;
     context->SetWaitFlag();
@@ -426,10 +424,10 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
         // 将工作线程的发送队列分发完毕
         DispatchMsg(worker->GetMsgList());
 
-        // 将服务的发送队列分发完毕
+        // 将actor的发送队列分发完毕
         DispatchMsg(worker->_context);
 
-        // 将工作线程中的服务状态设置为全局状态
+        // 将工作线程中的actor状态设置为全局状态
         // 将线程加入空闲队列
         worker->Idle();
         _idle_workers.emplace_back(dynamic_cast<MyWorker*>(worker));
@@ -475,7 +473,7 @@ int MyApp::Exec() {
     evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
     
     while(_cur_worker_count) {
-        /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的服务处理
+        /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
         CheckStopWorkers();
         /// 等待事件
         if(0 > (ev_count = epoll_wait(_epoll_fd, evs, max_ev_count, time_wait))) {

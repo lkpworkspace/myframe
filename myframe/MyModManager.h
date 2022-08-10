@@ -13,7 +13,7 @@ public:
 
     bool RegWorker(const std::string& class_name, std::function<MyWorker*(const std::string&)> func);
 
-    std::shared_ptr<MyActor> CreateActorInst(const std::string& mod_or_class_name, const std::string& service_name);
+    std::shared_ptr<MyActor> CreateActorInst(const std::string& mod_or_class_name, const std::string& actor_name);
 
     MyWorker* CreateWorkerInst(const std::string& mod_or_class_name, const std::string& worker_name);
 

@@ -1,7 +1,7 @@
 {
     "type":"library",
     "lib":"libtest_timer.so",
-    "service":{
+    "actor":{
         "test_timer":[
             {
                 "instance_name":"echo_per_one_second",

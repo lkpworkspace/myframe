@@ -22,11 +22,11 @@ public:
             /* 设置下一次超时时间 100 * 10 ms */
             Timeout(100);
             std::cout << "----> from " << msg->GetSrc() << " to " 
-                << GetServiceName() << ": " << "timeout" << std::endl;
+                << GetActorName() << ": " << "timeout" << std::endl;
         }
     }
 };
 
-extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& service_name) {
+extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
     return std::make_shared<MyTestTimer>();
 }

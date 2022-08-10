@@ -7,8 +7,6 @@ bin/
 
 build/
 
-CXXService/
-
 *.user
 
 .vscode

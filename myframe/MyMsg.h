@@ -2,8 +2,6 @@
 #include <cstdint>
 #include <string>
 
-#include "MyCommon.h"
-
 class MyMsg
 {
 public:

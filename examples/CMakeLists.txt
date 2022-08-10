@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
-### service
+### Actor
 add_library(demo SHARED MyDemo.cpp)
 add_library(test_timer SHARED MyTestTimer.cpp)
 
@@ -12,7 +12,7 @@ INSTALL(FILES
     OWNER_READ
     GROUP_READ
     WORLD_READ
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/service
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/actor
 )
 INSTALL(TARGETS demo
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib

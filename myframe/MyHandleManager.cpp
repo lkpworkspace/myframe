@@ -39,10 +39,10 @@ uint32_t MyHandleManager::RegHandle(MyContext* ctx)
 
                 handle |= m_harbor;
                 ctx->SetHandle(handle);
-                if(m_named_ctxs.find(ctx->GetModule()->GetServiceName()) == m_named_ctxs.end()){
-                    m_named_ctxs[ctx->GetModule()->GetServiceName()] = handle;
+                if(m_named_ctxs.find(ctx->GetModule()->GetActorName()) == m_named_ctxs.end()){
+                    m_named_ctxs[ctx->GetModule()->GetActorName()] = handle;
                 }else{
-                    LOG(WARNING) << "reg the same service name: " << ctx->GetModule()->GetServiceName();
+                    LOG(WARNING) << "reg the same actor name: " << ctx->GetModule()->GetActorName();
                 }
                 m_ctx_count++;
                 pthread_rwlock_unlock(&m_rw);
@@ -65,12 +65,12 @@ uint32_t MyHandleManager::RegHandle(MyContext* ctx)
     return 0;
 }
 
-MyContext* MyHandleManager::GetContext(const std::string& service_name)
+MyContext* MyHandleManager::GetContext(const std::string& actor_name)
 {
     uint32_t handle = 0x00;
     pthread_rwlock_rdlock(&m_rw);
-    if(m_named_ctxs.find(service_name) != m_named_ctxs.end()){
-        handle = m_named_ctxs[service_name];
+    if(m_named_ctxs.find(actor_name) != m_named_ctxs.end()){
+        handle = m_named_ctxs[actor_name];
         pthread_rwlock_unlock(&m_rw);
         return GetContext(handle);
     }

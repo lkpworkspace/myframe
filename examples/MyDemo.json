@@ -1,7 +1,7 @@
 {
     "type":"library",
     "lib":"libdemo.so",
-    "service":{
+    "actor":{
         "demo":[
             {
                 "instance_name":"echo_hello_world",

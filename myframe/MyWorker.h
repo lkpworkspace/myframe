@@ -5,8 +5,9 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <list>
+#include <memory>
 
-#include "MyCommon.h"
 #include "MyEvent.h"
 #include "MyMsg.h"
 

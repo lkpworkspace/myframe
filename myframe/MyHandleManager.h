@@ -16,35 +16,35 @@ public:
     MyHandleManager();
     virtual ~MyHandleManager();
 
-    /* 给服务分配句柄，并进行管理 */
+    /* 给actor分配句柄，并进行管理 */
     uint32_t RegHandle(MyContext* ctx);
     
-    /* 获得句柄对应的服务 */
+    /* 获得句柄对应的actor */
     MyContext* GetContext(uint32_t handle);
 
-    /* 获得服务名对应的服务 */
-    MyContext* GetContext(const std::string& service_name);
+    /* 获得actor名对应的actor */
+    MyContext* GetContext(const std::string& actor_name);
     
-    /* 获得一个待处理的服务 */
+    /* 获得一个待处理的actor */
     MyContext* GetContextWithMsg();
 
-    /* 将有消息的服务放入链表 */
+    /* 将有消息的actor放入链表 */
     void PushContext(MyContext* ctx);
 
 private:
     /// 暂时没用
     uint32_t            m_harbor;
-    /// 当前服务数组大小
+    /// 当前actor数组大小
     int                 m_slot_size;
-    /// 当前要处理消息的服务下标
+    /// 当前要处理消息的actor下标
     uint32_t            m_slot_idx;
-    /// 服务数组
+    /// actor数组
     MyContext**         m_slot;
-    /// 当前注册服务数量
+    /// 当前注册actor数量
     uint32_t            m_ctx_count;
     /// 分配的句柄
     uint32_t            m_handle_index;
-    /// 待处理服务链表
+    /// 待处理actor链表
     MyList              m_msg_list;
     /// 读写锁
     pthread_rwlock_t    m_rw;
