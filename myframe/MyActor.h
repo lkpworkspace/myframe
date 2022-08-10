@@ -1,5 +1,4 @@
-#ifndef __MYMODULE_H__
-#define __MYMODULE_H__
+#pragma once
 #include <stdint.h>
 #include <stddef.h>
 
@@ -18,14 +17,14 @@ class MyContext;
  * 编写的服务都需要继承该类，并重写Init()/CB()方法
  * 
  */
-class MyModule
+class MyActor
 {
     friend class MyApp;
     friend class MyContext;
     friend class MyModLib;
 public:
-    MyModule();
-    virtual ~MyModule();
+    MyActor();
+    virtual ~MyActor();
 
     /**
      * Init() - 服务初始化调用的初始化函数
@@ -93,7 +92,5 @@ private:
 };
 
 extern "C" {
-    typedef std::shared_ptr<MyModule> (*my_mod_create_func)(const std::string&);
+    typedef std::shared_ptr<MyActor> (*my_actor_create_func)(const std::string&);
 } // extern "C"
-
-#endif

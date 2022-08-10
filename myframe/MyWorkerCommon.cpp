@@ -5,6 +5,7 @@
 
 MyWorkerCommon::MyWorkerCommon() :
     _context(nullptr) {
+    SetInstName("MyWorkerCommon");
 }
 
 MyWorkerCommon::~MyWorkerCommon() {

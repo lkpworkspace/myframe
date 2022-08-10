@@ -11,7 +11,7 @@
 #include "MyFlags.h"
 #include "MyLog.h"
 #include "MyMsg.h"
-#include "MyModule.h"
+#include "MyActor.h"
 #include "MyContext.h"
 #include "MyHandleManager.h"
 #include "MyModManager.h"
@@ -49,7 +49,7 @@ bool MyApp::Init() {
     /// start worker
     Start(FLAGS_worker_count);
 
-    /// load modules
+    /// load actor and worker
     if (!LoadModsFromConf(FLAGS_service_desc_path)) {
         return false;
     }
@@ -91,7 +91,21 @@ bool MyApp::LoadModsFromConf(const std::string& path) {
                 }
             }
         }
-        // TODO worker
+        // worker
+        if (root.isMember("worker") && root["worker"].isObject()) {
+            const auto& worker_list = root["worker"];
+            Json::Value::Members worker_name_list = worker_list.getMemberNames();
+            for (auto inst_name_it = worker_name_list.begin(); inst_name_it != worker_name_list.end(); ++inst_name_it) {
+                LOG(INFO) << "Load worker " << *inst_name_it << " ...";
+                if (type == "library") {
+                    res |= LoadWorkerFromLib(root, worker_list, *inst_name_it);
+                } else if (type == "class") {
+                    res |= LoadWorkerFromClass(root, worker_list, *inst_name_it);
+                } else {
+                    LOG(ERROR) << "Unknown type " << type;
+                }
+            }
+        }
     }
     return res;
 }
@@ -113,7 +127,7 @@ bool MyApp::LoadServiceFromLib(
     const auto& insts = service_list[service_name];
     bool res = false;
     for (const auto& inst : insts) {
-        LOG(INFO) << "create instance " << service_name << ": " << inst.toStyledString();
+        LOG(INFO) << "create service instance \"" << service_name << "\": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
             LOG(ERROR) << "service " << service_name <<" key \"instance_name\": no key, skip";
             return false;
@@ -137,7 +151,7 @@ bool MyApp::LoadServiceFromClass(
     const auto& insts = service_list[service_name];
     bool res = false;
     for (const auto& inst : insts) {
-        LOG(INFO) << "create instance class" << ": " << inst.toStyledString();
+        LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
             LOG(ERROR) << "service " << service_name <<" key \"instance_name\": no key, skip";
             return false;
@@ -150,6 +164,58 @@ bool MyApp::LoadServiceFromClass(
             "class", service_name, 
             inst["instance_name"].asString(), 
             inst["instance_params"].asString());
+    }
+    return res;
+}
+
+bool MyApp::LoadWorkerFromLib(
+    const Json::Value& root, 
+    const Json::Value& worker_list, 
+    const std::string& worker_name) {
+    if (!root.isMember("lib") || !root["lib"].isString()) {
+        LOG(ERROR) << "worker \"" << worker_name << "\" key \"lib\": no key or not string, skip";
+        return false;
+    }
+    const auto& lib_name = root["lib"].asString();
+    if (!_mods->LoadMod(FLAGS_service_lib_path + lib_name)) {
+        LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
+        return false;
+    }
+    
+    const auto& insts = worker_list[worker_name];
+    bool res = false;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create worker instance \"" << worker_name << "\": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "service " << worker_name <<" key \"instance_name\": no key, skip";
+            return false;
+        }
+        MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
+        worker->SetInstName(inst["instance_name"].asString());
+        worker->Start();
+        AddEvent(static_cast<MyEvent*>(worker));
+        _cur_worker_count++;
+    }
+    return res;
+}
+
+bool MyApp::LoadWorkerFromClass(
+    const Json::Value& root, 
+    const Json::Value& worker_list, 
+    const std::string& worker_name) {
+    const auto& insts = worker_list[worker_name];
+    bool res = true;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "worker \"" << worker_name << "\" key \"instance_name\": no key, skip";
+            return false;
+        }
+        MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
+        worker->SetInstName(inst["instance_name"].asString());
+        worker->Start();
+        AddEvent(static_cast<MyEvent*>(worker));
+        _cur_worker_count++;
     }
     return res;
 }
@@ -168,7 +234,7 @@ bool MyApp::CreateContext(
     const std::string& service_name, 
     const std::string& instance_name, 
     const std::string& params) {
-    auto mod_inst = _mods->CreateModInst(mod_name, service_name);
+    auto mod_inst = _mods->CreateActorInst(mod_name, service_name);
     if(mod_inst == nullptr) {
         LOG(ERROR) << "Create mod " << mod_name << "." << service_name << " failed";
         return false;
@@ -177,7 +243,7 @@ bool MyApp::CreateContext(
     return CreateContext(mod_inst, params);
 }
 
-bool MyApp::CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string& params) {
+bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params) {
     MyContext* ctx = new MyContext(mod_inst);
     _handle_mgr->RegHandle(ctx);
     ctx->Init(params.c_str());
@@ -344,6 +410,24 @@ void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
     }
 }
 
+void MyApp::ProcessUserEvent(MyWorker *worker) {
+    MyWorkerCmd cmd;
+    worker->RecvCmdFromWorker(cmd);
+    switch(cmd){
+    case MyWorkerCmd::IDLE: // idle
+        // 将用户线程的发送队列分发完毕
+        DispatchMsg(worker->GetMsgList());
+        worker->SendCmdToWorker(MyWorkerCmd::RUN);
+        break;
+    case MyWorkerCmd::QUIT: // quit
+        LOG(WARNING) << "Unimplement worker task quit: " << (char)cmd;
+        break;
+    default:
+        LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
+        break;
+    }
+}
+
 void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);
@@ -375,9 +459,7 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
 
 void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
     MyEvent* ev_obj;
-
-    for(int i = 0; i < ev_count; ++i)
-    {
+    for(int i = 0; i < ev_count; ++i) {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
         ev_obj->RetEpollEventType(evs[i].events);
         switch(ev_obj->GetMyEventType()){
@@ -388,6 +470,9 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
         case MyEventType::EV_TIMER:
             // 分发超时消息
             ProcessTimerEvent(static_cast<MyWorkerTimer*>(ev_obj));
+            break;
+        case MyEventType::EV_USER:
+            ProcessUserEvent(static_cast<MyWorker*>(ev_obj));
             break;
         default:
             LOG(WARNING) << "Unknown event";

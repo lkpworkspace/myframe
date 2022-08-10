@@ -7,7 +7,7 @@
 #include "MyList.h"
 
 class MyMsg;
-class MyModule;
+class MyActor;
 class MyWorkerCommon;
 class MyContext : public MyNode
 {
@@ -15,7 +15,7 @@ class MyContext : public MyNode
     friend class MyWorkerCommon;
     friend class MyApp;
 public:
-    MyContext(std::shared_ptr<MyModule>& mod);
+    MyContext(std::shared_ptr<MyActor>& mod);
     virtual ~MyContext(){}
 
     int Init(const char *param);
@@ -50,7 +50,7 @@ public:
 
     bool IsInRunQueue() { return _in_run_que; }
 
-    std::shared_ptr<MyModule> GetModule() { return _mod; }
+    std::shared_ptr<MyActor> GetModule() { return _mod; }
 
 private:
     void FilterArgs(int type, int* session, void** data, size_t* sz);
@@ -68,7 +68,7 @@ private:
     bool                _in_run_que;
     /* 服务分配的session ID */
     int                 _session_id;
-    std::shared_ptr<MyModule> _mod;
+    std::shared_ptr<MyActor> _mod;
 
 };
 

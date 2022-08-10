@@ -6,7 +6,7 @@
 #include "MyCUtils.h"
 #include "MyApp.h"
 #include "MyMsg.h"
-#include "MyModule.h"
+#include "MyActor.h"
 
 MyTimerManager::MyTimerManager()
 {
@@ -159,6 +159,7 @@ std::list<std::shared_ptr<MyMsg>>& MyTimerManager::Updatetime()
 //////////////////////////////////////////////////////
 
 MyWorkerTimer::MyWorkerTimer() {
+    SetInstName("MyWorkerTimer");
     SetObjName("MyWorkerTimer");
     SetInherits("MyWorker");
 }

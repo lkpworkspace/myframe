@@ -41,6 +41,9 @@ public:
     void PushMsg(std::shared_ptr<MyMsg> msg);
     std::list<std::shared_ptr<MyMsg>>& GetMsgList() { return _send; }
 
+    void SetInstName(const std::string& name) { _inst_name = name; }
+    std::string& GetInstName() { return _inst_name; }
+
 protected:
     int DispatchMsg();
     int RecvCmdFromMain(MyWorkerCmd& cmd);
@@ -51,6 +54,7 @@ private:
     bool CreateSockPair();
     void CloseSockPair();
 
+    std::string _inst_name;
     /// idx: 0 used by MyWorkerCommon, 1 used by MyApp
     int _sockpair[2];
     /// 发送消息队列
@@ -60,3 +64,7 @@ private:
     std::atomic_bool _runing;
 
 };
+
+extern "C" {
+    typedef MyWorker* (*my_worker_create_func)(const std::string&);
+} // extern "C"

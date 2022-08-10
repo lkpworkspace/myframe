@@ -19,10 +19,12 @@ public:
     virtual ~MyEvent() {}
 
     /* 事件类型 */
-    virtual MyEventType GetMyEventType() = 0;
+    virtual MyEventType GetMyEventType() { 
+        return MyEventType::EV_USER; 
+    }
 
     /* 获得当前事件的文件描述符 */
-    virtual int GetFd(){ return -1; }
+    virtual int GetFd() = 0;
 
     /**
      * 监听的是文件描述符的写事件还是读事件

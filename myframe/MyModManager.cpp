@@ -6,21 +6,40 @@ bool MyModManager::LoadMod(const std::string& dl_path) {
     return _lib_mods.LoadMod(dl_path);
 }
 
-bool MyModManager::RegMod(const std::string& class_name, std::function<std::shared_ptr<MyModule>(const std::string&)> func) {
-    if (_class_mods.find(class_name) != _class_mods.end()) {
+bool MyModManager::RegActor(const std::string& class_name, std::function<std::shared_ptr<MyActor>(const std::string&)> func) {
+    if (_class_actors.find(class_name) != _class_actors.end()) {
         LOG(WARNING) << "reg " << class_name << " failed, " << " has exist";
         return false;
     }
-    _class_mods[class_name] = func;
+    _class_actors[class_name] = func;
     return true;
 }
 
-std::shared_ptr<MyModule> MyModManager::CreateModInst(const std::string& mod_or_class_name, const std::string& service_name) {
-    if (_lib_mods.IsLoad(mod_or_class_name)) {
-        return _lib_mods.CreateModInst(mod_or_class_name, service_name);
+bool MyModManager::RegWorker(const std::string& class_name, std::function<MyWorker*(const std::string&)> func) {
+    if (_class_workers.find(class_name) != _class_workers.end()) {
+        LOG(WARNING) << "reg " << class_name << " failed, " << " has exist";
+        return false;
     }
-    if (_class_mods.find(mod_or_class_name) != _class_mods.end()) {
-        return _class_mods[mod_or_class_name](service_name);
+    _class_workers[class_name] = func;
+    return true;
+}
+
+std::shared_ptr<MyActor> MyModManager::CreateActorInst(const std::string& mod_or_class_name, const std::string& service_name) {
+    if (_lib_mods.IsLoad(mod_or_class_name)) {
+        return _lib_mods.CreateActorInst(mod_or_class_name, service_name);
+    }
+    if (_class_actors.find(mod_or_class_name) != _class_actors.end()) {
+        return _class_actors[mod_or_class_name](service_name);
+    }
+    return nullptr;
+}
+
+MyWorker* MyModManager::CreateWorkerInst(const std::string& mod_or_class_name, const std::string& worker_name) {
+    if (_lib_mods.IsLoad(mod_or_class_name)) {
+        return _lib_mods.CreateWorkerInst(mod_or_class_name, worker_name);
+    }
+    if (_class_workers.find(mod_or_class_name) != _class_workers.end()) {
+        return _class_workers[mod_or_class_name](worker_name);
     }
     return nullptr;
 }

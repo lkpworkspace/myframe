@@ -1,31 +1,31 @@
-#include "MyModule.h"
+#include "MyActor.h"
 #include "MyContext.h"
 #include "MyWorkerTimer.h"
 #include "MyApp.h"
 
-MyModule::MyModule() : 
+MyActor::MyActor() : 
     m_ctx(nullptr) {
 }
 
-MyModule::~MyModule()
+MyActor::~MyActor()
 {}
 
-int MyModule::Send(std::shared_ptr<MyMsg> msg) {
+int MyActor::Send(std::shared_ptr<MyMsg> msg) {
     return m_ctx->SendMsg(msg);
 }
 
-uint32_t MyModule::GetHandle() {
+uint32_t MyActor::GetHandle() {
     return m_ctx->GetHandle();
 }
 
-std::string MyModule::GetServiceName() {
+std::string MyActor::GetServiceName() {
     return m_service_name + "." + m_instance_name;
 }
 
-int MyModule::Timeout(int time, int session) {
+int MyActor::Timeout(int time, int session) {
     return MyApp::Inst()->GetTimerWorker()->SetTimeout(GetHandle(), time, session);
 }
 
-void MyModule::SetContext(MyContext* c) {
+void MyActor::SetContext(MyContext* c) {
     m_ctx = c;
 }

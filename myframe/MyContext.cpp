@@ -3,10 +3,10 @@
 #include <assert.h>
 
 #include "MyLog.h"
-#include "MyModule.h"
+#include "MyActor.h"
 #include "MyMsg.h"
 
-MyContext::MyContext(std::shared_ptr<MyModule>& mod) :
+MyContext::MyContext(std::shared_ptr<MyActor>& mod) :
     _mod(mod),
     _handle(0),
     _in_worker(false),

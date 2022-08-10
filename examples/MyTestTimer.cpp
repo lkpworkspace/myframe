@@ -1,10 +1,10 @@
 #include <iostream>
 #include <string.h>
 
-#include "myframe/MyModule.h"
+#include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
-class MyTestTimer : public MyModule
+class MyTestTimer : public MyActor
 {
 public:
     MyTestTimer(){}
@@ -37,6 +37,6 @@ public:
     }
 };
 
-extern "C" std::shared_ptr<MyModule> my_mod_create(const std::string& service_name) {
+extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& service_name) {
     return std::make_shared<MyTestTimer>();
 }

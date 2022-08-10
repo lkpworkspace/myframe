@@ -1,14 +1,14 @@
 #include <iostream>
 #include <string.h>
 
-#include "myframe/MyModule.h"
+#include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
 /*
     该服务实现：
         自己给自己发送一条消息
 */
-class MyDemo : public MyModule
+class MyDemo : public MyActor
 {
 public:
     /* 服务模块加载完毕后调用 */
@@ -36,6 +36,6 @@ public:
 };
 
 /* 创建服务模块实例函数 */
-extern "C" std::shared_ptr<MyModule> my_mod_create(const std::string& service_name) {
+extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& service_name) {
     return std::make_shared<MyDemo>();
 }

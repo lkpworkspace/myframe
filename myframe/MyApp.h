@@ -11,7 +11,8 @@ struct epoll_event;
 class MyMsg;
 class MyEvent;
 class MyContext;
-class MyModule;
+class MyActor;
+class MyWorker;
 class MyModManager;
 class MyHandleManager;
 class MyWorkerCommon;
@@ -37,7 +38,7 @@ public:
         const std::string& service_name, 
         const std::string& instance_name, 
         const std::string& params);
-    bool CreateContext(std::shared_ptr<MyModule>& mod_inst, const std::string& params);
+    bool CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params);
 
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& service_name);
@@ -61,6 +62,14 @@ private:
         const Json::Value& root, 
         const Json::Value& service_list, 
         const std::string& service_name);
+    bool LoadWorkerFromLib(
+        const Json::Value& root, 
+        const Json::Value& worker_list, 
+        const std::string& worker_name);
+    bool LoadWorkerFromClass(
+        const Json::Value& root, 
+        const Json::Value& worker_list, 
+        const std::string& worker_name);
     /// worker
     void Start(int worker_count);
     void StartCommonWorker(int worker_count);
@@ -74,8 +83,9 @@ private:
     void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
     void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
-    void ProcessWorkerEvent(MyWorkerCommon *worker);
-    void ProcessTimerEvent(MyWorkerTimer *timer_task);
+    void ProcessWorkerEvent(MyWorkerCommon*);
+    void ProcessTimerEvent(MyWorkerTimer*);
+    void ProcessUserEvent(MyWorker*);
     void HandleSysMsg(std::shared_ptr<MyMsg>& msg);
 
     /// 退出标志

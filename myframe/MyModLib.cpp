@@ -1,9 +1,10 @@
 #include <dlfcn.h>
 
 #include "MyModLib.h"
-#include "MyLog.h"
-#include "MyModule.h"
 #include "MyCUtils.h"
+#include "MyLog.h"
+#include "MyActor.h"
+#include "MyWorker.h"
 
 MyModLib::MyModLib() {
     pthread_rwlock_init(&_rw, NULL);
@@ -68,17 +69,37 @@ bool MyModLib::UnloadMod(const std::string& dlname)
     return true;
 }
 
-std::shared_ptr<MyModule> MyModLib::CreateModInst(const std::string& mod_name, const std::string& service_name) {
+MyWorker* MyModLib::CreateWorkerInst(
+    const std::string& mod_name,
+    const std::string& worker_name) {
+    pthread_rwlock_rdlock(&_rw);
+    if(_mods.find(mod_name) == _mods.end()) {
+        LOG(ERROR) << "Find " << mod_name << "." << worker_name << " failed";
+        return nullptr;
+    }
+    void* handle = _mods[mod_name];
+    my_worker_create_func create = (my_worker_create_func)dlsym(handle, "my_worker_create");
+    if(nullptr == create){
+        pthread_rwlock_unlock(&_rw);
+        LOG(ERROR) << "Load " << mod_name << "." << worker_name << " module my_worker_create function failed";
+        return nullptr;
+    }
+    auto worker = create(worker_name);
+    pthread_rwlock_unlock(&_rw);
+    return worker;
+}
+
+std::shared_ptr<MyActor> MyModLib::CreateActorInst(const std::string& mod_name, const std::string& service_name) {
     pthread_rwlock_rdlock(&_rw);
     if(_mods.find(mod_name) == _mods.end()) {
         LOG(ERROR) << "Find " << mod_name << "." << service_name << " failed";
         return nullptr;
     }
     void* handle = _mods[mod_name];
-    my_mod_create_func create = (my_mod_create_func)dlsym(handle, "my_mod_create");
+    my_actor_create_func create = (my_actor_create_func)dlsym(handle, "my_actor_create");
     if(nullptr == create){
         pthread_rwlock_unlock(&_rw);
-        LOG(ERROR) << "Load " << mod_name << "." << service_name << " module my_mod_create function failed";
+        LOG(ERROR) << "Load " << mod_name << "." << service_name << " module my_actor_create function failed";
         return nullptr;
     }
     auto mod = create(service_name);

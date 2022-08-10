@@ -8,5 +8,12 @@
                 "instance_params":""
             }
         ]
+    },
+    "worker":{
+        "@template_name@":[
+            {
+                "instance_name":"@template_name@1"
+            }
+        ]
     }
 }

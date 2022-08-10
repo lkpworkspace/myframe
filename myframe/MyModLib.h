@@ -4,7 +4,8 @@
 #include <vector>
 #include <pthread.h>
 
-class MyModule;
+class MyActor;
+class MyWorker;
 class MyModLib final
 {
 public:
@@ -30,15 +31,26 @@ public:
     bool LoadMod(const std::string& dlpath);
     
     /**
-     * @brief 创建模块实例
+     * @brief 创建服务实例
      * 
      * @param mod_name eg: libtest.so
      * @param service_name eg: /my/test
-     * @return std::shared_ptr<MyModule> 
+     * @return std::shared_ptr<MyActor> 
      */
-    std::shared_ptr<MyModule> CreateModInst(
+    std::shared_ptr<MyActor> CreateActorInst(
         const std::string& mod_name,
         const std::string& service_name);
+
+    /**
+     * @brief 创建Worker实例
+     * 
+     * @param mod_name eg: libtest.so
+     * @param worker_name eg: /my/test
+     * @return MyWorker*
+     */
+    MyWorker* CreateWorkerInst(
+        const std::string& mod_name,
+        const std::string& worker_name);
 
 private:
     bool UnloadMod(const std::string& dlname);
