@@ -1,0 +1,12 @@
+{
+    "type":"library",
+    "lib":"libdemo.so",
+    "actor":{
+        "demo":[
+            {
+                "instance_name":"echo_hello_world",
+                "instance_params":""
+            }
+        ]
+    }
+}

@@ -20,12 +20,6 @@ bool my_set_nonblock(int fd, bool b);
 
 const char* my_get_error();
 
-void* my_dll_open(const char* dl_path);
-
-void* my_dll_use(void *handle, const char *symbol);
-
-int my_dll_close(void *handle);
-
 #ifdef __cplusplus
 }
 #endif

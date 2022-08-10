@@ -1,20 +1,24 @@
 #ifndef __MYCOMMON_H__
 #define __MYCOMMON_H__
+#include <memory>
+#include <string>
+#include <vector>
+#include <list>
 
-#ifdef GTEST
-#define private    public
-#define protected  public
-#endif
+#include <jsoncpp/json/json.h>
 
-#define ATOM_CAS(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
-#define ATOM_CAS_POINTER(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
-#define ATOM_INC(ptr) __sync_add_and_fetch(ptr, 1)
-#define ATOM_FINC(ptr) __sync_fetch_and_add(ptr, 1)
-#define ATOM_DEC(ptr) __sync_sub_and_fetch(ptr, 1)
-#define ATOM_FDEC(ptr) __sync_fetch_and_sub(ptr, 1)
-#define ATOM_ADD(ptr,n) __sync_add_and_fetch(ptr, n)
-#define ATOM_SUB(ptr,n) __sync_sub_and_fetch(ptr, n)
-#define ATOM_AND(ptr,n) __sync_and_and_fetch(ptr, n)
+#include "MyLog.h"
 
+template<typename T>
+void MyListAppend(std::list<std::shared_ptr<T>>& src, std::list<std::shared_ptr<T>>& dst) {
+    src.insert(src.end(), dst.begin(), dst.end());
+    dst.clear();
+}
+
+class MyCommon {
+public:
+    static std::vector<std::string> GetDirFiles(const std::string& conf_path);
+    static Json::Value LoadJsonFromFile(const std::string& json_file);
+};
 
 #endif // __MYCOMMON_H__

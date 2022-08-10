@@ -1,0 +1,19 @@
+{
+    "type":"library",
+    "lib":"lib@template_name@.so",
+    "actor":{
+        "@template_name@":[
+            {
+                "instance_name":"@template_name@1",
+                "instance_params":""
+            }
+        ]
+    },
+    "worker":{
+        "@template_name@":[
+            {
+                "instance_name":"@template_name@1"
+            }
+        ]
+    }
+}

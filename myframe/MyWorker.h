@@ -1,69 +1,74 @@
-#ifndef __MYWORKER_H__
-#define __MYWORKER_H__
+#pragma once
+#include <sys/epoll.h>
 
-#include "MyCommon.h"
-#include "MyThread.h"
+#include <pthread.h>
+#include <unistd.h>
 
-class MyMsg;
-class MyContext;
-class MyWorker : public MyThread
+#include <atomic>
+#include <list>
+#include <memory>
+
+#include "MyEvent.h"
+#include "MyMsg.h"
+
+enum class MyWorkerCmd : char {
+    IDLE            = 'i',     ///< 工作线程空闲
+    RUN             = 'r',     ///< 工作线程运行
+    QUIT            = 'q',     ///< 线程退出命令
+};
+
+class MyWorker : public MyEvent
 {
-    friend class MyApp;
 public:
-    enum class MyWorkerCmdType : char {
-        NONE            = '\0',    // 未知命令
-        IDLE            = 'i',     // 工作线程空闲
-        IDLE_ONE_THREAD = 's',     // 独立线程空闲
-        QUIT            = 'q',     // 线程退出命令
-    };
-
     MyWorker();
-    ~MyWorker();
+    virtual ~MyWorker();
 
-    /**
-     * override MyThread virtual method
-     */
-    virtual void Run() override;
-    virtual void OnInit() override;
-    virtual void OnExit() override;
+    ////////////////////////////// thread 相关函数
+    virtual void OnInit() {}
+    virtual void Run() = 0;
+    virtual void OnExit(){}
+    void Start();
+    void Stop();
+    bool IsRuning() { return _runing; }
+    pthread_t GetPosixThreadId(){return _posix_thread_id;}
 
-    /**
-     * override MyEvent virtual method
-     */
-    virtual int GetEventType() override
-    { return EV_WORKER; }
-    virtual int GetFd() override;
-    virtual unsigned int GetEpollEventType() override;
-    virtual MyList* CB(MyEvent*, int*) override
-    { return nullptr; }
-    virtual void SetEpollEvents(uint32_t ev) override
-    { ev = ev; }
+    ////////////////////////////// event 相关函数
+    int GetFd() override { return _sockpair[1]; }
+    unsigned int ListenEpollEventType() override { return EPOLLIN; }
+    void RetEpollEventType(uint32_t ev) override { ev = ev; }
 
-    // 主线程调用该函数与工作线程通信
-    int SendCmd(const char* cmd, size_t len);
-    int RecvCmd(char* cmd, size_t len);
+    ////////////////////////////// 线程间通信相关函数
+    int SendCmdToWorker(const MyWorkerCmd& cmd);
+    int RecvCmdFromWorker(MyWorkerCmd& cmd);
 
-    void SetCmd(MyWorkerCmdType cmd){ m_cmd = cmd; }
-    void SetContext(MyContext* context){ m_context = context; }
+    ////////////////////////////// 消息处理相关函数
+    void PushMsg(std::shared_ptr<MyMsg> msg);
+    std::list<std::shared_ptr<MyMsg>>& GetMsgList() { return _send; }
+
+    void SetInstName(const std::string& name) { _inst_name = name; }
+    std::string& GetInstName() { return _inst_name; }
+
+protected:
+    int DispatchMsg();
+    int RecvCmdFromMain(MyWorkerCmd& cmd);
+    int SendCmdToMain(const MyWorkerCmd& cmd);
+    static void* ListenThread(void*);
 
 private:
-    /* 等待主线程唤醒工作 */
-    int Wait();
-    /* 工作线程消息处理 */
-    int Work();
-    /* 工作线程进入空闲链表之前进行的操作 */
-    void Idle();
-    /* 创建与主线程通信的socket */
     bool CreateSockPair();
     void CloseSockPair();
 
-    /* idx: 0 used by MyWorker, 1 used by MyApp */
-    int               m_sockpair[2];
+    std::string _inst_name;
+    /// idx: 0 used by MyWorkerCommon, 1 used by MyApp
+    int _sockpair[2];
+    /// 发送消息队列
+    std::list<std::shared_ptr<MyMsg>> _send;
+    /// posix thread id
+    pthread_t _posix_thread_id;
+    std::atomic_bool _runing;
 
-    MyList            m_send;              // 发送消息队列(针对没有服务的消息,缓存到该队列)
-    MyList            m_que;               // work queue
-    MyContext*        m_context;           // 当前执行服务的指针
-    MyWorkerCmdType   m_cmd;               // 当前命令类型
 };
 
-#endif
+extern "C" {
+    typedef MyWorker* (*my_worker_create_func)(const std::string&);
+} // extern "C"

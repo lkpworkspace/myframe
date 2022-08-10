@@ -1,522 +1,492 @@
-#include "MyApp.h"
-
 #include <errno.h>
 #include <signal.h>
 #include <sys/epoll.h>
 
 #include <iostream>
-#include <boost/program_options.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/foreach.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/log/trivial.hpp>
 
-#include "MyWorker.h"
+#include "MyApp.h"
 #include "MyCUtils.h"
-#include "MyContext.h"
+#include "MyFlags.h"
+#include "MyLog.h"
 #include "MyMsg.h"
-#include "MyModule.h"
-#include "MyHandleMgr.h"
-#include "MySocksMgr.h"
-#include "MyModules.h"
-#include "MyTimerTask.h"
+#include "MyActor.h"
+#include "MyContext.h"
+#include "MyHandleManager.h"
+#include "MyModManager.h"
+#include "MyWorkerCommon.h"
+#include "MyWorkerTimer.h"
 
 MyApp* MyApp::s_inst = nullptr;
 
+MyApp* MyApp::Create() {
+    if (s_inst == nullptr) {
+        s_inst = new MyApp();
+    }
+    return s_inst;
+}
+
+MyApp* MyApp::Inst() {
+    return s_inst;
+}
+
 MyApp::MyApp() :
-    m_epoll_fd(-1),
-    m_worker_count(0),
-    m_quit(true),
-    m_handle_mgr(nullptr),
-    m_mods(nullptr),
-    m_socks_mgr(nullptr)
-{
-    SetInherits("MyObj");
+    _epoll_fd(-1),
+    _cur_worker_count(0),
+    _quit(true) {
     s_inst = this;
 }
 
 MyApp::~MyApp()
 {}
 
-bool MyApp::ParseArg(int argc, char** argv)
-{
-    int ret = true;
-    // 解析命令行输入参数
-    // 命令行参数优先级高于配置文件中的参数优先级
-    namespace po = boost::program_options;
-    po::options_description desc("Allowed options");
-    desc.add_options()
-            ("help", "produce help message")
-            ("conf", po::value<std::string>(), "set config file path")
-    ;
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+bool MyApp::Init() {
+    _handle_mgr = std::make_shared<MyHandleManager>();
+    _mods = std::make_shared<MyModManager>();
 
-    if(vm.count("help")){
-        std::cout << desc << std::endl;
+    /// start worker
+    Start(FLAGS_worker_count);
+
+    /// load actor and worker
+    if (!LoadModsFromConf(FLAGS_actor_desc_path)) {
         return false;
     }
-    std::string conf_path = "config.json";
-    if(vm.count("conf")){
-        conf_path = vm["conf"].as<std::string>();
-    }else{
-        std::cout << desc << std::endl;
-        return false;
-    }
-    m_handle_mgr = new MyHandleMgr();
-    m_mods = new MyModules();
-    m_socks_mgr = new MySocksMgr();
-
-    if(false == LoadFromConf(conf_path)) return false;
-    return ret;
+    return true;
 }
 
-bool MyApp::LoadFromConf(std::string& filename)
-{
-    bool ret = true;
-    namespace pt = boost::property_tree;
-    pt::ptree tree;
-    boost::system::error_code error;
-    if(false == boost::filesystem::is_regular_file(filename, error)){
-        std::cout << "Not a regular file" << std::endl;
+bool MyApp::LoadModsFromConf(const std::string& path) {
+    auto actor_conf_list = MyCommon::GetDirFiles(path);
+    LOG(INFO) << "Search " << actor_conf_list.size() << " actor conf";
+    if (actor_conf_list.size() <= 0) {
+        LOG(WARNING) << "Search actor failed, exit";
         return false;
     }
-
-    pt::read_json(filename, tree);
-    // 获得工作线程数量
-    m_worker_count_conf = tree.get("thread", 4);
-    m_worker_count_conf = (m_worker_count_conf <= 0) ? 1 : m_worker_count_conf;
-    m_worker_count_conf = (m_worker_count_conf >= 128) ? 128 : m_worker_count_conf;
-    Start(m_worker_count_conf);
-    // 获得模块路径
-    m_mod_path = tree.get("module_path", ".");
-    m_mods->SetModPath(m_mod_path.c_str());
-    // 获得例化模块名和参数
-    boost::property_tree::ptree items;
-    items = tree.get_child("module_inst");
-    for(boost::property_tree::ptree::iterator it=items.begin(); it != items.end(); ++it)
-    {
-        std::string m = it->first;
-        std::string p;
-        std::string s;
-        m_mods->LoadMod(m.c_str());
-        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, it->second)
-        {
-            s = v.second.get<std::string>("name");
-            p = v.second.get<std::string>("params");
-            ret = CreateContext(m.c_str(), s.c_str(), p.empty() ? nullptr : p.c_str());
+    bool res = false;
+    for (const auto& it : actor_conf_list) {
+        LOG(INFO) << "Load " << it << " ...";
+        auto root = MyCommon::LoadJsonFromFile(it);
+        if (root.isNull()) {
+            LOG(ERROR) << it <<" parse failed, skip";
+            continue;
+        }
+        if (!root.isMember("type") || !root["type"].isString()) {
+            LOG(ERROR) << it <<" key \"type\": no key or not string, skip";
+            continue;
+        }
+        const auto& type = root["type"].asString();
+        // load actor
+        if (root.isMember("actor") && root["actor"].isObject()) {
+            const auto& actor_list = root["actor"];
+            Json::Value::Members actor_name_list = actor_list.getMemberNames();
+            for (auto inst_name_it = actor_name_list.begin(); inst_name_it != actor_name_list.end(); ++inst_name_it) {
+                LOG(INFO) << "Load actor " << *inst_name_it << " ...";
+                if (type == "library") {
+                    res |= LoadActorFromLib(root, actor_list, *inst_name_it);
+                } else if (type == "class") {
+                    res |= LoadActorFromClass(root, actor_list, *inst_name_it);
+                } else {
+                    LOG(ERROR) << "Unknown type " << type;
+                }
+            }
+        }
+        // worker
+        if (root.isMember("worker") && root["worker"].isObject()) {
+            const auto& worker_list = root["worker"];
+            Json::Value::Members worker_name_list = worker_list.getMemberNames();
+            for (auto inst_name_it = worker_name_list.begin(); inst_name_it != worker_name_list.end(); ++inst_name_it) {
+                LOG(INFO) << "Load worker " << *inst_name_it << " ...";
+                if (type == "library") {
+                    res |= LoadWorkerFromLib(root, worker_list, *inst_name_it);
+                } else if (type == "class") {
+                    res |= LoadWorkerFromClass(root, worker_list, *inst_name_it);
+                } else {
+                    LOG(ERROR) << "Unknown type " << type;
+                }
+            }
         }
     }
-    return ret;
+    return res;
 }
 
-MyApp* MyApp::Create()
-{
-    if(s_inst == nullptr){
-        s_inst = new MyApp();
+bool MyApp::LoadActorFromLib(
+    const Json::Value& root, 
+    const Json::Value& actor_list, 
+    const std::string& actor_name) {
+    if (!root.isMember("lib") || !root["lib"].isString()) {
+        LOG(ERROR) << "actor " << actor_name <<" key \"lib\": no key or not string, skip";
+        return false;
     }
-    return s_inst;
+    const auto& lib_name = root["lib"].asString();
+    if (!_mods->LoadMod(FLAGS_actor_lib_path + lib_name)) {
+        LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
+        return false;
+    }
+    
+    const auto& insts = actor_list[actor_name];
+    bool res = false;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create actor instance \"" << actor_name << "\": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_name\": no key, skip";
+            return false;
+        }
+        if (!inst.isMember("instance_params")) {
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_params\": no key, skip";
+            return false;
+        }
+        res |= CreateContext(
+            lib_name, actor_name, 
+            inst["instance_name"].asString(), 
+            inst["instance_params"].asString());
+    }
+    return res;
 }
 
-MyApp* MyApp::Inst()
-{
-    return s_inst;
+bool MyApp::LoadActorFromClass(
+    const Json::Value& root, 
+    const Json::Value& actor_list, 
+    const std::string& actor_name) {
+    const auto& insts = actor_list[actor_name];
+    bool res = false;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_name\": no key, skip";
+            return false;
+        }
+        if (!inst.isMember("instance_params")) {
+            LOG(ERROR) << "actor " << actor_name <<" key \"instance_params\": no key, skip";
+            return false;
+        }
+        res |= CreateContext(
+            "class", actor_name, 
+            inst["instance_name"].asString(), 
+            inst["instance_params"].asString());
+    }
+    return res;
 }
 
-bool MyApp::LoadMod(const char* mod_name)
-{
-    return m_mods->LoadMod(mod_name);
+bool MyApp::LoadWorkerFromLib(
+    const Json::Value& root, 
+    const Json::Value& worker_list, 
+    const std::string& worker_name) {
+    if (!root.isMember("lib") || !root["lib"].isString()) {
+        LOG(ERROR) << "worker \"" << worker_name << "\" key \"lib\": no key or not string, skip";
+        return false;
+    }
+    const auto& lib_name = root["lib"].asString();
+    if (!_mods->LoadMod(FLAGS_actor_lib_path + lib_name)) {
+        LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
+        return false;
+    }
+    
+    const auto& insts = worker_list[worker_name];
+    bool res = false;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create worker instance \"" << worker_name << "\": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "actor " << worker_name <<" key \"instance_name\": no key, skip";
+            return false;
+        }
+        MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
+        worker->SetInstName(inst["instance_name"].asString());
+        worker->Start();
+        AddEvent(dynamic_cast<MyEvent*>(worker));
+        _cur_worker_count++;
+    }
+    return res;
+}
+
+bool MyApp::LoadWorkerFromClass(
+    const Json::Value& root, 
+    const Json::Value& worker_list, 
+    const std::string& worker_name) {
+    const auto& insts = worker_list[worker_name];
+    bool res = true;
+    for (const auto& inst : insts) {
+        LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
+        if (!inst.isMember("instance_name")) {
+            LOG(ERROR) << "worker \"" << worker_name << "\" key \"instance_name\": no key, skip";
+            return false;
+        }
+        MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
+        worker->SetInstName(inst["instance_name"].asString());
+        worker->Start();
+        AddEvent(dynamic_cast<MyEvent*>(worker));
+        _cur_worker_count++;
+    }
+    return res;
 }
 
 /**
- * 创建一个新的服务:
- *      1. 从MyModules中获得对应模块对象
+ * 创建一个新的actor:
+ *      1. 从MyModManager中获得对应模块对象
  *      2. 生成MyContext
  *      3. 将模块对象加入MyContext对象
- *      4. 并MyContext加入Context数组
+ *      4. 将MyContext加入Context数组
  *      3. 注册句柄
- *      4. 初始化服务
+ *      4. 初始化actor
 */
-bool MyApp::CreateContext(const char* mod_path, const char* mod_name, const char* service_name, const char* param)
-{
-    m_mods->SetModPath(mod_path);
-    return CreateContext(mod_name, service_name, param);
+bool MyApp::CreateContext(
+    const std::string& mod_name, 
+    const std::string& actor_name, 
+    const std::string& instance_name, 
+    const std::string& params) {
+    auto mod_inst = _mods->CreateActorInst(mod_name, actor_name);
+    if(mod_inst == nullptr) {
+        LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
+        return false;
+    }
+    mod_inst->m_instance_name = instance_name;
+    return CreateContext(mod_inst, params);
 }
 
-bool MyApp::CreateContext(const char* mod_name, const char* service_name, const char* param)
-{
-    if(false == m_mods->IsLoad(mod_name)) return false;
-    MyModule* mod_inst = m_mods->CreateModInst(mod_name, service_name);
-    return CreateContext(mod_inst, param);
-}
-
-bool MyApp::CreateContext(MyModule* mod_inst, const char* param)
-{
+bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params) {
     MyContext* ctx = new MyContext(mod_inst);
-    m_handle_mgr->RegHandle(ctx);
-    ctx->Init(param);
-    // 初始化之后, 手动将服务中发送消息队列分发出去
+    _handle_mgr->RegHandle(ctx);
+    ctx->Init(params.c_str());
+    // 初始化之后, 手动将actor中发送消息队列分发出去
     DispatchMsg(ctx);
     return true;
 }
 
-bool MyApp::AddEvent(MyEvent* ev)
-{
-    int ret = true;
-    int res;
+bool MyApp::AddEvent(MyEvent* ev) {
     struct epoll_event event;
-
     event.data.ptr = ev;
-    event.events = ev->GetEpollEventType();
-
-    BOOST_LOG_TRIVIAL(debug) << ev->GetObjName() << " reg event fd: " << ev->GetFd();
+    event.events = ev->ListenEpollEventType();
+    int res = 0;
     // 如果该事件已经注册，就修改事件类型
-    if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_MOD,ev->GetFd(),&event))) {
+    if(-1 == (res = epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, ev->GetFd(), &event))) {
         // 没有注册就添加至epoll
-        if(-1 == (res = epoll_ctl(m_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
-            ret = false;
-            BOOST_LOG_TRIVIAL(error) << "epoll " << my_get_error();
+        if(-1 == (res = epoll_ctl(_epoll_fd,EPOLL_CTL_ADD,ev->GetFd(),&event))){
+            LOG(ERROR) << "epoll " << my_get_error();
+            return false;
         }
     }else{
-        BOOST_LOG_TRIVIAL(warning) << ev->GetObjName() << " has already reg ev " 
+        LOG(WARNING) << " has already reg ev " 
             << ev->GetFd() << ": " << my_get_error();
+        return false;
     }
-    return ret;
+    return true;
 }
 
-bool MyApp::DelEvent(MyEvent *ev)
-{
-    int ret = true;
-    if(-1 == epoll_ctl(m_epoll_fd,EPOLL_CTL_DEL,ev->GetFd(),NULL)){
-        ret = false;
-        BOOST_LOG_TRIVIAL(error) << ev->GetObjName() << " del event " 
+bool MyApp::DelEvent(MyEvent *ev) {
+    if(-1 == epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, ev->GetFd(), NULL)){
+        LOG(ERROR) << "del event " 
             << ev->GetFd() << ": " << my_get_error();
+        return false;
     }
-    return ret;
+    return true;
 }
 
-void MyApp::StartWorker(int worker_count)
-{
+void MyApp::StartCommonWorker(int worker_count) {
     for(int i = 0; i < worker_count; ++i){
-        MyWorker* worker = new MyWorker();
+        MyWorkerCommon* worker = new MyWorkerCommon();
         worker->Start();
-        AddEvent(static_cast<MyEvent*>(worker));
-        m_worker_count++;
+        AddEvent(dynamic_cast<MyEvent*>(worker));
+        _cur_worker_count++;
     }
-    // 启动一个独立线程
-    MyWorker* worker = new MyWorker();
-    worker->SetCmd(MyWorker::MyWorkerCmdType::IDLE_ONE_THREAD);
-    worker->Start();
-    AddEvent(static_cast<MyEvent*>(worker));
-    BOOST_LOG_TRIVIAL(debug) << "Worker start";
+    LOG(INFO) << "Common worker start";
 }
 
-void MyApp::StartTimerTask()
-{
-    m_timer_task = new MyTimerTask();
-    m_timer_task->Start();
-    AddEvent(static_cast<MyEvent*>(m_timer_task));
-
-    BOOST_LOG_TRIVIAL(debug) << "Timer task start";
+void MyApp::StartTimerWorker() {
+    _timer_worker = new MyWorkerTimer();
+    _timer_worker->Start();
+    AddEvent(dynamic_cast<MyEvent*>(_timer_worker));
+    LOG(INFO) << "Timer worker start";
 }
 
-void MyApp::Start(int worker_count)
-{
-    m_epoll_fd = epoll_create(1024);
-    if(-1 == m_epoll_fd){
-        BOOST_LOG_TRIVIAL(error) << my_get_error();
+void MyApp::Start(int worker_count) {
+    _epoll_fd = epoll_create(1024);
+    if(-1 == _epoll_fd){
+        LOG(ERROR) << my_get_error();
         return;
     }
-    BOOST_LOG_TRIVIAL(debug) << "Create epoll fd " << m_epoll_fd;
+    LOG(INFO) << "Create epoll fd " << _epoll_fd;
 
-    StartWorker(worker_count);
-    StartTimerTask();
+    StartCommonWorker(worker_count);
+    StartTimerWorker();
 
     // ingore SIGPIPE signal
     signal(SIGPIPE,SIG_IGN);
-    BOOST_LOG_TRIVIAL(debug) << "Ingore SIGPIPE signal";
-    m_quit = false;
+    LOG(INFO) << "Ingore SIGPIPE signal";
+    _quit = false;
 }
 
-MyContext* MyApp::GetContext(uint32_t handle)
-{
-    return m_handle_mgr->GetContext(handle);
+MyContext* MyApp::GetContext(uint32_t handle) {
+    return _handle_mgr->GetContext(handle);
 }
 
-MyContext* MyApp::GetContext(std::string& service_name)
-{
-    return m_handle_mgr->GetContext(service_name);
+MyContext* MyApp::GetContext(std::string& actor_name) {
+    return _handle_mgr->GetContext(actor_name);
 }
 
-MySocksMgr* MyApp::GetSocksMgr()
-{ return m_socks_mgr; }
-
-// 获得一个有消息待处理的服务(m_recv不为空的服务)
-MyContext* MyApp::GetContextWithMsg(bool onethread)
-{
-    return m_handle_mgr->GetContext(onethread);
+MyContext* MyApp::GetContextWithMsg() {
+    return _handle_mgr->GetContextWithMsg();
 }
 
-void MyApp::HandleSysMsg(MyMsg* msg)
-{
-    MyMsg::MyMsgType type = msg->GetMsgType();
-    MySockMsg* smsg = nullptr;
-
-    switch(type){
-    case MyMsg::MyMsgType::SOCKET:
-        // 接收一些socket的消息
-        smsg = static_cast<MySockMsg*>(msg);
-        if(smsg->GetSockMsgType() == MySockMsg::MySockMsgType::CLOSE){
-            GetSocksMgr()->Close(smsg->GetSockId());
-            BOOST_LOG_TRIVIAL(debug) << "main thread " 
-                        << " close socket id: " << smsg->GetSockId();
-        }
-        break;
-    default:
-        BOOST_LOG_TRIVIAL(debug) << "main thread "
-                        << " get unknown msg type: " << (int)msg->GetMsgType();
-        break;
-    }
+void MyApp::HandleSysMsg(std::shared_ptr<MyMsg>& msg) {
+    LOG(INFO) << "main thread get unknown msg type: " << msg->GetMsgType();
 }
 
-void MyApp::DispatchMsg(MyList* msg_list)
-{
-    MyMsg* msg;
-    MyContext* ctx;
-    MyNode* begin;
-    MyNode* end;
-    MyNode* temp;
-
-    begin= msg_list->Begin();
-    end = msg_list->End();
-    m_mutex.lock();
-    for(;begin != end;)
-    {
-        temp = begin->next;
-        msg = static_cast<MyMsg*>(begin);
-        if(msg->destination == MY_FRAME_DST){
-            msg_list->Del(begin);
-            // 在此处理系统消息，不再转发给工作线程处理
-            BOOST_LOG_TRIVIAL(debug) << "Handle MY_FRAME_DST msg";
+void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
+    for (auto& msg : msg_list) {
+        if(msg->GetDst() == MY_FRAME_DST_NAME){
             HandleSysMsg(msg);
-        }else{
-            ctx = m_handle_mgr->GetContext(msg->destination);
-            if(nullptr != ctx){
-                msg_list->Del(begin);
-                ctx->PushMsg(begin);
-                m_handle_mgr->PushContext(ctx);
-            }else{
-                msg_list->Del(begin);
-                BOOST_LOG_TRIVIAL(error) << "Err msg src:" 
-                    << msg->source << " dst:" << msg->destination 
-                    << " session:" << msg->session;
-                delete msg;
-            }
+            continue;
         }
-        begin = temp;
+        auto ctx = _handle_mgr->GetContext(msg->GetDst());
+        if(nullptr == ctx){
+            LOG(ERROR) << "msg src:" 
+                << msg->GetSrc() << " dst:" << msg->GetDst();
+            continue;
+        }
+        ctx->PushMsg(msg);
+        _handle_mgr->PushContext(ctx);
     }
-    m_mutex.unlock();
+    msg_list.clear();
 }
 
-// 将获得的消息分发给其他服务
-void MyApp::DispatchMsg(MyContext* context)
-{
+// 将获得的消息分发给其他actor
+void MyApp::DispatchMsg(MyContext* context) {
     if(nullptr == context) return;
-    context->m_in_global = true;
-    MyList* msg_list = context->GetDispatchMsgList();
+    context->SetWaitFlag();
+    auto& msg_list = context->GetDispatchMsgList();
     DispatchMsg(msg_list);
 }
 
-void MyApp::CheckStopWorkers(bool onethread)
-{
-    char cmd = 'y';
-
-    MyWorker* worker;
+void MyApp::CheckStopWorkers() {
     MyContext* context;
-    MyNode* begin;
-    MyNode* end;
-    MyNode* temp;
-    MyList* list;
-
-    MyList& idle_workers = onethread ? m_iidle_workers : m_idle_workers;
-    begin= idle_workers.Begin();
-    end = idle_workers.End();
-    m_mutex.lock();
-    for(;begin != end;)
-    {
-        temp = begin->next;
-        worker = static_cast<MyWorker*>(begin);
-        // 主线程有消息，则先派发执行主线程中消息
-        if(!onethread && (false == m_cache_que.IsEmpty())){
-            worker->m_que.Append(&m_cache_que);
-            idle_workers.Del(worker);
-            worker->SendCmd(&cmd, sizeof(char));
-            begin = temp;
-            continue;
+    for (auto it = _idle_workers.begin(); it != _idle_workers.end();) {
+        auto worker = dynamic_cast<MyWorkerCommon*>(*it);
+        if(nullptr == (context = GetContextWithMsg())) {
+            LOG(INFO) << "no msg need process";
+            break;
         }
-        // 主线程没有消息，则派发执行服务中的消息
-        if(nullptr == (context = GetContextWithMsg(onethread))) break;
-        list = context->GetRecvMsgList();
-        if(!list->IsEmpty()){
-            worker->m_que.Append(list);
+        auto& msg_list = context->GetRecvMsgList();
+        if(!msg_list.empty()){
+            MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
-            idle_workers.Del(begin);
-            worker->SendCmd(&cmd, sizeof(char));
+            it = _idle_workers.erase(it);
+            worker->SendCmdToWorker(MyWorkerCmd::RUN);
+            continue;
         }else{
-            BOOST_LOG_TRIVIAL(error) << "Context has no msg";
+            LOG(ERROR) << "Context has no msg";
         }
-        begin = temp;
+        ++it;
     }
-    m_mutex.unlock();
 }
 
-void MyApp::ProcessTimerEvent(MyTimerTask *timer_task)
-{
-    char cmd = 'y';
-    timer_task->RecvCmd(&cmd, 1);
+void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
+    MyWorkerCmd cmd;
+    timer_worker->RecvCmdFromWorker(cmd);
     switch(cmd){
-    case 'i': // idle
+    case MyWorkerCmd::IDLE: // idle
         // 将定时器线程的发送队列分发完毕
-        DispatchMsg(&timer_task->m_send);
-        timer_task->SendCmd(&cmd, sizeof(char));
+        DispatchMsg(timer_worker->GetMsgList());
+        timer_worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
-    case 'q': // quit
+    case MyWorkerCmd::QUIT: // quit
         // TODO...
-        BOOST_LOG_TRIVIAL(warning) << "Unimplement timer task quit: " << cmd;
+        LOG(WARNING) << "Unimplement timer task quit: " << (char)cmd;
         break;
     default:
-        BOOST_LOG_TRIVIAL(warning) << "Unknown timer task cmd: " << cmd;
+        LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
         break;
     }
 }
 
-void MyApp::ProcessWorkerEvent(MyWorker* worker)
-{
-    char cmd = 'y';
-    worker->RecvCmd(&cmd, 1);
+void MyApp::ProcessUserEvent(MyWorker *worker) {
+    MyWorkerCmd cmd;
+    worker->RecvCmdFromWorker(cmd);
     switch(cmd){
-    case 'i': // idle
-        // 将工作线程的发送队列分发完毕
-        DispatchMsg(&worker->m_send);
-
-        // 将服务的发送队列分发完毕
-        DispatchMsg(worker->m_context);
-
-        if(false == m_cache_que.IsEmpty()){
-            // 检查主线程消息缓存队列，如果有消息就分发给工作线程, 唤醒并执行
-            worker->Idle();
-            worker->m_que.Append(&m_cache_que);
-            worker->SendCmd(&cmd, sizeof(char));
-        }else{
-            // 将工作线程中的服务状态设置为全局状态
-            // 将线程加入空闲队列
-            worker->Idle();
-            m_idle_workers.AddTail(static_cast<MyNode*>(worker));
-        }
+    case MyWorkerCmd::IDLE: // idle
+        // 将用户线程的发送队列分发完毕
+        DispatchMsg(worker->GetMsgList());
+        worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
-    case 's': // 独立线程空闲
-        // 将服务的发送队列分发完毕
-        DispatchMsg(worker->m_context);
-        worker->Idle();
-        m_iidle_workers.AddTail(static_cast<MyNode*>(worker));
-        break;
-    case 'q': // quit
-        // TODO...
-        BOOST_LOG_TRIVIAL(warning) << "Unimplement worker quit: " << cmd;
+    case MyWorkerCmd::QUIT: // quit
+        LOG(WARNING) << "Unimplement worker task quit: " << (char)cmd;
         break;
     default:
-        BOOST_LOG_TRIVIAL(warning) << "Unknown worker cmd: " << cmd;
+        LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
         break;
     }
 }
 
-void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count)
-{
-    MyEvent* ev_obj;
+void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
+    MyWorkerCmd cmd;
+    worker->RecvCmdFromWorker(cmd);
+    switch(cmd){
+    case MyWorkerCmd::IDLE: // idle
+        // 将主线程的缓存消息分发完毕
+        DispatchMsg(_cache_que);
 
-    for(int i = 0; i < ev_count; ++i)
-    {
+        // 将工作线程的发送队列分发完毕
+        DispatchMsg(worker->GetMsgList());
+
+        // 将actor的发送队列分发完毕
+        DispatchMsg(worker->_context);
+
+        // 将工作线程中的actor状态设置为全局状态
+        // 将线程加入空闲队列
+        worker->Idle();
+        _idle_workers.emplace_back(dynamic_cast<MyWorker*>(worker));
+        break;
+    case MyWorkerCmd::QUIT: // quit
+        LOG(WARNING) << "Unimplement worker quit: " << (char)cmd;
+        break;
+    default:
+        LOG(WARNING) << "Unknown worker cmd: " << (char)cmd;
+        break;
+    }
+}
+
+void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
+    MyEvent* ev_obj;
+    for(int i = 0; i < ev_count; ++i) {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
-        ev_obj->SetEpollEvents(evs[i].events);
-        if(MyNode::NODE_EVENT == ev_obj->GetNodeType()){
-            switch(ev_obj->GetEventType()){
-            case MyEvent::EV_WORKER:
-                // 工作线程事件
-                ProcessWorkerEvent(static_cast<MyWorker*>(ev_obj));break;
-            case MyEvent::EV_TIMER:
-                // 分发超时消息
-                ProcessTimerEvent(static_cast<MyTimerTask*>(ev_obj));
-                break;
-            case MyEvent::EV_SOCK:
-                // socket可读可写事件
-                //      如果不是 EPOLLONESHOT 类型， 需要调用 DelEvent() 删除该监听事件
-                //      将事件缓存到主线程的消息队列
-                DelEvent(ev_obj);
-                m_cache_que.AddTail(ev_obj);
-                break;
-            default:
-                BOOST_LOG_TRIVIAL(warning) << "Unknown event";
-                break;
-            }
-        }else{
-            BOOST_LOG_TRIVIAL(warning) << "Unknown event node";
+        ev_obj->RetEpollEventType(evs[i].events);
+        switch(ev_obj->GetMyEventType()){
+        case MyEventType::EV_WORKER:
+            // 工作线程事件
+            ProcessWorkerEvent(dynamic_cast<MyWorkerCommon*>(ev_obj));
+            break;
+        case MyEventType::EV_TIMER:
+            // 分发超时消息
+            ProcessTimerEvent(dynamic_cast<MyWorkerTimer*>(ev_obj));
+            break;
+        case MyEventType::EV_USER:
+            ProcessUserEvent(dynamic_cast<MyWorker*>(ev_obj));
+            break;
+        default:
+            LOG(WARNING) << "Unknown event";
+            break;
         }
     }
 }
 
-int MyApp::Exec()
-{
+int MyApp::Exec() {
     int ev_count = 0;
     int max_ev_count = 64;
     int time_wait = 100;
     struct epoll_event* evs;
-
     evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
-    // 检查所有服务发送列表，并分发消息
-
-    while(m_worker_count)
-    {
-        // 1. 检查空闲工作线程
-        //  - 检查队列是否有空闲线程
-        //      - 如果有就找到一个有消息的服务:
-        //          - 将发送消息队列分发至其他服务
-        //              - 如果是申请系统操作消息(dst id: 0xffffff)
-        //                  - 由主线程处理该消息(如: 创建服务， 删除服务， 。。。)
-        //              - 如果是普通消息，就分发就行
-        //          - 将接收消息链表移动至工作线程
-        //          - 标记服务进入工作线程
-        //          - 设置工作线程要处理的服务对象指针
-        //          - 唤醒工作线程并工作
-        //      - 如果没有,退出检查
-        CheckStopWorkers(true);
-        CheckStopWorkers(false);
-        // 2. 等待事件
-        if(0 <= (ev_count = epoll_wait(m_epoll_fd, evs, max_ev_count, time_wait))) {
-            // 3. 处理事件
-            //  - 获得事件区分事件类型
-            //      - 线程事件
-            //      - timer事件
-            //      - socket事件
-            ProcessEvent(evs, ev_count);
-        }else{
-            BOOST_LOG_TRIVIAL(error) << my_get_error();
+    
+    while(_cur_worker_count) {
+        /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
+        CheckStopWorkers();
+        /// 等待事件
+        if(0 > (ev_count = epoll_wait(_epoll_fd, evs, max_ev_count, time_wait))) {
+            LOG(ERROR) << "epoll wait error: " << my_get_error();
         }
-        // 4. loop
+        /// 处理事件
+        ProcessEvent(evs, ev_count);
     }
 
     // quit MyApp
     free(evs);
-    close(m_epoll_fd);
+    close(_epoll_fd);
 
-    BOOST_LOG_TRIVIAL(info) << "MyFrame Exit";
+    LOG(INFO) << "myframe exit";
     return 0;
-}
-
-
-void MyApp::Quit()
-{
-    // TODO...
-    return;
 }

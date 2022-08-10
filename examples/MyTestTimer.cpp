@@ -1,51 +1,32 @@
 #include <iostream>
 #include <string.h>
 
-#include "MyModule.h"
-#include "MyMsg.h"
+#include "myframe/MyActor.h"
+#include "myframe/MyMsg.h"
 
-class MyTestTimer : public MyModule
+class MyTestTimer : public MyActor
 {
 public:
     MyTestTimer(){}
     virtual ~MyTestTimer(){}
 
-    virtual int Init(const char* param) override
-    {
+    int Init(const char* param) override {
         /* 设置超时时间为 10 * 10 ms */
-        Timeout(10, 0xff);
+        Timeout(10);
         return 0;
     }
 
-    virtual int CB(MyMsg* msg) override
-    {
-        MyRespMsg* rmsg = nullptr;
-        switch(msg->GetMsgType()){
-            case MyMsg::MyMsgType::RESPONSE:
-                rmsg = static_cast<MyRespMsg*>(msg);
-                if(rmsg->GetRespMsgType() == MyRespMsg::MyRespMsgType::TIMER){
-                    /* 设置下一次超时时间 100 * 10 ms */
-                    Timeout(100, 0xff);
-
-                    std::cout << "----> from " << GetServiceName(msg->source) << " to " 
-                        << GetServiceName() << ": " << "timeout" << std::endl;
-                }
-                break;
-            default:
-                /* 忽略其它消息 */
-                std::cout << "Unknown msg type" << std::endl;
-                break;
+    void CB(std::shared_ptr<MyMsg>& msg) override {
+        if (msg->GetMsgType() == "TIMER"){
+            auto rmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
+            /* 设置下一次超时时间 100 * 10 ms */
+            Timeout(100);
+            std::cout << "----> from " << msg->GetSrc() << " to " 
+                << GetActorName() << ": " << "timeout" << std::endl;
         }
-        return 1;
     }
 };
 
-extern "C" MyModule* my_mod_create()
-{
-    return static_cast<MyModule*>(new MyTestTimer());
-}
-
-extern "C" void my_mod_destory(MyModule* m)
-{
-    delete m;
+extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
+    return std::make_shared<MyTestTimer>();
 }

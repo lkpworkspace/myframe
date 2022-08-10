@@ -2,51 +2,29 @@
 
 #include <assert.h>
 
-#include <boost/log/trivial.hpp>
-
-#include "MyModule.h"
+#include "MyLog.h"
+#include "MyActor.h"
 #include "MyMsg.h"
 
-MyContext::MyContext(MyModule* mod) :
-    m_handle(0),
-    m_mod(mod),
-    m_in_global(true),
-    m_in_msg_list(false),
-    m_run_in_one_thread(false),
-    m_session_id(0)
-{
-    SetInherits("MyNode");
-    m_mod->SetContext(this);
+MyContext::MyContext(std::shared_ptr<MyActor>& mod) :
+    _mod(mod),
+    _handle(0),
+    _in_worker(false),
+    _in_run_que(false) {
+    _mod->SetContext(this);
 }
 
-int MyContext::NewSession()
-{
-    int session = ++m_session_id;
-    if (session <= 0) {
-        m_session_id = 1;
-        return 1;
-    }
-    return session;
-}
-
-int MyContext::SendMsg(MyMsg* msg)
-{
+int MyContext::SendMsg(std::shared_ptr<MyMsg>& msg) {
     if(nullptr == msg) return -1;
-    BOOST_LOG_TRIVIAL(debug) << "Service " << m_handle << " send message type: " << (int)msg->GetMsgType();
-    if(msg->source == 0) msg->source = m_handle;
-    if((int)msg->GetCtrl() & (int)MyMsg::MyMsgCtrl::ALLOC_SESSION) msg->session = NewSession();
-    m_send.AddTail(static_cast<MyNode*>(msg));
+    LOG(INFO) << "actor \"" << _mod->GetActorName() << "\" send message type: " << msg->GetMsgType();
+    _send.emplace_back(msg);
     return 0;
 }
 
-int MyContext::Init(const char* param)
-{
-    return m_mod->Init(param);
+int MyContext::Init(const char* param) {
+    return _mod->Init(param);
 }
 
-void MyContext::CB(MyMsg* msg)
-{
-    if(1 == m_mod->CB(msg)){
-        delete msg;
-    }
+void MyContext::CB(std::shared_ptr<MyMsg>& msg) {
+    _mod->CB(msg);
 }

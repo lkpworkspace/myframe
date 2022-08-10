@@ -1,5 +1,6 @@
 #ifndef __MYLOG_H__
 #define __MYLOG_H__
+#include "glog/logging.h"
 
 class MyLog
 {

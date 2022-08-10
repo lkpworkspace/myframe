@@ -1,43 +1,27 @@
-#ifndef __MYLIST_H__
-#define __MYLIST_H__
-
-#include "MyObj.h"
-
+#pragma once
 /**
  *  双向循环链表
  **/
 
-class MyNode : public MyObj
+class MyNode
 {
 public:
-
-    enum ENUM_NODE_TYPE{
-        NODE_MSG,
-        NODE_EVENT,
-        NODE_NONE,
-    };
-
     MyNode() :
         prev(nullptr),
         next(nullptr)
-    {
-        SetInherits("MyObj");
-    }
-
-    virtual ~MyNode(){}
+    {}
+    virtual ~MyNode() {}
 
     MyNode* prev;
 
     MyNode* next;
-
-    virtual enum ENUM_NODE_TYPE GetNodeType() { return NODE_NONE; }
 };
 
-class MyList : public MyObj
+class MyList
 {
 public:
 
-    MyList(){ __Init(); SetInherits("MyObj"); }
+    MyList(){ __Init(); }
 
     ~MyList(){ Clear(false); }
 
@@ -86,7 +70,3 @@ private:
     int m_count;
 
 };
-
-#endif // __MYLIST_H__
-
-

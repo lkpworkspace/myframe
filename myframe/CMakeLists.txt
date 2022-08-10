@@ -1,10 +1,41 @@
-set(MYFRAME_MAIN MyMain.cpp)
+cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,-E")
+### source
+aux_source_directory(. MYFRAME_SRCS)
+list(FILTER MYFRAME_SRCS EXCLUDE REGEX ".*main.cpp$")
+set(MYFRAME_MAIN main.cpp)
 
-LINK_LIBRARIES(pthread dl rt m)
+### lib
+add_library(myframe SHARED ${MYFRAME_SRCS})
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+### bin
+add_executable(myframe_main ${MYFRAME_MAIN})
+target_link_libraries(myframe_main myframe)
 
-ADD_EXECUTABLE(myframe ${MYFRAME_MAIN} ${MYFRAME_SRCS})
-target_link_libraries(myframe ${Boost_LIBRARIES})
+### install
+FILE(GLOB header_files 
+    "MyMsg.h",
+    "MyActor.h",
+    "MyEvent.h",
+    "MyWorker.h",
+    "MyApp.h",
+)
+INSTALL(FILES 
+    ${header_files}
+    PERMISSIONS
+    OWNER_READ
+    GROUP_READ
+    WORLD_READ
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/inc
+)
+install(TARGETS myframe
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)
+
+install(TARGETS myframe_main
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)
