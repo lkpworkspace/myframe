@@ -27,6 +27,7 @@ include_directories(.)
 add_subdirectory(myframe)
 add_subdirectory(examples)
 add_subdirectory(test)
+add_subdirectory(misc)
 
 ### install dir
 install(DIRECTORY templates DESTINATION ${CMAKE_INSTALL_PREFIX})

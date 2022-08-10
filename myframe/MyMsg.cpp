@@ -2,11 +2,11 @@
 
 void MyTextMsg::SetData(const char* data, int len)
 {
-    m_data.clear();
-    m_data.append(data, len);
+    _data.clear();
+    _data.append(data, len);
 }
 void MyTextMsg::SetData(std::string& data)
 {
-    m_data.clear();
-    m_data.append(data.data(), data.size());
+    _data.clear();
+    _data.append(data.data(), data.size());
 }

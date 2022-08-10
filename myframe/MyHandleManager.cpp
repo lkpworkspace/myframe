@@ -65,7 +65,7 @@ uint32_t MyHandleManager::RegHandle(MyContext* ctx)
     return 0;
 }
 
-MyContext* MyHandleManager::GetContext(std::string& service_name)
+MyContext* MyHandleManager::GetContext(const std::string& service_name)
 {
     uint32_t handle = 0x00;
     pthread_rwlock_rdlock(&m_rw);
@@ -101,7 +101,7 @@ MyContext* MyHandleManager::GetContextWithMsg()
 
     while(!msg_list.IsEmpty()){
         ctx_node = msg_list.Begin();
-        ctx = static_cast<MyContext*>(ctx_node);
+        ctx = dynamic_cast<MyContext*>(ctx_node);
 
         if(ctx->IsRuning()){
             msg_list.DelHead();

@@ -1,6 +1,9 @@
 #pragma once
+#include <sys/epoll.h>
+
 #include <pthread.h>
 #include <unistd.h>
+
 #include <atomic>
 
 #include "MyCommon.h"

@@ -1,5 +1,4 @@
-#ifndef __MYCONTEXT_H__
-#define __MYCONTEXT_H__
+#pragma once
 #include <memory>
 #include <list>
 
@@ -53,9 +52,6 @@ public:
     std::shared_ptr<MyActor> GetModule() { return _mod; }
 
 private:
-    void FilterArgs(int type, int* session, void** data, size_t* sz);
-    int NewSession();
-
     /* 服务句柄 */
     uint32_t            _handle;
     /* 主线程分发给服务的消息链表，主线程操作该链表 */
@@ -66,10 +62,6 @@ private:
     bool                _in_worker;
     /* 服务是否在消息队列中 */
     bool                _in_run_que;
-    /* 服务分配的session ID */
-    int                 _session_id;
     std::shared_ptr<MyActor> _mod;
 
 };
-
-#endif

@@ -23,8 +23,7 @@ sudo make install
 ## 运行
 
 ```sh
-cd /opt/myframe/bin
-sudo nohup LD_LIBRARY_PATH=/opt/myframe/lib /opt/myframe/bin/myframe_main &
+sudo bash /opt/myframe/bin/start_myframe.bash
 ```
 
 ## 创建模块工程
@@ -51,23 +50,15 @@ public:
     /* 服务模块加载完毕后调用 */
     int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
-        auto msg = std::make_shared<MyTextMsg>(GetHandle(),"hello,world");
-        return Send(msg);
+        return Send("demo.echo_hello_world", std::make_shared<MyTextMsg>("hello,world"));
     }
 
     void CB(std::shared_ptr<MyMsg>& msg) override {
-        switch(msg->GetMsgType()){
-            case MyMsg::MyMsgType::TEXT: {
-                /* 获得文本消息， 打印 源服务地址 目的服务地址 消息内容*/
-                auto tmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
-                std::cout << "----> from \"" << tmsg->source << "\" to \"" 
-                    << GetServiceName() << "\": " << tmsg->GetData() << std::endl;
-                break;
-            }
-            default:
-                /* 忽略其它消息 */
-                std::cout << "Unknown msg type" << std::endl;
-                break;
+        if (msg->GetMsgType() == "TEXT") {
+            /* 获得文本消息， 打印 源服务地址 目的服务地址 消息内容*/
+            auto tmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
+            std::cout << "----> from \"" << tmsg->GetSrc() << "\" to \"" 
+                << GetServiceName() << "\": " << tmsg->GetData() << std::endl;
         }
     }
 };
@@ -87,7 +78,7 @@ extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& service_n
     "service":{
         "demo":[
             {
-                "instance_name":"hello_world",
+                "instance_name":"echo_hello_world",
                 "instance_params":""
             }
         ]
@@ -114,8 +105,8 @@ extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& service_n
 - [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)
 
 ### TODOLIST
-- 接口界面全部使用service name
 - 减少继承
+    - context不继承MyNode
 - 全部使用智能指针
     - 解决addevent(MyEvent*)
 - 提供完整应用程序的demo示例图

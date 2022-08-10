@@ -21,7 +21,7 @@ class MyWorkerTimer;
 /**
  * 该类为单例类，不允许创建多个
  */
-class MyApp : public MyObj
+class MyApp
 {
 private:
     MyApp();
@@ -95,7 +95,7 @@ private:
     /// 工作线程数
     int _cur_worker_count;
     /// 空闲线程链表
-    MyList _idle_workers;
+    std::list<MyWorker*> _idle_workers;
     /// 缓存消息队列
     std::list<std::shared_ptr<MyMsg>> _cache_que;          
     /// 句柄管理对象

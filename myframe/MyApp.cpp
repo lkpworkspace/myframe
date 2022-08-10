@@ -35,7 +35,6 @@ MyApp::MyApp() :
     _epoll_fd(-1),
     _cur_worker_count(0),
     _quit(true) {
-    SetInherits("MyObj");
     s_inst = this;
 }
 
@@ -193,7 +192,7 @@ bool MyApp::LoadWorkerFromLib(
         MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
         worker->SetInstName(inst["instance_name"].asString());
         worker->Start();
-        AddEvent(static_cast<MyEvent*>(worker));
+        AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
     }
     return res;
@@ -214,7 +213,7 @@ bool MyApp::LoadWorkerFromClass(
         MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
         worker->SetInstName(inst["instance_name"].asString());
         worker->Start();
-        AddEvent(static_cast<MyEvent*>(worker));
+        AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
     }
     return res;
@@ -285,7 +284,7 @@ void MyApp::StartCommonWorker(int worker_count) {
     for(int i = 0; i < worker_count; ++i){
         MyWorkerCommon* worker = new MyWorkerCommon();
         worker->Start();
-        AddEvent(static_cast<MyEvent*>(worker));
+        AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
     }
     LOG(INFO) << "Common worker start";
@@ -294,7 +293,7 @@ void MyApp::StartCommonWorker(int worker_count) {
 void MyApp::StartTimerWorker() {
     _timer_worker = new MyWorkerTimer();
     _timer_worker->Start();
-    AddEvent(static_cast<MyEvent*>(_timer_worker));
+    AddEvent(dynamic_cast<MyEvent*>(_timer_worker));
     LOG(INFO) << "Timer worker start";
 }
 
@@ -328,20 +327,19 @@ MyContext* MyApp::GetContextWithMsg() {
 }
 
 void MyApp::HandleSysMsg(std::shared_ptr<MyMsg>& msg) {
-    LOG(INFO) << "main thread get unknown msg type: " << (int)msg->GetMsgType();
+    LOG(INFO) << "main thread get unknown msg type: " << msg->GetMsgType();
 }
 
 void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
     for (auto& msg : msg_list) {
-        if(msg->destination == MY_FRAME_DST){
+        if(msg->GetDst() == MY_FRAME_DST_NAME){
             HandleSysMsg(msg);
             continue;
         }
-        auto ctx = _handle_mgr->GetContext(msg->destination);
+        auto ctx = _handle_mgr->GetContext(msg->GetDst());
         if(nullptr == ctx){
             LOG(ERROR) << "msg src:" 
-                << msg->source << " dst:" << msg->destination 
-                << " session:" << msg->session;
+                << msg->GetSrc() << " dst:" << msg->GetDst();
             continue;
         }
         ctx->PushMsg(msg);
@@ -359,21 +357,9 @@ void MyApp::DispatchMsg(MyContext* context) {
 }
 
 void MyApp::CheckStopWorkers() {
-    char cmd = 'y';
-
-    MyWorkerCommon* worker;
     MyContext* context;
-    MyNode* begin;
-    MyNode* end;
-    MyNode* temp;
-
-    MyList& idle_workers = _idle_workers;
-    begin= idle_workers.Begin();
-    end = idle_workers.End();
-    for(;begin != end;)
-    {
-        temp = begin->next;
-        worker = static_cast<MyWorkerCommon*>(begin);
+    for (auto it = _idle_workers.begin(); it != _idle_workers.end();) {
+        auto worker = dynamic_cast<MyWorkerCommon*>(*it);
         if(nullptr == (context = GetContextWithMsg())) {
             LOG(INFO) << "no msg need process";
             break;
@@ -382,12 +368,13 @@ void MyApp::CheckStopWorkers() {
         if(!msg_list.empty()){
             MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
-            idle_workers.Del(begin);
+            it = _idle_workers.erase(it);
             worker->SendCmdToWorker(MyWorkerCmd::RUN);
+            continue;
         }else{
             LOG(ERROR) << "Context has no msg";
         }
-        begin = temp;
+        ++it;
     }
 }
 
@@ -445,8 +432,7 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
         // 将工作线程中的服务状态设置为全局状态
         // 将线程加入空闲队列
         worker->Idle();
-        _idle_workers.AddTail(static_cast<MyNode*>(worker));
-    
+        _idle_workers.emplace_back(dynamic_cast<MyWorker*>(worker));
         break;
     case MyWorkerCmd::QUIT: // quit
         LOG(WARNING) << "Unimplement worker quit: " << (char)cmd;
@@ -465,14 +451,14 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
         switch(ev_obj->GetMyEventType()){
         case MyEventType::EV_WORKER:
             // 工作线程事件
-            ProcessWorkerEvent(static_cast<MyWorkerCommon*>(ev_obj));
+            ProcessWorkerEvent(dynamic_cast<MyWorkerCommon*>(ev_obj));
             break;
         case MyEventType::EV_TIMER:
             // 分发超时消息
-            ProcessTimerEvent(static_cast<MyWorkerTimer*>(ev_obj));
+            ProcessTimerEvent(dynamic_cast<MyWorkerTimer*>(ev_obj));
             break;
         case MyEventType::EV_USER:
-            ProcessUserEvent(static_cast<MyWorker*>(ev_obj));
+            ProcessUserEvent(dynamic_cast<MyWorker*>(ev_obj));
             break;
         default:
             LOG(WARNING) << "Unknown event";

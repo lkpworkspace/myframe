@@ -6,6 +6,7 @@
 #include "MyCommon.h"
 #include "MyWorker.h"
 #include "MyMsg.h"
+#include "MyList.h"
 
 #define TVN_BITS 6
 #define TVR_BITS 8
@@ -23,8 +24,7 @@ public:
     MyTimer(){}
     virtual ~MyTimer(){}
 
-    uint32_t m_handle;
-    uint32_t m_session;
+    std::string _service_name;
     uint32_t m_expire;        // interval
     bool     m_run;
 };
@@ -35,7 +35,7 @@ public:
     MyTimerManager();
     virtual ~MyTimerManager();
 
-    int Timeout(uint32_t handle, int time, int session);
+    int Timeout(const std::string& service_name, int time);
 
     std::list<std::shared_ptr<MyMsg>>& Updatetime();
 
@@ -68,7 +68,7 @@ public:
     MyWorkerTimer();
     virtual ~MyWorkerTimer();
 
-    int SetTimeout(uint32_t handle, int time, int session);
+    int SetTimeout(const std::string& service_name, int time);
 
     /**
      * override MyWorker virtual method

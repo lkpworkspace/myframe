@@ -1,32 +1,27 @@
-#ifndef __MYLIST_H__
-#define __MYLIST_H__
-
-#include "MyObj.h"
-
+#pragma once
 /**
  *  双向循环链表
  **/
 
-class MyNode : public MyObj
+class MyNode
 {
 public:
     MyNode() :
         prev(nullptr),
         next(nullptr)
-    {
-        SetInherits("MyObj");
-    }
+    {}
+    virtual ~MyNode() {}
 
     MyNode* prev;
 
     MyNode* next;
 };
 
-class MyList : public MyObj
+class MyList
 {
 public:
 
-    MyList(){ __Init(); SetInherits("MyObj"); }
+    MyList(){ __Init(); }
 
     ~MyList(){ Clear(false); }
 
@@ -75,7 +70,3 @@ private:
     int m_count;
 
 };
-
-#endif // __MYLIST_H__
-
-

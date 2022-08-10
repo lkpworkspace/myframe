@@ -23,7 +23,7 @@ public:
     MyContext* GetContext(uint32_t handle);
 
     /* 获得服务名对应的服务 */
-    MyContext* GetContext(std::string& service_name);
+    MyContext* GetContext(const std::string& service_name);
     
     /* 获得一个待处理的服务 */
     MyContext* GetContextWithMsg();

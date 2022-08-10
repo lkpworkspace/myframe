@@ -12,27 +12,17 @@ public:
 
     int Init(const char* param) override {
         /* 设置超时时间为 10 * 10 ms */
-        Timeout(10, 0xff);
+        Timeout(10);
         return 0;
     }
 
     void CB(std::shared_ptr<MyMsg>& msg) override {
-        switch(msg->GetMsgType()){
-            case MyMsg::MyMsgType::RESPONSE: {
-                auto rmsg = std::dynamic_pointer_cast<MyRespMsg>(msg);
-                if(rmsg->GetRespMsgType() == MyRespMsg::MyRespMsgType::TIMER){
-                    /* 设置下一次超时时间 100 * 10 ms */
-                    Timeout(100, 0xff);
-
-                    std::cout << "----> from " << msg->source << " to " 
-                        << GetServiceName() << ": " << "timeout" << std::endl;
-                }
-                break;
-            }
-            default:
-                /* 忽略其它消息 */
-                std::cout << "Unknown msg type" << std::endl;
-                break;
+        if (msg->GetMsgType() == "TIMER"){
+            auto rmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
+            /* 设置下一次超时时间 100 * 10 ms */
+            Timeout(100);
+            std::cout << "----> from " << msg->GetSrc() << " to " 
+                << GetServiceName() << ": " << "timeout" << std::endl;
         }
     }
 };

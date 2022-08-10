@@ -7,6 +7,7 @@
 
 /* 系统的句柄号 */
 #define MY_FRAME_DST 0xffffff
+#define MY_FRAME_DST_NAME "myframe"
 
 class MyMsg;
 class MyContext;
@@ -44,13 +45,14 @@ public:
 
     /**
      * Send() - 发送消息给别的服务
+     * @dst:            目的服务
      * @msg:            发送的消息
      * 
      *      将消息添加到该服务的消息发送队列中，等待服务执行完成后，myframe会将消息分发给其他服务
      * 
      * @return:         成功 0， 失败 -1
      */
-    int Send(std::shared_ptr<MyMsg> msg);
+    int Send(const std::string& dst, std::shared_ptr<MyMsg> msg);
 
     /**
      * GetHandle() - 获得该服务的句柄号
@@ -71,15 +73,14 @@ public:
     /**
      * Timeout() - 设置定时器
      * @time:           超时时间(单位:10ms, 比如 time = 1, 那么超时时间就是10ms)
-     * @session:        设置定时器标识
      * 
      *      定时器设置之后，过了超时时间，服务就会收到超时消息;
      *      如果想实现周期性的定时器，可以在收到超时消息之后，
      *      再次调用此函数设置下一次的超时。
      * 
-     * @return:         成功返回: session值, 失败返回: -1
+     * @return:         成功返回: 0, 失败返回: -1
      */
-    int Timeout(int time, int session);
+    int Timeout(int time);
 
 private:
     bool IsFromLib() { return _is_from_lib; }

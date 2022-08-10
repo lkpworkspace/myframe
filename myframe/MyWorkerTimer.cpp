@@ -42,20 +42,18 @@ void MyTimerManager::_AddTimerNode(MyTimer* node)
     }
 }
 
-int MyTimerManager::Timeout(uint32_t handle, int time, int session)
+int MyTimerManager::Timeout(const std::string& service_name, int time)
 {
     if(time <= 0) return -1;
     MyTimer* timer = new MyTimer();
-    timer->m_handle = handle;
-    timer->m_session = session;
+    timer->_service_name = service_name;
 
     // add node
     _mutex.lock();
     timer->m_expire = time + _time;
     _AddTimerNode(timer);
     _mutex.unlock();
-
-    return session;
+    return 0;
 }
 
 void MyTimerManager::_Dispath(MyList* cur)
@@ -71,12 +69,11 @@ void MyTimerManager::_Dispath(MyList* cur)
     {
         temp = begin->next;
         cur->Del(begin);
-        timer = static_cast<MyTimer*>(begin);
-        auto msg = std::make_shared<MyRespMsg>();
-        msg->source = MY_FRAME_DST;
-        msg->destination = timer->m_handle;
-        msg->session = timer->m_session;
-        msg->SetRespMsgType(MyRespMsg::MyRespMsgType::TIMER);
+        timer = dynamic_cast<MyTimer*>(begin);
+        auto msg = std::make_shared<MyTextMsg>();
+        msg->SetSrc(MY_FRAME_DST_NAME);
+        msg->SetDst(timer->_service_name);
+        msg->SetMsgType("TIMER");
         delete begin;
         _timeout_list.emplace_back(msg);
         begin = temp;
@@ -104,7 +101,7 @@ void MyTimerManager::_MoveList(int level, int idx)
     {
         temp = begin->next;
         cur->Del(begin);
-        timer = static_cast<MyTimer*>(begin);
+        timer = dynamic_cast<MyTimer*>(begin);
         _AddTimerNode(timer);
         begin = temp;
     }
@@ -160,8 +157,6 @@ std::list<std::shared_ptr<MyMsg>>& MyTimerManager::Updatetime()
 
 MyWorkerTimer::MyWorkerTimer() {
     SetInstName("MyWorkerTimer");
-    SetObjName("MyWorkerTimer");
-    SetInherits("MyWorker");
 }
 
 MyWorkerTimer::~MyWorkerTimer()
@@ -185,8 +180,8 @@ void MyWorkerTimer::OnExit() {
     MyWorker::OnExit();
 }
 
-int MyWorkerTimer::SetTimeout(uint32_t handle, int time, int session) {
-    return _timer_mgr.Timeout(handle, time, session);
+int MyWorkerTimer::SetTimeout(const std::string& service_name, int time) {
+    return _timer_mgr.Timeout(service_name, time);
 }
 
 int MyWorkerTimer::Work() {

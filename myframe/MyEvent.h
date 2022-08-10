@@ -1,10 +1,5 @@
-#ifndef __MYEVENT_H__
-#define __MYEVENT_H__
-
-#include <sys/epoll.h>
-
+#pragma once
 #include "MyCommon.h"
-#include "MyList.h"
 
 enum class MyEventType : int {
     EV_WORKER,
@@ -12,7 +7,7 @@ enum class MyEventType : int {
     EV_USER,
 };
 
-class MyEvent : public MyNode
+class MyEvent
 {
 public:
     MyEvent() {}
@@ -35,5 +30,3 @@ public:
     /* 获得的epoll事件类型(call by MyApp) */
     virtual void RetEpollEventType(uint32_t ev) = 0;
 };
-
-#endif // __MYEVENT_H__
