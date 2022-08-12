@@ -42,11 +42,12 @@ void MyTimerManager::_AddTimerNode(MyTimer* node)
     }
 }
 
-int MyTimerManager::Timeout(const std::string& actor_name, int time)
+int MyTimerManager::Timeout(const std::string& actor_name, const std::string& timer_name, int time)
 {
     if(time <= 0) return -1;
     MyTimer* timer = new MyTimer();
     timer->_actor_name = actor_name;
+    timer->_timer_name = timer_name;
 
     // add node
     _mutex.lock();
@@ -73,6 +74,7 @@ void MyTimerManager::_Dispath(MyList* cur)
         auto msg = std::make_shared<MyTextMsg>();
         msg->SetSrc(MY_FRAME_DST_NAME);
         msg->SetDst(timer->_actor_name);
+        msg->SetMsgDesc(timer->_timer_name);
         msg->SetMsgType("TIMER");
         delete begin;
         _timeout_list.emplace_back(msg);
@@ -180,8 +182,8 @@ void MyWorkerTimer::OnExit() {
     MyWorker::OnExit();
 }
 
-int MyWorkerTimer::SetTimeout(const std::string& actor_name, int time) {
-    return _timer_mgr.Timeout(actor_name, time);
+int MyWorkerTimer::SetTimeout(const std::string& actor_name, const std::string& timer_name, int time) {
+    return _timer_mgr.Timeout(actor_name, timer_name, time);
 }
 
 int MyWorkerTimer::Work() {

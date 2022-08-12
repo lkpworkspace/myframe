@@ -1,6 +1,6 @@
 #include "MyFlags.h"
 
-#define MYFRAME_ROOT "/home/caros/myframe/"
+#define MYFRAME_ROOT "@MYFRAME_ROOT@"
 
 // params
 DEFINE_uint32(worker_count, 4, "");

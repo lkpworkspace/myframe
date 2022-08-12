@@ -11,7 +11,7 @@ set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/output/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/output/bin")
 
 ### install path
-set(CMAKE_INSTALL_PREFIX "/opt/${CMAKE_PROJECT_NAME}")
+set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}/")
 
 ### deps libs
 find_package(jsoncpp REQUIRED)
@@ -24,12 +24,21 @@ link_libraries(glog gflags jsoncpp)
 ### include dir
 include_directories(.)
 
+### sub directory
 add_subdirectory(myframe)
 add_subdirectory(examples)
 add_subdirectory(test)
 add_subdirectory(misc)
 
-### install dir
+### install file/dir
+INSTALL(FILES 
+    "LICENSE"
+    PERMISSIONS
+    OWNER_READ
+    GROUP_READ
+    WORLD_READ
+    DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
 install(DIRECTORY templates DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY tools DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/log)

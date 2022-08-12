@@ -11,16 +11,16 @@ public:
     virtual ~MyTestTimer(){}
 
     int Init(const char* param) override {
-        /* 设置超时时间为 10 * 10 ms */
-        Timeout(10);
+        /* 设置超时时间为 100 * 10 ms */
+        Timeout("1000ms", 10);
         return 0;
     }
 
     void CB(std::shared_ptr<MyMsg>& msg) override {
-        if (msg->GetMsgType() == "TIMER"){
+        if (msg->GetMsgType() == "TIMER" && msg->GetMsgDesc() == "1000ms") {
             auto rmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
             /* 设置下一次超时时间 100 * 10 ms */
-            Timeout(100);
+            Timeout("1000ms", 100);
             std::cout << "----> from " << msg->GetSrc() << " to " 
                 << GetActorName() << ": " << "timeout" << std::endl;
         }

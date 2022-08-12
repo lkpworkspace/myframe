@@ -13,7 +13,6 @@ MyWorker::MyWorker() :
 }
 
 MyWorker::~MyWorker() {
-    Stop();
     CloseSockPair();
 }
 
@@ -38,6 +37,9 @@ void MyWorker::Start() {
 
 void MyWorker::Stop() {
     _runing = false;
+    MyWorkerCmd cmd = MyWorkerCmd::QUIT;
+    SendCmdToMain(cmd);
+    RecvCmdFromMain(cmd);
 }
 
 void* MyWorker::ListenThread(void* obj) {
@@ -46,6 +48,7 @@ void* MyWorker::ListenThread(void* obj) {
     while (t->_runing)
 		t->Run();
 	t->OnExit();
+    delete t;
     return nullptr;
 }
 

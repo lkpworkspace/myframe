@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+### config file
+set(MYFRAME_ROOT "${CMAKE_INSTALL_PREFIX}")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MyFlags.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/MyFlags.cpp @ONLY)
+
 ### source
 aux_source_directory(. MYFRAME_SRCS)
 list(FILTER MYFRAME_SRCS EXCLUDE REGEX ".*main.cpp$")
@@ -13,14 +17,14 @@ add_executable(myframe_main ${MYFRAME_MAIN})
 target_link_libraries(myframe_main myframe)
 
 ### install
-FILE(GLOB header_files 
-    "MyMsg.h",
-    "MyActor.h",
-    "MyEvent.h",
-    "MyWorker.h",
-    "MyApp.h",
+file(GLOB header_files 
+    MyMsg.h
+    MyActor.h
+    MyEvent.h
+    MyWorker.h
+    MyApp.h
 )
-INSTALL(FILES 
+install(FILES 
     ${header_files}
     PERMISSIONS
     OWNER_READ
@@ -33,7 +37,6 @@ install(TARGETS myframe
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
 )
-
 install(TARGETS myframe_main
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib

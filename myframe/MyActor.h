@@ -65,7 +65,7 @@ public:
 
     /**
      * Timeout() - 设置定时器
-     * @time:           超时时间(单位:10ms, 比如 time = 1, 那么超时时间就是10ms)
+     * @expired: 超时时间(单位:10ms, 比如 expired = 1, 那么超时时间就是10ms)
      * 
      *      定时器设置之后，过了超时时间，actor就会收到超时消息;
      *      如果想实现周期性的定时器，可以在收到超时消息之后，
@@ -73,7 +73,7 @@ public:
      * 
      * @return:         成功返回: 0, 失败返回: -1
      */
-    int Timeout(int time);
+    int Timeout(const std::string& timer_name, int expired);
 
 private:
     bool IsFromLib() { return _is_from_lib; }

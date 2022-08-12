@@ -24,8 +24,8 @@ std::string MyActor::GetActorName() {
     return m_actor_name + "." + m_instance_name;
 }
 
-int MyActor::Timeout(int time) {
-    return MyApp::Inst()->GetTimerWorker()->SetTimeout(GetActorName(), time);
+int MyActor::Timeout(const std::string& timer_name, int expired) {
+    return MyApp::Inst()->GetTimerWorker()->SetTimeout(GetActorName(), timer_name, expired);
 }
 
 void MyActor::SetContext(MyContext* c) {

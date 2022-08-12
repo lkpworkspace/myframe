@@ -8,6 +8,8 @@ public:
     virtual ~MyMsg() {}
     const std::string& GetMsgType() const { return _type; }
     void SetMsgType(const std::string& type) { _type = type; }
+    const std::string& GetMsgDesc() const { return _desc; }
+    void SetMsgDesc(const std::string& desc) { _desc = desc; }
     void SetSrc(const std::string& src) { _src = src; }
     const std::string& GetSrc() const { return _src; }
     void SetDst(const std::string& dst) { _dst = dst; }
@@ -17,6 +19,7 @@ private:
     std::string _src;
     std::string _dst; 
     std::string _type;
+    std::string _desc;
 };
 
 /**

@@ -28,12 +28,12 @@ sudo cp *.a /usr/lib
 mkdir build
 cd build
 cmake ..
-sudo make install
+make install
 ```
 
 ## 运行
 ```sh
-sudo bash /opt/myframe/bin/start_myframe.bash
+bash /opt/myframe/bin/start_myframe.bash
 ```
 
 ## 创建模块工程

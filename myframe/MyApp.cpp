@@ -47,7 +47,7 @@ bool MyApp::Init() {
     Start(FLAGS_worker_count);
 
     /// load actor and worker
-    if (!LoadModsFromConf(FLAGS_actor_desc_path)) {
+    if (!LoadModsFromConf(FLAGS_myframe_root + "actor/")) {
         return false;
     }
     return true;
@@ -116,7 +116,7 @@ bool MyApp::LoadActorFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_actor_lib_path + lib_name)) {
+    if (!_mods->LoadMod(FLAGS_myframe_root + "lib/" + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -174,7 +174,7 @@ bool MyApp::LoadWorkerFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_actor_lib_path + lib_name)) {
+    if (!_mods->LoadMod(FLAGS_myframe_root + "lib/" + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -306,9 +306,6 @@ void MyApp::Start(int worker_count) {
     StartCommonWorker(worker_count);
     StartTimerWorker();
 
-    // ingore SIGPIPE signal
-    signal(SIGPIPE,SIG_IGN);
-    LOG(INFO) << "Ingore SIGPIPE signal";
     _quit = false;
 }
 
@@ -377,17 +374,20 @@ void MyApp::CheckStopWorkers() {
 }
 
 void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
+    // 将定时器线程的发送队列分发完毕
+    DispatchMsg(timer_worker->GetMsgList());
+
     MyWorkerCmd cmd;
     timer_worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
-        // 将定时器线程的发送队列分发完毕
-        DispatchMsg(timer_worker->GetMsgList());
         timer_worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
     case MyWorkerCmd::QUIT: // quit
-        // TODO...
-        LOG(WARNING) << "Unimplement timer task quit: " << (char)cmd;
+        DelEvent(timer_worker);
+        timer_worker->SendCmdToWorker(MyWorkerCmd::QUIT);
+        _cur_worker_count--;
+        LOG(WARNING) << "timer task quit: " << (char)cmd;
         break;
     default:
         LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
@@ -396,47 +396,54 @@ void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
 }
 
 void MyApp::ProcessUserEvent(MyWorker *worker) {
+    // 将用户线程的发送队列分发完毕
+    DispatchMsg(worker->GetMsgList());
+
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
-        // 将用户线程的发送队列分发完毕
-        DispatchMsg(worker->GetMsgList());
         worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
     case MyWorkerCmd::QUIT: // quit
-        LOG(WARNING) << "Unimplement worker task quit: " << (char)cmd;
+        DelEvent(worker);
+        worker->SendCmdToWorker(MyWorkerCmd::QUIT);
+        _cur_worker_count--;
+        LOG(WARNING) << "user worker quit: " << (char)cmd;
         break;
     default:
-        LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
+        LOG(WARNING) << "Unknown user worker cmd: " << (char)cmd;
         break;
     }
 }
 
 void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
+    // 将主线程的缓存消息分发完毕
+    DispatchMsg(_cache_que);
+
+    // 将工作线程的发送队列分发完毕
+    DispatchMsg(worker->GetMsgList());
+
+    // 将actor的发送队列分发完毕
+    DispatchMsg(worker->_context);
+
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
-        // 将主线程的缓存消息分发完毕
-        DispatchMsg(_cache_que);
-
-        // 将工作线程的发送队列分发完毕
-        DispatchMsg(worker->GetMsgList());
-
-        // 将actor的发送队列分发完毕
-        DispatchMsg(worker->_context);
-
         // 将工作线程中的actor状态设置为全局状态
         // 将线程加入空闲队列
         worker->Idle();
         _idle_workers.emplace_back(dynamic_cast<MyWorker*>(worker));
         break;
-    case MyWorkerCmd::QUIT: // quit
-        LOG(WARNING) << "Unimplement worker quit: " << (char)cmd;
+    case MyWorkerCmd::QUIT: // quit    
+        DelEvent(dynamic_cast<MyEvent*>(worker));
+        worker->SendCmdToWorker(MyWorkerCmd::QUIT);
+        _cur_worker_count--;
+        LOG(WARNING) << "common worker quit: " << (char)cmd;
         break;
     default:
-        LOG(WARNING) << "Unknown worker cmd: " << (char)cmd;
+        LOG(WARNING) << "Unknown common worker cmd: " << (char)cmd;
         break;
     }
 }

@@ -4,6 +4,8 @@ FILE(GLOB scripts_files "*.bash")
 INSTALL(FILES 
     ${scripts_files}
     PERMISSIONS
+    OWNER_READ
+    OWNER_WRITE
     OWNER_EXECUTE
     GROUP_READ
     WORLD_READ
