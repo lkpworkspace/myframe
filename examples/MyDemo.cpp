@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string.h>
 
+#include <glog/logging.h>
+
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
@@ -14,15 +16,15 @@ public:
     /* actor模块加载完毕后调用 */
     int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
-        return Send("demo.echo_hello_world", std::make_shared<MyTextMsg>("hello,world"));
+        return Send("actor.demo.echo_hello_world", std::make_shared<MyTextMsg>("hello,world"));
     }
 
-    void CB(std::shared_ptr<MyMsg>& msg) override {
+    void CB(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
             /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
-            auto tmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
-            std::cout << "----> from \"" << tmsg->GetSrc() << "\" to \"" 
-                << GetActorName() << "\": " << tmsg->GetData() << std::endl;
+            const auto& tmsg = std::dynamic_pointer_cast<const MyTextMsg>(msg);
+            LOG(INFO) << "----> from \"" << tmsg->GetSrc() << "\" to \"" 
+                << GetActorName() << "\": " << tmsg->GetData();
         }
     }
 };

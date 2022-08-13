@@ -34,11 +34,11 @@ public:
      * @msg:      actor收到的消息
      * 
      */
-    virtual void CB(std::shared_ptr<MyMsg>& msg) = 0;
+    virtual void CB(const std::shared_ptr<const MyMsg>& msg) = 0;
 
     /**
      * Send() - 发送消息给别的actor
-     * @dst:            目的actor
+     * @dst:            目的actor, eg: actor.demo.hellow_world
      * @msg:            发送的消息
      * 
      *      将消息添加到该actor的消息发送队列中，等待actor执行完成后，myframe会将消息分发给其他actor

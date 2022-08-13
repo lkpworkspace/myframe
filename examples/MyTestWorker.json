@@ -1,0 +1,19 @@
+{
+    "type":"library",
+    "lib":"libtest_worker.so",
+    "actor":{
+        "testworker":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ]
+    },
+    "worker":{
+        "testworker":[
+            {
+                "instance_name":"#1"
+            }
+        ]
+    }
+}

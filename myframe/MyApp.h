@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <list>
+#include <unordered_map>
 
 #include <jsoncpp/json/json.h>
 
@@ -44,6 +45,7 @@ public:
     MyContext* GetContext(std::string& actor_name);
 
     MyWorkerTimer* GetTimerWorker() { return _timer_worker; }
+    std::shared_ptr<MyHandleManager>& GetHandleManager() { return _handle_mgr; }
 
     bool AddEvent(MyEvent *ev);
     bool DelEvent(MyEvent *ev);
@@ -75,8 +77,6 @@ private:
     void StartCommonWorker(int worker_count);
     void StartTimerWorker();
 
-    /// 获取有消息的actor
-    MyContext* GetContextWithMsg();
     /// 通知执行事件
     void CheckStopWorkers();
     /// 分发事件
@@ -86,7 +86,6 @@ private:
     void ProcessWorkerEvent(MyWorkerCommon*);
     void ProcessTimerEvent(MyWorkerTimer*);
     void ProcessUserEvent(MyWorker*);
-    void HandleSysMsg(std::shared_ptr<MyMsg>& msg);
 
     /// 退出标志
     bool _quit;
@@ -95,9 +94,9 @@ private:
     /// 工作线程数
     int _cur_worker_count;
     /// 空闲线程链表
-    std::list<MyWorker*> _idle_workers;
-    /// 缓存消息队列
-    std::list<std::shared_ptr<MyMsg>> _cache_que;          
+    std::list<MyWorkerCommon*> _idle_workers;
+    /// 等待消息线程
+    std::unordered_map<std::string, MyWorker*> _wait_msg_workers;
     /// 句柄管理对象
     std::shared_ptr<MyHandleManager> _handle_mgr; 
     /// 模块管理对象

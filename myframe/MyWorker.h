@@ -14,11 +14,13 @@
 enum class MyWorkerCmd : char {
     IDLE            = 'i',     ///< 工作线程空闲
     RUN             = 'r',     ///< 工作线程运行
+    WAIT_FOR_MSG    = 'w',     ///< 工作线程等待消息
     QUIT            = 'q',     ///< 线程退出命令
 };
 
 class MyWorker : public MyEvent
 {
+    friend class MyApp;
 public:
     MyWorker();
     virtual ~MyWorker();
@@ -42,16 +44,24 @@ public:
     int RecvCmdFromWorker(MyWorkerCmd& cmd);
 
     ////////////////////////////// 消息处理相关函数
-    void PushMsg(std::shared_ptr<MyMsg> msg);
-    std::list<std::shared_ptr<MyMsg>>& GetMsgList() { return _send; }
+    int SendMsgListSize() { return _send.size(); }
+    void SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg);
 
     void SetInstName(const std::string& name) { _inst_name = name; }
     std::string& GetInstName() { return _inst_name; }
 
 protected:
     int DispatchMsg();
+    int DispatchAndWaitMsg();
+    
     int RecvCmdFromMain(MyWorkerCmd& cmd);
     int SendCmdToMain(const MyWorkerCmd& cmd);
+    
+    int RecvMsgListSize() { return _que.size(); }
+    const std::shared_ptr<const MyMsg> GetRecvMsg();
+    
+    void PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list);
+    
     static void* ListenThread(void*);
 
 private:
@@ -61,6 +71,8 @@ private:
     std::string _inst_name;
     /// idx: 0 used by MyWorkerCommon, 1 used by MyApp
     int _sockpair[2];
+    /// 运行时消息队列
+    std::list<std::shared_ptr<MyMsg>> _que;
     /// 发送消息队列
     std::list<std::shared_ptr<MyMsg>> _send;
     /// posix thread id

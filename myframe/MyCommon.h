@@ -15,6 +15,8 @@ void MyListAppend(std::list<std::shared_ptr<T>>& src, std::list<std::shared_ptr<
     dst.clear();
 }
 
+std::vector<std::string> SplitMsgName(const std::string& name);
+
 class MyCommon {
 public:
     static std::vector<std::string> GetDirFiles(const std::string& conf_path);

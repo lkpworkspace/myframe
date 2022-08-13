@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string.h>
 
+#include <glog/logging.h>
+
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
@@ -16,13 +18,13 @@ public:
         return 0;
     }
 
-    void CB(std::shared_ptr<MyMsg>& msg) override {
+    void CB(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TIMER" && msg->GetMsgDesc() == "1000ms") {
-            auto rmsg = std::dynamic_pointer_cast<MyTextMsg>(msg);
+            const auto& rmsg = std::dynamic_pointer_cast<const MyTextMsg>(msg);
             /* 设置下一次超时时间 100 * 10 ms */
             Timeout("1000ms", 100);
-            std::cout << "----> from " << msg->GetSrc() << " to " 
-                << GetActorName() << ": " << "timeout" << std::endl;
+            LOG(INFO) << "----> from " << msg->GetSrc() << " to " 
+                << GetActorName() << ": " << "timeout";
         }
     }
 };

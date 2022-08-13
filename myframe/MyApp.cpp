@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "MyCommon.h"
 #include "MyApp.h"
 #include "MyCUtils.h"
 #include "MyFlags.h"
@@ -47,7 +48,7 @@ bool MyApp::Init() {
     Start(FLAGS_worker_count);
 
     /// load actor and worker
-    if (!LoadModsFromConf(FLAGS_myframe_root + "actor/")) {
+    if (!LoadModsFromConf(FLAGS_myframe_service_conf_dir)) {
         return false;
     }
     return true;
@@ -55,7 +56,8 @@ bool MyApp::Init() {
 
 bool MyApp::LoadModsFromConf(const std::string& path) {
     auto actor_conf_list = MyCommon::GetDirFiles(path);
-    LOG(INFO) << "Search " << actor_conf_list.size() << " actor conf";
+    LOG(INFO) << "Search " << actor_conf_list.size() << " actor conf"
+              << ", from " << path;
     if (actor_conf_list.size() <= 0) {
         LOG(WARNING) << "Search actor failed, exit";
         return false;
@@ -116,7 +118,7 @@ bool MyApp::LoadActorFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_myframe_root + "lib/" + lib_name)) {
+    if (!_mods->LoadMod(FLAGS_myframe_lib_dir + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -174,7 +176,7 @@ bool MyApp::LoadWorkerFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_myframe_root + "lib/" + lib_name)) {
+    if (!_mods->LoadMod(FLAGS_myframe_lib_dir + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -188,7 +190,7 @@ bool MyApp::LoadWorkerFromLib(
             return false;
         }
         MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
-        worker->SetInstName(inst["instance_name"].asString());
+        worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
         worker->Start();
         AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
@@ -209,7 +211,7 @@ bool MyApp::LoadWorkerFromClass(
             return false;
         }
         MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
-        worker->SetInstName(inst["instance_name"].asString());
+        worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
         worker->Start();
         AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
@@ -309,36 +311,34 @@ void MyApp::Start(int worker_count) {
     _quit = false;
 }
 
-MyContext* MyApp::GetContext(uint32_t handle) {
-    return _handle_mgr->GetContext(handle);
-}
-
-MyContext* MyApp::GetContext(std::string& actor_name) {
-    return _handle_mgr->GetContext(actor_name);
-}
-
-MyContext* MyApp::GetContextWithMsg() {
-    return _handle_mgr->GetContextWithMsg();
-}
-
-void MyApp::HandleSysMsg(std::shared_ptr<MyMsg>& msg) {
-    LOG(INFO) << "main thread get unknown msg type: " << msg->GetMsgType();
-}
-
 void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
     for (auto& msg : msg_list) {
-        if(msg->GetDst() == MY_FRAME_DST_NAME){
-            HandleSysMsg(msg);
+        LOG(INFO) << "msg from " << msg->GetSrc() << " to " << msg->GetDst();
+        auto name_list = SplitMsgName(msg->GetDst());
+        if (name_list.size() < 2) {
+            LOG(ERROR) << "Unknown msg dst " << msg->GetDst() << " from " << msg->GetSrc();
             continue;
         }
-        auto ctx = _handle_mgr->GetContext(msg->GetDst());
-        if(nullptr == ctx){
-            LOG(ERROR) << "msg src:" 
-                << msg->GetSrc() << " dst:" << msg->GetDst();
-            continue;
+        // dispatch to user worker
+        if (name_list[0] == "worker") {
+            if (_wait_msg_workers.find(msg->GetDst()) == _wait_msg_workers.end()) {
+                LOG(ERROR) << "Unknown msg src:" 
+                    << msg->GetSrc() << " dst:" << msg->GetDst();
+                continue;
+            }
+            _wait_msg_workers[msg->GetDst()]->_que.emplace_back(msg);
         }
-        ctx->PushMsg(msg);
-        _handle_mgr->PushContext(ctx);
+        // dispatch to actor
+        if (name_list[0] == "actor") {      
+            auto ctx = _handle_mgr->GetContext(msg->GetDst());
+            if(nullptr == ctx){
+                LOG(ERROR) << "Unknown msg src:" 
+                    << msg->GetSrc() << " dst:" << msg->GetDst();
+                continue;
+            }
+            ctx->PushMsg(msg);
+            _handle_mgr->PushContext(ctx);
+        }
     }
     msg_list.clear();
 }
@@ -353,10 +353,18 @@ void MyApp::DispatchMsg(MyContext* context) {
 
 void MyApp::CheckStopWorkers() {
     MyContext* context;
+    for (auto it = _wait_msg_workers.begin(); it != _wait_msg_workers.end();) {
+        if (it->second->_que.size() > 0) {
+            auto worker = it->second;
+            it = _wait_msg_workers.erase(it);
+            worker->SendCmdToWorker(MyWorkerCmd::RUN);
+            continue;
+        }
+        ++it;
+    }
     for (auto it = _idle_workers.begin(); it != _idle_workers.end();) {
-        auto worker = dynamic_cast<MyWorkerCommon*>(*it);
-        if(nullptr == (context = GetContextWithMsg())) {
-            LOG(INFO) << "no msg need process";
+        auto worker = *it;
+        if(nullptr == (context = _handle_mgr->GetContextWithMsg())) {
             break;
         }
         auto& msg_list = context->GetRecvMsgList();
@@ -375,7 +383,7 @@ void MyApp::CheckStopWorkers() {
 
 void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
     // 将定时器线程的发送队列分发完毕
-    DispatchMsg(timer_worker->GetMsgList());
+    DispatchMsg(timer_worker->_send);
 
     MyWorkerCmd cmd;
     timer_worker->RecvCmdFromWorker(cmd);
@@ -397,7 +405,7 @@ void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
 
 void MyApp::ProcessUserEvent(MyWorker *worker) {
     // 将用户线程的发送队列分发完毕
-    DispatchMsg(worker->GetMsgList());
+    DispatchMsg(worker->_send);
 
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);
@@ -411,6 +419,9 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
         _cur_worker_count--;
         LOG(WARNING) << "user worker quit: " << (char)cmd;
         break;
+    case MyWorkerCmd::WAIT_FOR_MSG:
+        _wait_msg_workers[worker->GetInstName()] = worker;
+        break;
     default:
         LOG(WARNING) << "Unknown user worker cmd: " << (char)cmd;
         break;
@@ -418,11 +429,8 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
 }
 
 void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
-    // 将主线程的缓存消息分发完毕
-    DispatchMsg(_cache_que);
-
     // 将工作线程的发送队列分发完毕
-    DispatchMsg(worker->GetMsgList());
+    DispatchMsg(worker->_send);
 
     // 将actor的发送队列分发完毕
     DispatchMsg(worker->_context);
@@ -434,7 +442,7 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
         // 将工作线程中的actor状态设置为全局状态
         // 将线程加入空闲队列
         worker->Idle();
-        _idle_workers.emplace_back(dynamic_cast<MyWorker*>(worker));
+        _idle_workers.emplace_back(worker);
         break;
     case MyWorkerCmd::QUIT: // quit    
         DelEvent(dynamic_cast<MyEvent*>(worker));

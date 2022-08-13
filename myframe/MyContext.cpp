@@ -16,7 +16,6 @@ MyContext::MyContext(std::shared_ptr<MyActor>& mod) :
 
 int MyContext::SendMsg(std::shared_ptr<MyMsg>& msg) {
     if(nullptr == msg) return -1;
-    LOG(INFO) << "actor \"" << _mod->GetActorName() << "\" send message type: " << msg->GetMsgType();
     _send.emplace_back(msg);
     return 0;
 }
@@ -25,6 +24,6 @@ int MyContext::Init(const char* param) {
     return _mod->Init(param);
 }
 
-void MyContext::CB(std::shared_ptr<MyMsg>& msg) {
+void MyContext::CB(const std::shared_ptr<const MyMsg>& msg) {
     _mod->CB(msg);
 }

@@ -6,20 +6,23 @@ class MyMsg
 {
 public:
     virtual ~MyMsg() {}
-    const std::string& GetMsgType() const { return _type; }
-    void SetMsgType(const std::string& type) { _type = type; }
-    const std::string& GetMsgDesc() const { return _desc; }
-    void SetMsgDesc(const std::string& desc) { _desc = desc; }
-    void SetSrc(const std::string& src) { _src = src; }
+
     const std::string& GetSrc() const { return _src; }
-    void SetDst(const std::string& dst) { _dst = dst; }
     const std::string& GetDst() const { return _dst; }
+    const std::string& GetMsgType() const { return _type; }
+    const std::string& GetMsgDesc() const { return _desc; }
+
+    void SetSrc(const std::string& src) { _src = src; }
+    void SetDst(const std::string& dst) { _dst = dst; }
+    void SetMsgType(const std::string& type) { _type = type; }
+    void SetMsgDesc(const std::string& desc) { _desc = desc; }
 
 private:
     std::string _src;
     std::string _dst; 
     std::string _type;
     std::string _desc;
+
 };
 
 /**
@@ -39,7 +42,7 @@ public:
     virtual ~MyTextMsg(){}
     void SetData(const char* data, int len);
     void SetData(std::string& data);
-    const std::string& GetData() { return _data; }
+    const std::string& GetData() const { return _data; }
 private:
     std::string         _data;
 };

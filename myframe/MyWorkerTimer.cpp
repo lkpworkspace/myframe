@@ -158,7 +158,7 @@ std::list<std::shared_ptr<MyMsg>>& MyTimerManager::Updatetime()
 //////////////////////////////////////////////////////
 
 MyWorkerTimer::MyWorkerTimer() {
-    SetInstName("MyWorkerTimer");
+    SetInstName("worker.MyWorkerTimer");
 }
 
 MyWorkerTimer::~MyWorkerTimer()
@@ -188,6 +188,6 @@ int MyWorkerTimer::SetTimeout(const std::string& actor_name, const std::string& 
 
 int MyWorkerTimer::Work() {
     auto& timeout_list = _timer_mgr.Updatetime();
-    MyListAppend(GetMsgList(), timeout_list);
-    return (GetMsgList().empty() == false) ? 1 : 0;
+    PushSendMsgList(timeout_list);
+    return SendMsgListSize();
 }

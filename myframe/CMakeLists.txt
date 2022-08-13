@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-### config file
-set(MYFRAME_ROOT "${CMAKE_INSTALL_PREFIX}")
+### configure file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MyFlags.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/MyFlags.cpp @ONLY)
 
 ### source

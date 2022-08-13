@@ -5,7 +5,7 @@
 
 MyWorkerCommon::MyWorkerCommon() :
     _context(nullptr) {
-    SetInstName("MyWorkerCommon");
+    SetInstName("worker.MyWorkerCommon");
 }
 
 MyWorkerCommon::~MyWorkerCommon() {
@@ -39,10 +39,9 @@ int MyWorkerCommon::Work() {
         LOG(ERROR) << "context is nullptr";
         return -1;
     }
-
-    for (auto msg : _que) {
-        ctx->CB(msg);
+    while (RecvMsgListSize() > 0) {
+        ctx->CB(GetRecvMsg());
     }
-    _que.clear();
+    
     return 0;
 }

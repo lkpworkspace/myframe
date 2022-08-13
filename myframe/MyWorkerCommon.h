@@ -27,8 +27,6 @@ private:
     int Work();
     /* 工作线程进入空闲链表之前进行的操作 */
     void Idle();
-    /// 运行时消息队列
-    std::list<std::shared_ptr<MyMsg>> _que;
     //// 当前执行actor的指针
     MyContext* _context;
 };

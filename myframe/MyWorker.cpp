@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "MyCommon.h"
 #include "MyWorker.h"
 #include "MyLog.h"
 #include "MyCUtils.h"
@@ -76,14 +77,35 @@ int MyWorker::RecvCmdFromWorker(MyWorkerCmd& cmd) {
     return ret;
 }
 
-void MyWorker::PushMsg(std::shared_ptr<MyMsg> msg) {
+void MyWorker::SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg) {
+    msg->SetSrc(GetInstName());
+    msg->SetDst(dst);
     _send.emplace_back(msg);
-}   
+}
+
+void MyWorker::PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list) {
+    MyListAppend(_send, msg_list);
+}
 
 int MyWorker::DispatchMsg() {
     MyWorkerCmd cmd = MyWorkerCmd::IDLE;
     SendCmdToMain(cmd);
     return RecvCmdFromMain(cmd);
+}
+
+int MyWorker::DispatchAndWaitMsg() {
+    MyWorkerCmd cmd = MyWorkerCmd::WAIT_FOR_MSG;
+    SendCmdToMain(cmd);
+    return RecvCmdFromMain(cmd);
+}
+
+const std::shared_ptr<const MyMsg> MyWorker::GetRecvMsg() { 
+    if (_que.empty()) {
+        return nullptr;
+    }
+    auto msg = _que.front();
+    _que.pop_front();
+    return msg;
 }
 
 bool MyWorker::CreateSockPair() {

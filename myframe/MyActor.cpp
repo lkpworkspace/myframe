@@ -21,7 +21,7 @@ uint32_t MyActor::GetHandle() {
 }
 
 std::string MyActor::GetActorName() {
-    return m_actor_name + "." + m_instance_name;
+    return "actor." + m_actor_name + "." + m_instance_name;
 }
 
 int MyActor::Timeout(const std::string& timer_name, int expired) {
