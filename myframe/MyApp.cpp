@@ -129,11 +129,11 @@ bool MyApp::LoadActorFromLib(
         LOG(INFO) << "create actor instance \"" << actor_name << "\": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
             LOG(ERROR) << "actor " << actor_name <<" key \"instance_name\": no key, skip";
-            return false;
+            continue;
         }
         if (!inst.isMember("instance_params")) {
             LOG(ERROR) << "actor " << actor_name <<" key \"instance_params\": no key, skip";
-            return false;
+            continue;
         }
         res |= CreateContext(
             lib_name, actor_name, 
@@ -153,11 +153,11 @@ bool MyApp::LoadActorFromClass(
         LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
             LOG(ERROR) << "actor " << actor_name <<" key \"instance_name\": no key, skip";
-            return false;
+            continue;
         }
         if (!inst.isMember("instance_params")) {
             LOG(ERROR) << "actor " << actor_name <<" key \"instance_params\": no key, skip";
-            return false;
+            continue;
         }
         res |= CreateContext(
             "class", actor_name, 
@@ -186,9 +186,10 @@ bool MyApp::LoadWorkerFromLib(
     for (const auto& inst : insts) {
         LOG(INFO) << "create worker instance \"" << worker_name << "\": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
-            LOG(ERROR) << "actor " << worker_name <<" key \"instance_name\": no key, skip";
-            return false;
+            LOG(ERROR) << "worker " << worker_name <<" key \"instance_name\": no key, skip";
+            continue;
         }
+        res = true;
         MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
         worker->Start();
@@ -203,13 +204,14 @@ bool MyApp::LoadWorkerFromClass(
     const Json::Value& worker_list, 
     const std::string& worker_name) {
     const auto& insts = worker_list[worker_name];
-    bool res = true;
+    bool res = false;
     for (const auto& inst : insts) {
         LOG(INFO) << "create instance \"class\"" << ": " << inst.toStyledString();
         if (!inst.isMember("instance_name")) {
             LOG(ERROR) << "worker \"" << worker_name << "\" key \"instance_name\": no key, skip";
-            return false;
+            continue;
         }
+        res = true;
         MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
         worker->Start();
@@ -417,10 +419,11 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
         DelEvent(worker);
         worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
-        LOG(WARNING) << "user worker quit: " << (char)cmd;
+        LOG(INFO) << "user worker " << worker->GetInstName() << " quit: " << (char)cmd;
         break;
     case MyWorkerCmd::WAIT_FOR_MSG:
         _wait_msg_workers[worker->GetInstName()] = worker;
+        LOG(INFO) << "user worker " << worker->GetInstName() << " wait for msg: " << (char)cmd;
         break;
     default:
         LOG(WARNING) << "Unknown user worker cmd: " << (char)cmd;
