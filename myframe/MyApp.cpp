@@ -321,17 +321,17 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             LOG(ERROR) << "Unknown msg dst " << msg->GetDst() << " from " << msg->GetSrc();
             continue;
         }
-        // dispatch to user worker
-        if (name_list[0] == "worker") {
+        
+        if (name_list[0] == "worker") { 
+            // dispatch to user worker
             if (_wait_msg_workers.find(msg->GetDst()) == _wait_msg_workers.end()) {
                 LOG(ERROR) << "Unknown msg src:" 
                     << msg->GetSrc() << " dst:" << msg->GetDst();
                 continue;
             }
             _wait_msg_workers[msg->GetDst()]->_que.emplace_back(msg);
-        }
-        // dispatch to actor
-        if (name_list[0] == "actor") {      
+        } else if (name_list[0] == "actor") {  
+            // dispatch to actor    
             auto ctx = _handle_mgr->GetContext(msg->GetDst());
             if(nullptr == ctx){
                 LOG(ERROR) << "Unknown msg src:" 
@@ -340,6 +340,8 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             }
             ctx->PushMsg(msg);
             _handle_mgr->PushContext(ctx);
+        } else {
+            LOG(ERROR) << "Unknown msg dst " << msg->GetDst() << " from " << msg->GetSrc();
         }
     }
     msg_list.clear();
@@ -359,6 +361,7 @@ void MyApp::CheckStopWorkers() {
         if (it->second->_que.size() > 0) {
             auto worker = it->second;
             it = _wait_msg_workers.erase(it);
+            LOG(INFO) << "weakup user worker " << worker->GetInstName() << "...";
             worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
         }
@@ -374,6 +377,7 @@ void MyApp::CheckStopWorkers() {
             MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
             it = _idle_workers.erase(it);
+            LOG(INFO) << "run actor " << context->GetModule()->GetActorName() << "...";
             worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
         }else{
@@ -395,9 +399,9 @@ void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
         break;
     case MyWorkerCmd::QUIT: // quit
         DelEvent(timer_worker);
+        LOG(WARNING) << "timer task quit: " << (char)cmd;
         timer_worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
-        LOG(WARNING) << "timer task quit: " << (char)cmd;
         break;
     default:
         LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
@@ -417,9 +421,9 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
         break;
     case MyWorkerCmd::QUIT: // quit
         DelEvent(worker);
+        LOG(INFO) << "user worker " << worker->GetInstName() << " quit: " << (char)cmd;
         worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
-        LOG(INFO) << "user worker " << worker->GetInstName() << " quit: " << (char)cmd;
         break;
     case MyWorkerCmd::WAIT_FOR_MSG:
         _wait_msg_workers[worker->GetInstName()] = worker;
@@ -449,9 +453,9 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
         break;
     case MyWorkerCmd::QUIT: // quit    
         DelEvent(dynamic_cast<MyEvent*>(worker));
+        LOG(WARNING) << "common worker quit: " << (char)cmd;
         worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
-        LOG(WARNING) << "common worker quit: " << (char)cmd;
         break;
     default:
         LOG(WARNING) << "Unknown common worker cmd: " << (char)cmd;
