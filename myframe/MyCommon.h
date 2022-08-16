@@ -10,9 +10,9 @@
 #include "MyLog.h"
 
 template<typename T>
-void MyListAppend(std::list<std::shared_ptr<T>>& src, std::list<std::shared_ptr<T>>& dst) {
-    src.insert(src.end(), dst.begin(), dst.end());
-    dst.clear();
+void MyListAppend(std::list<std::shared_ptr<T>>& dst, std::list<std::shared_ptr<T>>& src) {
+    dst.insert(dst.end(), src.begin(), src.end());
+    src.clear();
 }
 
 std::vector<std::string> SplitMsgName(const std::string& name);

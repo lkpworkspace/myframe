@@ -97,6 +97,8 @@ private:
     std::list<MyWorkerCommon*> _idle_workers;
     /// 等待消息线程
     std::unordered_map<std::string, MyWorker*> _wait_msg_workers;
+    /// 用户worker
+    std::unordered_map<std::string, MyWorker*> _user_workers;
     /// 句柄管理对象
     std::shared_ptr<MyHandleManager> _handle_mgr; 
     /// 模块管理对象

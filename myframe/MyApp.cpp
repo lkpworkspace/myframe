@@ -192,6 +192,7 @@ bool MyApp::LoadWorkerFromLib(
         res = true;
         MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
+        _user_workers[worker->GetInstName()] = worker;
         worker->Start();
         AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
@@ -214,6 +215,7 @@ bool MyApp::LoadWorkerFromClass(
         res = true;
         MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
+        _user_workers[worker->GetInstName()] = worker;
         worker->Start();
         AddEvent(dynamic_cast<MyEvent*>(worker));
         _cur_worker_count++;
@@ -322,14 +324,13 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             continue;
         }
         
-        if (name_list[0] == "worker") { 
+        if (name_list[0] == "worker" && _user_workers.find(msg->GetDst()) != _user_workers.end()) { 
             // dispatch to user worker
             if (_wait_msg_workers.find(msg->GetDst()) == _wait_msg_workers.end()) {
-                LOG(ERROR) << "Unknown msg src:" 
-                    << msg->GetSrc() << " dst:" << msg->GetDst();
-                continue;
+                _user_workers[msg->GetDst()]->_recv.emplace_back(msg);
+            } else {
+                _wait_msg_workers[msg->GetDst()]->_que.emplace_back(msg);
             }
-            _wait_msg_workers[msg->GetDst()]->_que.emplace_back(msg);
         } else if (name_list[0] == "actor") {  
             // dispatch to actor    
             auto ctx = _handle_mgr->GetContext(msg->GetDst());
@@ -358,11 +359,14 @@ void MyApp::DispatchMsg(MyContext* context) {
 void MyApp::CheckStopWorkers() {
     MyContext* context;
     for (auto it = _wait_msg_workers.begin(); it != _wait_msg_workers.end();) {
-        if (it->second->_que.size() > 0) {
-            auto worker = it->second;
+        auto user_worker = it->second;
+        if (!user_worker->_recv.empty()) {
+            MyListAppend(user_worker->_que, user_worker->_recv);
+        }
+        if (user_worker->_que.size() > 0) {
             it = _wait_msg_workers.erase(it);
-            LOG(INFO) << "weakup user worker " << worker->GetInstName() << "...";
-            worker->SendCmdToWorker(MyWorkerCmd::RUN);
+            LOG(INFO) << "weakup " << user_worker->GetInstName() << "...";
+            user_worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
         }
         ++it;
@@ -377,7 +381,7 @@ void MyApp::CheckStopWorkers() {
             MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
             it = _idle_workers.erase(it);
-            LOG(INFO) << "run actor " << context->GetModule()->GetActorName() << "...";
+            LOG(INFO) << "run " << context->GetModule()->GetActorName() << "...";
             worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
         }else{
@@ -421,13 +425,14 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
         break;
     case MyWorkerCmd::QUIT: // quit
         DelEvent(worker);
-        LOG(INFO) << "user worker " << worker->GetInstName() << " quit: " << (char)cmd;
+        _user_workers.erase(worker->GetInstName());
+        LOG(INFO) << worker->GetInstName() << " quit: " << (char)cmd;
         worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
         break;
     case MyWorkerCmd::WAIT_FOR_MSG:
         _wait_msg_workers[worker->GetInstName()] = worker;
-        LOG(INFO) << "user worker " << worker->GetInstName() << " wait for msg: " << (char)cmd;
+        LOG(INFO) << worker->GetInstName() << " wait for msg: " << (char)cmd;
         break;
     default:
         LOG(WARNING) << "Unknown user worker cmd: " << (char)cmd;

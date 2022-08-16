@@ -71,6 +71,8 @@ private:
     std::string _inst_name;
     /// idx: 0 used by MyWorkerCommon, 1 used by MyApp
     int _sockpair[2];
+    /// 接收消息队列
+    std::list<std::shared_ptr<MyMsg>> _recv;
     /// 运行时消息队列
     std::list<std::shared_ptr<MyMsg>> _que;
     /// 发送消息队列

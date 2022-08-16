@@ -1,6 +1,11 @@
 #include "MyLog.h"
 #include "MyFlags.h"
 
+static void signal_handler(const char *data, int size) {
+    std::string str = std::string(data, size);
+    LOG(ERROR) << str;
+}
+
 MyLog::MyLog()
 {
     // output log immediately
@@ -8,6 +13,9 @@ MyLog::MyLog()
     // set the log file to 100MB
     FLAGS_max_log_size = 100;
     FLAGS_stop_logging_if_full_disk = true;
+    // install core handle
+    google::InstallFailureSignalHandler();
+    google::InstallFailureWriter(&signal_handler);
     // init glog
     google::InitGoogleLogging("myframe");
     // log with level >=ERROR is output to stderr
