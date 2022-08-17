@@ -32,6 +32,8 @@ public:
     void PushContext(MyContext* ctx);
 
 private:
+    void PrintWaitQueue();
+    
     /// 暂时没用
     uint32_t            m_harbor;
     /// 当前actor数组大小

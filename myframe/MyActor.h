@@ -5,10 +5,6 @@
 #include <memory>
 #include <string>
 
-/* 系统的句柄号 */
-#define MY_FRAME_DST 0xffffff
-#define MY_FRAME_DST_NAME "myframe"
-
 class MyMsg;
 class MyContext;
 class MyActor

@@ -316,8 +316,9 @@ void MyApp::Start(int worker_count) {
 }
 
 void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
+    LOG_IF(WARNING, msg_list.size() > FLAGS_dispatch_or_process_msg_max) << " dispatch msg too many";
     for (auto& msg : msg_list) {
-        LOG(INFO) << "msg from " << msg->GetSrc() << " to " << msg->GetDst();
+        DLOG(INFO) << "msg from " << msg->GetSrc() << " to " << msg->GetDst();
         auto name_list = SplitMsgName(msg->GetDst());
         if (name_list.size() < 2) {
             LOG(ERROR) << "Unknown msg dst " << msg->GetDst() << " from " << msg->GetSrc();
@@ -335,14 +336,16 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             // dispatch to actor    
             auto ctx = _handle_mgr->GetContext(msg->GetDst());
             if(nullptr == ctx){
-                LOG(ERROR) << "Unknown msg src:" 
-                    << msg->GetSrc() << " dst:" << msg->GetDst();
+                LOG(ERROR) << "Unknown msg from " 
+                    << msg->GetSrc() << " to " << msg->GetDst();
                 continue;
             }
             ctx->PushMsg(msg);
             _handle_mgr->PushContext(ctx);
         } else {
-            LOG(ERROR) << "Unknown msg dst " << msg->GetDst() << " from " << msg->GetSrc();
+            LOG(ERROR) \
+                << "Unknown msg from " 
+                << msg->GetSrc() << " to " << msg->GetDst();
         }
     }
     msg_list.clear();
@@ -350,42 +353,59 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
 
 // 将获得的消息分发给其他actor
 void MyApp::DispatchMsg(MyContext* context) {
-    if(nullptr == context) return;
+    if(nullptr == context) {
+        return;
+    }
+    DLOG(INFO) << context->GetModule()->GetActorName() << " dispatch msg...";
     context->SetWaitFlag();
     auto& msg_list = context->GetDispatchMsgList();
     DispatchMsg(msg_list);
 }
 
 void MyApp::CheckStopWorkers() {
-    MyContext* context;
+    DLOG(INFO) << "check stop worker";
     for (auto it = _wait_msg_workers.begin(); it != _wait_msg_workers.end();) {
         auto user_worker = it->second;
+        DLOG(INFO) << user_worker->GetInstName() << " check recv msg queue...";
         if (!user_worker->_recv.empty()) {
             MyListAppend(user_worker->_que, user_worker->_recv);
         }
         if (user_worker->_que.size() > 0) {
             it = _wait_msg_workers.erase(it);
-            LOG(INFO) << "weakup " << user_worker->GetInstName() << "...";
+            LOG(INFO) << "recv " << user_worker->_que.size() << " msg, weakup " << user_worker->GetInstName();
             user_worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
+        } else {
+            DLOG(INFO) << user_worker->GetInstName() << " no recv msg, continue wait...";
         }
         ++it;
     }
+    LOG_IF(INFO, _idle_workers.size() == 0) << "worker busy, wait for idle worker...";
+    MyContext* context = nullptr;
     for (auto it = _idle_workers.begin(); it != _idle_workers.end();) {
         auto worker = *it;
         if(nullptr == (context = _handle_mgr->GetContextWithMsg())) {
+            LOG(INFO) << "no actor need process, waiting...";
             break;
         }
+        DLOG(INFO) \
+            << worker->GetInstName() 
+            << "."
+            << (unsigned long)worker->GetPosixThreadId() 
+            << " dispatch task to idle worker";
         auto& msg_list = context->GetRecvMsgList();
         if(!msg_list.empty()){
+            LOG_IF(WARNING, msg_list.size() > FLAGS_dispatch_or_process_msg_max) \
+                << context->GetModule()->GetActorName() 
+                << " recv msg size too many: " << msg_list.size();
+            LOG(INFO) << "run " << context->GetModule()->GetActorName();
             MyListAppend(worker->_que, msg_list);
             worker->SetContext(context);
             it = _idle_workers.erase(it);
-            LOG(INFO) << "run " << context->GetModule()->GetActorName() << "...";
             worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
         }else{
-            LOG(ERROR) << "Context has no msg";
+            LOG(ERROR) << context->GetModule()->GetActorName() << " has no msg";
         }
         ++it;
     }
@@ -393,46 +413,50 @@ void MyApp::CheckStopWorkers() {
 
 void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
     // 将定时器线程的发送队列分发完毕
+    DLOG(INFO) << timer_worker->GetInstName() << " dispatch msg...";
     DispatchMsg(timer_worker->_send);
 
     MyWorkerCmd cmd;
     timer_worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
+        DLOG(INFO) << timer_worker->GetInstName() << " run again";
         timer_worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
     case MyWorkerCmd::QUIT: // quit
+        LOG(INFO) << timer_worker->GetInstName() << " quit, delete from myframe";
         DelEvent(timer_worker);
-        LOG(WARNING) << "timer task quit: " << (char)cmd;
         timer_worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
         break;
     default:
-        LOG(WARNING) << "Unknown timer task cmd: " << (char)cmd;
+        LOG(WARNING) << "Unknown timer worker cmd: " << (char)cmd;
         break;
     }
 }
 
 void MyApp::ProcessUserEvent(MyWorker *worker) {
     // 将用户线程的发送队列分发完毕
+    DLOG(INFO) << worker->GetInstName() << " dispatch msg...";
     DispatchMsg(worker->_send);
 
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
+        DLOG(INFO) << worker->GetInstName() << " run again";
         worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
     case MyWorkerCmd::QUIT: // quit
+        LOG(INFO) << worker->GetInstName() << " quit, delete from myframe";
         DelEvent(worker);
         _user_workers.erase(worker->GetInstName());
-        LOG(INFO) << worker->GetInstName() << " quit: " << (char)cmd;
         worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
         break;
     case MyWorkerCmd::WAIT_FOR_MSG:
+        DLOG(INFO) << worker->GetInstName() << " wait for msg...";
         _wait_msg_workers[worker->GetInstName()] = worker;
-        LOG(INFO) << worker->GetInstName() << " wait for msg: " << (char)cmd;
         break;
     default:
         LOG(WARNING) << "Unknown user worker cmd: " << (char)cmd;
@@ -440,11 +464,28 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
     }
 }
 
+/// FIXME: Idle/DispatchMsg 会影响actor的执行顺序
 void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
     // 将工作线程的发送队列分发完毕
+    DLOG(INFO) \
+        << worker->GetInstName() 
+        << "."
+        << (unsigned long)worker->GetPosixThreadId() 
+        << " dispatch worker msg...";
     DispatchMsg(worker->_send);
-
     // 将actor的发送队列分发完毕
+    DLOG_IF(INFO, worker->_context != nullptr) \
+        << worker->GetInstName() 
+        << "."
+        << (unsigned long)worker->GetPosixThreadId() 
+        << " dispatch "
+        << worker->_context->GetModule()->GetActorName()
+        << " msg...";
+    LOG_IF(WARNING, worker->_context == nullptr) \
+        << worker->GetInstName() 
+        << "."
+        << (unsigned long)worker->GetPosixThreadId() 
+        << " no context";
     DispatchMsg(worker->_context);
 
     MyWorkerCmd cmd;
@@ -453,12 +494,21 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
     case MyWorkerCmd::IDLE: // idle
         // 将工作线程中的actor状态设置为全局状态
         // 将线程加入空闲队列
+        DLOG(INFO) \
+            << worker->GetInstName() 
+            << "."
+            << (unsigned long)worker->GetPosixThreadId() 
+            << " idle, push to idle queue";
         worker->Idle();
         _idle_workers.emplace_back(worker);
         break;
-    case MyWorkerCmd::QUIT: // quit    
+    case MyWorkerCmd::QUIT: // quit  
+        LOG(INFO) \
+            << worker->GetInstName() 
+            << "."
+            << (unsigned long)worker->GetPosixThreadId() 
+            << " quit, delete from myframe";
         DelEvent(dynamic_cast<MyEvent*>(worker));
-        LOG(WARNING) << "common worker quit: " << (char)cmd;
         worker->SendCmdToWorker(MyWorkerCmd::QUIT);
         _cur_worker_count--;
         break;
@@ -470,6 +520,7 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
 
 void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
     MyEvent* ev_obj;
+    LOG_IF(INFO, ev_count > 0) << "get " << ev_count << " event";
     for(int i = 0; i < ev_count; ++i) {
         ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
         ev_obj->RetEpollEventType(evs[i].events);
@@ -495,7 +546,7 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
 int MyApp::Exec() {
     int ev_count = 0;
     int max_ev_count = 64;
-    int time_wait = 100;
+    int time_wait = -1;
     struct epoll_event* evs;
     evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
     

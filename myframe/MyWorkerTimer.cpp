@@ -72,7 +72,7 @@ void MyTimerManager::_Dispath(MyList* cur)
         cur->Del(begin);
         timer = dynamic_cast<MyTimer*>(begin);
         auto msg = std::make_shared<MyTextMsg>();
-        msg->SetSrc(MY_FRAME_DST_NAME);
+        msg->SetSrc("worker.timer");
         msg->SetDst(timer->_actor_name);
         msg->SetMsgDesc(timer->_timer_name);
         msg->SetMsgType("TIMER");
@@ -183,6 +183,7 @@ void MyWorkerTimer::OnExit() {
 }
 
 int MyWorkerTimer::SetTimeout(const std::string& actor_name, const std::string& timer_name, int time) {
+    DLOG(INFO) << actor_name << " set timeout(" << timer_name<< "): " << (time * 10) << "ms";
     return _timer_mgr.Timeout(actor_name, timer_name, time);
 }
 

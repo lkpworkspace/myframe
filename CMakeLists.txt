@@ -4,7 +4,7 @@ project(myframe)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLGAS "-fPIC -DPIC")
-set(CMAKE_CXX_FLGAS "-fPIC -DPIC")
+set(CMAKE_CXX_FLGAS "-fPIC -DPIC") # -DNDEBUG
 
 ### output path
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/output/lib")

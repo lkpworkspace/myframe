@@ -3,6 +3,7 @@
 
 // params
 DECLARE_uint32(worker_count);
+DECLARE_uint32(dispatch_or_process_msg_max);
 
 // path
 DECLARE_string(myframe_lib_dir);

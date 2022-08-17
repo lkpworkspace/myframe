@@ -51,6 +51,7 @@ public:
 
     std::shared_ptr<MyActor> GetModule() { return _mod; }
 
+    std::string Print();
 private:
     /* actor句柄 */
     uint32_t            _handle;

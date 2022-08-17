@@ -91,34 +91,55 @@ MyContext* MyHandleManager::GetContext(uint32_t handle)
     return result;
 }
 
+void MyHandleManager::PrintWaitQueue() {
+    DLOG(INFO) << "cur wait queue actor:";
+    auto begin = m_msg_list.Begin();
+    while (begin != m_msg_list.End()) {
+        auto next = begin->next;
+        auto ctx = dynamic_cast<MyContext*>(begin);
+        DLOG(INFO) << ctx->Print();
+        begin = next;
+    }
+}
+
 MyContext* MyHandleManager::GetContextWithMsg()
 {
     MyList& msg_list = m_msg_list;
     if(msg_list.IsEmpty()) return nullptr;
 
-    MyNode* ctx_node = nullptr; 
-    MyContext* ctx = nullptr;
-
+    std::vector<MyContext*> in_runing_context;
+    MyContext* ret = nullptr;
     while(!msg_list.IsEmpty()){
-        ctx_node = msg_list.Begin();
-        ctx = dynamic_cast<MyContext*>(ctx_node);
+        auto ctx_node = msg_list.Begin();
+        auto ctx = dynamic_cast<MyContext*>(ctx_node);
 
         if(ctx->IsRuning()){
             msg_list.DelHead();
+            in_runing_context.push_back(ctx);
         }else{
             msg_list.DelHead();
 
             ctx->SetOutOfRunQueueFlag();
             ctx->SetRunFlag();
-            return ctx;
+            ret = ctx;
+            break;
         }
     }
-    return nullptr;
+    for (int i = 0; i < in_runing_context.size(); ++i) {
+        DLOG(INFO) << in_runing_context[i]->GetModule()->GetActorName() << " is runing, move to wait queue back";
+        msg_list.AddTail(in_runing_context[i]);
+    }
+    return ret;
 }
 
 void MyHandleManager::PushContext(MyContext* ctx)
 {
-    if(ctx->IsInRunQueue()) return;
+    if(ctx->IsInRunQueue()) {
+        DLOG(INFO) << ctx->Print() << " already in wait queue, return";
+        PrintWaitQueue();
+        return;
+    }
     ctx->SetInRunQueueFlag();
     m_msg_list.AddTail(ctx);
+    PrintWaitQueue();
 }
