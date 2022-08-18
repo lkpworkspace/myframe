@@ -1,12 +1,11 @@
 #include "MyMsg.h"
 
-void MyTextMsg::SetData(const char* data, int len)
+void MyMsg::SetData(const char* data, unsigned int len)
 {
     _data.clear();
     _data.append(data, len);
 }
-void MyTextMsg::SetData(std::string& data)
+void MyMsg::SetData(const std::string& data)
 {
-    _data.clear();
-    _data.append(data.data(), data.size());
+    SetData(data.data(), data.size());
 }

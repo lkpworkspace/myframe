@@ -6,12 +6,19 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLGAS "-fPIC -DPIC")
 set(CMAKE_CXX_FLGAS "-fPIC -DPIC") # -DNDEBUG
 
+option(GENERATE_EXAMPLE "generate example library" OFF)
+option(GENERATE_TEST "generate test exec" OFF)
+
 ### output path
-set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/output/lib")
-set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/output/bin")
+set(MYFRAME_OUTPUT_ROOT "${CMAKE_BINARY_DIR}/output")
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/lib)
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/lib)
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/bin)
 
 ### install path
 set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}")
+set(MYFRAME_TEST_DIR "${CMAKE_INSTALL_PREFIX}/test/")
+set(MYFRAME_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin/")
 set(MYFRAME_INC_DIR "${CMAKE_INSTALL_PREFIX}/inc/")
 set(MYFRAME_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/")
 set(MYFRAME_LOG_DIR "${CMAKE_INSTALL_PREFIX}/log/")
@@ -30,9 +37,13 @@ include_directories(.)
 
 ### sub directory
 add_subdirectory(myframe)
-add_subdirectory(examples)
-add_subdirectory(test)
 add_subdirectory(misc)
+if (GENERATE_EXAMPLE)
+    add_subdirectory(examples)
+endif()
+if (GENERATE_TEST)
+    add_subdirectory(test)
+endif()
 
 ### install file/dir
 INSTALL(FILES 
@@ -45,5 +56,5 @@ INSTALL(FILES
 )
 install(DIRECTORY templates DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY tools DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/log)
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/service)
+install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
+install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_CONF_DIR})

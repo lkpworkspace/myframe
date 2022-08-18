@@ -7,3 +7,9 @@ target_link_libraries(myframe_test
     GTest::Main
     myframe
 )
+
+INSTALL(TARGETS myframe_test
+    LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
+    ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
+    RUNTIME DESTINATION ${MYFRAME_TEST_DIR}
+)

@@ -20,7 +20,6 @@ public:
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TIMER" && msg->GetMsgDesc() == "1000ms") {
-            const auto& rmsg = std::dynamic_pointer_cast<const MyTextMsg>(msg);
             /* 设置下一次超时时间 100 * 10 ms */
             Timeout("1000ms", 100);
             LOG(INFO) << "----> from " << msg->GetSrc() << " to " 

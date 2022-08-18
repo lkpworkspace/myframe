@@ -71,7 +71,7 @@ void MyTimerManager::_Dispath(MyList* cur)
         temp = begin->next;
         cur->Del(begin);
         timer = dynamic_cast<MyTimer*>(begin);
-        auto msg = std::make_shared<MyTextMsg>();
+        auto msg = std::make_shared<MyMsg>();
         msg->SetSrc("worker.timer");
         msg->SetDst(timer->_actor_name);
         msg->SetMsgDesc(timer->_timer_name);

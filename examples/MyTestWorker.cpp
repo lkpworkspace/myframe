@@ -18,8 +18,7 @@ public:
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
-            const auto& tmsg = std::dynamic_pointer_cast<const MyTextMsg>(msg);
-            auto send_msg = std::make_shared<MyTextMsg>("this is actor msg from test worker actor");
+            auto send_msg = std::make_shared<MyMsg>("this is actor msg from test worker actor");
             Send(msg->GetSrc(), send_msg);
         }
     }
@@ -34,7 +33,7 @@ public:
 
     /// override MyWorker virtual method
     void Run() override {
-        auto send_msg = std::make_shared<MyTextMsg>("this msg is from MyTestWorker");
+        auto send_msg = std::make_shared<MyMsg>("this msg is from MyTestWorker");
         SendMsg("actor.testworker.#1", send_msg);
         DispatchAndWaitMsg();
         while (1) {
@@ -42,8 +41,7 @@ public:
             if (msg == nullptr) {
                 break;
             }
-            const auto& tmsg = std::dynamic_pointer_cast<const MyTextMsg>(msg);
-            LOG(INFO) << "get msg from " << tmsg->GetSrc() << " to " << tmsg->GetDst() << ": " << tmsg->GetData();
+            LOG(INFO) << "get msg from " << msg->GetSrc() << " to " << msg->GetDst() << ": " << msg->GetData();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }

@@ -67,6 +67,9 @@ public:
      *      如果想实现周期性的定时器，可以在收到超时消息之后，
      *      再次调用此函数设置下一次的超时。
      * 
+     *      msg->GetMsgType() == "TIMER" 确认是定时器消息
+     *      msg->GetMsgDesc() == timer_name 确认是那个定时器消息
+     * 
      * @return:         成功返回: 0, 失败返回: -1
      */
     int Timeout(const std::string& timer_name, int expired);
