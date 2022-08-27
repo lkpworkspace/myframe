@@ -18,7 +18,7 @@ class MyWorker;
 class MyWorkerCommon;
 class MyWorkerTimer;
 class MyModManager;
-class MyHandleManager;
+class MyContextManager;
 class MyWorkerManager;
 
 /**
@@ -49,7 +49,7 @@ public:
     bool AddWorker(std::shared_ptr<MyWorker> worker);
 
     std::shared_ptr<MyWorkerTimer> GetTimerWorker();
-    std::shared_ptr<MyHandleManager>& GetHandleManager() { return _handle_mgr; }
+    std::shared_ptr<MyContextManager>& GetHandleManager() { return _context_mgr; }
 
     bool AddEvent(std::shared_ptr<MyEvent> ev);
     bool DelEvent(std::shared_ptr<MyEvent> ev);
@@ -96,7 +96,7 @@ private:
     /// epoll文件描述符
     int _epoll_fd;
     /// 句柄管理对象
-    std::shared_ptr<MyHandleManager> _handle_mgr; 
+    std::shared_ptr<MyContextManager> _context_mgr; 
     /// 模块管理对象
     std::shared_ptr<MyModManager> _mods;
     /// 线程管理对象

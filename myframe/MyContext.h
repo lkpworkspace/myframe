@@ -10,7 +10,7 @@ class MyActor;
 class MyWorkerCommon;
 class MyContext : public MyNode
 {
-    friend class MyHandleManager;
+    friend class MyContextManager;
     friend class MyWorkerCommon;
     friend class MyApp;
 public:

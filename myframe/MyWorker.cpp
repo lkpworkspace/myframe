@@ -48,7 +48,6 @@ void* MyWorker::ListenThread(void* obj) {
     while (t->_runing)
 		t->Run();
 	t->OnExit();
-    delete t;
     return nullptr;
 }
 

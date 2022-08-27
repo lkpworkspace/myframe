@@ -12,7 +12,7 @@
 #include "MyMsg.h"
 #include "MyActor.h"
 #include "MyContext.h"
-#include "MyHandleManager.h"
+#include "MyContextManager.h"
 #include "MyModManager.h"
 #include "MyWorkerManager.h"
 #include "MyWorkerCommon.h"
@@ -45,7 +45,7 @@ MyApp::~MyApp()
 {}
 
 bool MyApp::Init() {
-    _handle_mgr = std::make_shared<MyHandleManager>();
+    _context_mgr = std::make_shared<MyContextManager>();
     _mods = std::make_shared<MyModManager>();
     _worker_mgr = std::make_shared<MyWorkerManager>();
 
@@ -258,7 +258,7 @@ bool MyApp::CreateContext(
 
 bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params) {
     MyContext* ctx = new MyContext(mod_inst);
-    _handle_mgr->RegHandle(ctx);
+    _context_mgr->RegHandle(ctx);
     ctx->Init(params.c_str());
     // 初始化之后, 手动将actor中发送消息队列分发出去
     DispatchMsg(ctx);
@@ -342,14 +342,14 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             _worker_mgr->DispatchWorkerMsg(msg);
         } else if (name_list[0] == "actor") {  
             // dispatch to actor    
-            auto ctx = _handle_mgr->GetContext(msg->GetDst());
+            auto ctx = _context_mgr->GetContext(msg->GetDst());
             if(nullptr == ctx){
                 LOG(ERROR) << "Unknown msg from " 
                     << msg->GetSrc() << " to " << msg->GetDst();
                 continue;
             }
             ctx->PushMsg(msg);
-            _handle_mgr->PushContext(ctx);
+            _context_mgr->PushContext(ctx);
         } else {
             LOG(ERROR) \
                 << "Unknown msg from " 
@@ -378,7 +378,7 @@ void MyApp::CheckStopWorkers() {
     MyContext* context = nullptr;
     std::shared_ptr<MyWorker> worker = nullptr;
     while((worker = _worker_mgr->FrontIdleWorker()) != nullptr) {
-        if(nullptr == (context = _handle_mgr->GetContextWithMsg())) {
+        if(nullptr == (context = _context_mgr->GetContextWithMsg())) {
             DLOG(INFO) << "no actor need process, waiting...";
             break;
         }

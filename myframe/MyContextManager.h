@@ -10,11 +10,11 @@
 #define MY_HANDLE_REMOTE_SHIFT 24
 
 class MyContext;
-class MyHandleManager
+class MyContextManager
 {
 public:
-    MyHandleManager();
-    virtual ~MyHandleManager();
+    MyContextManager();
+    virtual ~MyContextManager();
 
     /* 给actor分配句柄，并进行管理 */
     uint32_t RegHandle(MyContext* ctx);
