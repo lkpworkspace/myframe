@@ -82,7 +82,7 @@ public:
      * override MyEvent virtual method
      */
     MyEventType GetMyEventType() override
-    { return MyEventType::EV_TIMER; }
+    { return MyEventType::WORKER_TIMER; }
 
 private:
     int Work();

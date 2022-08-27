@@ -76,7 +76,7 @@ if __name__ == "__main__":
     proj_rename_dict = {}
     proj_modify_var_list = []
     # 设置要修改的文件
-    proj_src_dir = "/opt/myframe/templates/"
+    proj_src_dir = os.environ['HOME'] + "/myframe/templates/"
     proj_rename_dict[params_dict["dir"] + "template.cpp"] = params_dict["dir"] + params_dict["name"] + ".cpp"
     proj_rename_dict[params_dict["dir"] + "template.json"] = params_dict["dir"] + params_dict["name"] + ".json"
     proj_modify_var_list.append(params_dict["dir"] + "CMakeLists.txt")

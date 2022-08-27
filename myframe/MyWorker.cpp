@@ -40,7 +40,6 @@ void MyWorker::Stop() {
     _runing = false;
     MyWorkerCmd cmd = MyWorkerCmd::QUIT;
     SendCmdToMain(cmd);
-    RecvCmdFromMain(cmd);
 }
 
 void* MyWorker::ListenThread(void* obj) {

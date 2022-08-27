@@ -15,7 +15,7 @@ bool MyModManager::RegActor(const std::string& class_name, std::function<std::sh
     return true;
 }
 
-bool MyModManager::RegWorker(const std::string& class_name, std::function<MyWorker*(const std::string&)> func) {
+bool MyModManager::RegWorker(const std::string& class_name, std::function<std::shared_ptr<MyWorker>(const std::string&)> func) {
     if (_class_workers.find(class_name) != _class_workers.end()) {
         LOG(WARNING) << "reg " << class_name << " failed, " << " has exist";
         return false;
@@ -34,7 +34,7 @@ std::shared_ptr<MyActor> MyModManager::CreateActorInst(const std::string& mod_or
     return nullptr;
 }
 
-MyWorker* MyModManager::CreateWorkerInst(const std::string& mod_or_class_name, const std::string& worker_name) {
+std::shared_ptr<MyWorker> MyModManager::CreateWorkerInst(const std::string& mod_or_class_name, const std::string& worker_name) {
     if (_lib_mods.IsLoad(mod_or_class_name)) {
         return _lib_mods.CreateWorkerInst(mod_or_class_name, worker_name);
     }

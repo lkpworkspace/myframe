@@ -5,7 +5,6 @@
 
 MyWorkerCommon::MyWorkerCommon() :
     _context(nullptr) {
-    SetInstName("worker.MyWorkerCommon");
 }
 
 MyWorkerCommon::~MyWorkerCommon() {
@@ -25,12 +24,12 @@ void MyWorkerCommon::Run() {
 
 void MyWorkerCommon::OnInit() {
     MyWorker::OnInit();
-    LOG(INFO) << "Worker " << GetPosixThreadId() << " init";
+    LOG(INFO) << "Worker " << GetInstName() << " init";
 }
 
 void MyWorkerCommon::OnExit() {
     MyWorker::OnExit();
-    LOG(INFO) << "Worker " << GetPosixThreadId() << " exit";
+    LOG(INFO) << "Worker " << GetInstName() << " exit";
 }
 
 int MyWorkerCommon::Work() {

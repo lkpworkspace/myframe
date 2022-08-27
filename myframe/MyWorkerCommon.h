@@ -18,7 +18,7 @@ public:
     void OnExit() override;
 
     /// override MyEvent virtual method
-    MyEventType GetMyEventType() { return MyEventType::EV_WORKER; }
+    MyEventType GetMyEventType() { return MyEventType::WORKER_COMMON; }
 
     void SetContext(MyContext* context){ _context = context; }
 

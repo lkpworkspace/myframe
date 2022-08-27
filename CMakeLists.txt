@@ -3,11 +3,12 @@ project(myframe)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_C_FLGAS "-fPIC -DPIC")
-set(CMAKE_CXX_FLGAS "-fPIC -DPIC") # -DNDEBUG
+# -DNDEBUG -DDCHECK_ALWAYS_ON=0
+set(CMAKE_C_FLGAS "-fPIC -DPIC -DNDEBUG -DDCHECK_ALWAYS_ON=0")
+set(CMAKE_CXX_FLGAS "-fPIC -DPIC -DNDEBUG -DDCHECK_ALWAYS_ON=0") 
 
 option(GENERATE_EXAMPLE "generate example library" OFF)
-option(GENERATE_TEST "generate test exec" OFF)
+option(GENERATE_TEST "generate test exec" ON)
 
 ### output path
 set(MYFRAME_OUTPUT_ROOT "${CMAKE_BINARY_DIR}/output")

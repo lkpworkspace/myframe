@@ -48,7 +48,7 @@ public:
      * @param worker_name eg: /my/test
      * @return MyWorker*
      */
-    MyWorker* CreateWorkerInst(
+    std::shared_ptr<MyWorker> CreateWorkerInst(
         const std::string& mod_name,
         const std::string& worker_name);
 

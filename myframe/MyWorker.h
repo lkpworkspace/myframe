@@ -18,9 +18,16 @@ enum class MyWorkerCmd : char {
     QUIT            = 'q',     ///< 线程退出命令
 };
 
+enum class MyWorkerState : int {
+    RUN,
+    WAIT,
+    WEAKUP,
+};
+
 class MyWorker : public MyEvent
 {
     friend class MyApp;
+    friend class MyWorkerManager;
 public:
     MyWorker();
     virtual ~MyWorker();
@@ -80,9 +87,9 @@ private:
     /// posix thread id
     pthread_t _posix_thread_id;
     std::atomic_bool _runing;
-
+    MyWorkerState _state = MyWorkerState::RUN;
 };
 
 extern "C" {
-    typedef MyWorker* (*my_worker_create_func)(const std::string&);
+    typedef std::shared_ptr<MyWorker> (*my_worker_create_func)(const std::string&);
 } // extern "C"

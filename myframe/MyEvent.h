@@ -1,9 +1,9 @@
 #pragma once
 
 enum class MyEventType : int {
-    EV_WORKER,
-    EV_TIMER,
-    EV_USER,
+    WORKER_COMMON,
+    WORKER_TIMER,
+    WORKER_USER,
 };
 
 class MyEvent
@@ -14,7 +14,7 @@ public:
 
     /* 事件类型 */
     virtual MyEventType GetMyEventType() { 
-        return MyEventType::EV_USER; 
+        return MyEventType::WORKER_USER; 
     }
 
     /* 获得当前事件的文件描述符 */

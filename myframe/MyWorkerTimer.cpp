@@ -7,6 +7,7 @@
 #include "MyApp.h"
 #include "MyMsg.h"
 #include "MyActor.h"
+#include "MyFlags.h"
 
 MyTimerManager::MyTimerManager()
 {
@@ -158,7 +159,7 @@ std::list<std::shared_ptr<MyMsg>>& MyTimerManager::Updatetime()
 //////////////////////////////////////////////////////
 
 MyWorkerTimer::MyWorkerTimer() {
-    SetInstName("worker.MyWorkerTimer");
+    SetInstName(FLAGS_worker_timer_name);
 }
 
 MyWorkerTimer::~MyWorkerTimer()
@@ -174,11 +175,11 @@ void MyWorkerTimer::Run() {
 
 void MyWorkerTimer::OnInit() {
     MyWorker::OnInit();
-    LOG(INFO) << "Timer task " << GetPosixThreadId() << " init";
+    LOG(INFO) << "timer worker " << GetInstName() << " init";
 }
 
 void MyWorkerTimer::OnExit() {
-    LOG(INFO) << "Timer task " << GetPosixThreadId() << " exit";
+    LOG(INFO) << "timer worker " << GetInstName() << " exit";
     MyWorker::OnExit();
 }
 

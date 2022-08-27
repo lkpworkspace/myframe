@@ -14,6 +14,7 @@
 #include "MyContext.h"
 #include "MyHandleManager.h"
 #include "MyModManager.h"
+#include "MyWorkerManager.h"
 #include "MyWorkerCommon.h"
 #include "MyWorkerTimer.h"
 
@@ -30,10 +31,13 @@ MyApp* MyApp::Inst() {
     return s_inst;
 }
 
+std::shared_ptr<MyWorkerTimer> MyApp::GetTimerWorker() { 
+    auto w = _worker_mgr->Get(FLAGS_worker_timer_name);
+    return std::dynamic_pointer_cast<MyWorkerTimer>(w);
+}
+
 MyApp::MyApp() :
-    _epoll_fd(-1),
-    _cur_worker_count(0),
-    _quit(true) {
+    _epoll_fd(-1) {
     s_inst = this;
 }
 
@@ -43,6 +47,7 @@ MyApp::~MyApp()
 bool MyApp::Init() {
     _handle_mgr = std::make_shared<MyHandleManager>();
     _mods = std::make_shared<MyModManager>();
+    _worker_mgr = std::make_shared<MyWorkerManager>();
 
     /// start worker
     Start(FLAGS_worker_count);
@@ -80,7 +85,7 @@ bool MyApp::LoadModsFromConf(const std::string& path) {
             const auto& actor_list = root["actor"];
             Json::Value::Members actor_name_list = actor_list.getMemberNames();
             for (auto inst_name_it = actor_name_list.begin(); inst_name_it != actor_name_list.end(); ++inst_name_it) {
-                LOG(INFO) << "Load actor " << *inst_name_it << " ...";
+                LOG(INFO) << "search actor " << *inst_name_it << " ...";
                 if (type == "library") {
                     res |= LoadActorFromLib(root, actor_list, *inst_name_it);
                 } else if (type == "class") {
@@ -95,7 +100,7 @@ bool MyApp::LoadModsFromConf(const std::string& path) {
             const auto& worker_list = root["worker"];
             Json::Value::Members worker_name_list = worker_list.getMemberNames();
             for (auto inst_name_it = worker_name_list.begin(); inst_name_it != worker_name_list.end(); ++inst_name_it) {
-                LOG(INFO) << "Load worker " << *inst_name_it << " ...";
+                LOG(INFO) << "search worker " << *inst_name_it << " ...";
                 if (type == "library") {
                     res |= LoadWorkerFromLib(root, worker_list, *inst_name_it);
                 } else if (type == "class") {
@@ -190,12 +195,9 @@ bool MyApp::LoadWorkerFromLib(
             continue;
         }
         res = true;
-        MyWorker* worker = _mods->CreateWorkerInst(lib_name, worker_name);
+        auto worker = _mods->CreateWorkerInst(lib_name, worker_name);
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
-        _user_workers[worker->GetInstName()] = worker;
-        worker->Start();
-        AddEvent(dynamic_cast<MyEvent*>(worker));
-        _cur_worker_count++;
+        AddWorker(worker);
     }
     return res;
 }
@@ -213,14 +215,22 @@ bool MyApp::LoadWorkerFromClass(
             continue;
         }
         res = true;
-        MyWorker* worker = _mods->CreateWorkerInst("class", worker_name);
+        auto worker = _mods->CreateWorkerInst("class", worker_name);
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
-        _user_workers[worker->GetInstName()] = worker;
-        worker->Start();
-        AddEvent(dynamic_cast<MyEvent*>(worker));
-        _cur_worker_count++;
+        AddWorker(worker);
     }
     return res;
+}
+
+bool MyApp::AddWorker(std::shared_ptr<MyWorker> worker) {
+    if (!_worker_mgr->Add(worker)) {
+        return false;
+    }
+    if (!AddEvent(std::dynamic_pointer_cast<MyEvent>(worker))) {
+        return false;
+    }
+    worker->Start();
+    return true;
 }
 
 /**
@@ -255,9 +265,9 @@ bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string&
     return true;
 }
 
-bool MyApp::AddEvent(MyEvent* ev) {
+bool MyApp::AddEvent(std::shared_ptr<MyEvent> ev) {
     struct epoll_event event;
-    event.data.ptr = ev;
+    event.data.fd = ev->GetFd();
     event.events = ev->ListenEpollEventType();
     int res = 0;
     // 如果该事件已经注册，就修改事件类型
@@ -275,7 +285,7 @@ bool MyApp::AddEvent(MyEvent* ev) {
     return true;
 }
 
-bool MyApp::DelEvent(MyEvent *ev) {
+bool MyApp::DelEvent(std::shared_ptr<MyEvent> ev) {
     if(-1 == epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, ev->GetFd(), NULL)){
         LOG(ERROR) << "del event " 
             << ev->GetFd() << ": " << my_get_error();
@@ -285,20 +295,22 @@ bool MyApp::DelEvent(MyEvent *ev) {
 }
 
 void MyApp::StartCommonWorker(int worker_count) {
+    std::string worker_common_name = "worker.MyWorkerCommon";
     for(int i = 0; i < worker_count; ++i){
-        MyWorkerCommon* worker = new MyWorkerCommon();
-        worker->Start();
-        AddEvent(dynamic_cast<MyEvent*>(worker));
-        _cur_worker_count++;
+        auto worker = std::make_shared<MyWorkerCommon>();
+        std::string cur_name = worker_common_name + "." + std::to_string(i);
+        worker->SetInstName(cur_name);
+        if (AddWorker(worker)) {
+            LOG(INFO) << "start common worker " << cur_name;
+        }
     }
-    LOG(INFO) << "Common worker start";
 }
 
 void MyApp::StartTimerWorker() {
-    _timer_worker = new MyWorkerTimer();
-    _timer_worker->Start();
-    AddEvent(dynamic_cast<MyEvent*>(_timer_worker));
-    LOG(INFO) << "Timer worker start";
+    auto timer_worker = std::make_shared<MyWorkerTimer>();
+    if (AddWorker(timer_worker)) {
+        LOG(INFO) << "Timer worker start";
+    }
 }
 
 void MyApp::Start(int worker_count) {
@@ -325,13 +337,9 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             continue;
         }
         
-        if (name_list[0] == "worker" && _user_workers.find(msg->GetDst()) != _user_workers.end()) { 
+        if (name_list[0] == "worker") { 
             // dispatch to user worker
-            if (_wait_msg_workers.find(msg->GetDst()) == _wait_msg_workers.end()) {
-                _user_workers[msg->GetDst()]->_recv.emplace_back(msg);
-            } else {
-                _wait_msg_workers[msg->GetDst()]->_que.emplace_back(msg);
-            }
+            _worker_mgr->DispatchWorkerMsg(msg);
         } else if (name_list[0] == "actor") {  
             // dispatch to actor    
             auto ctx = _handle_mgr->GetContext(msg->GetDst());
@@ -364,28 +372,14 @@ void MyApp::DispatchMsg(MyContext* context) {
 
 void MyApp::CheckStopWorkers() {
     DLOG(INFO) << "check stop worker";
-    for (auto it = _wait_msg_workers.begin(); it != _wait_msg_workers.end();) {
-        auto user_worker = it->second;
-        DLOG(INFO) << user_worker->GetInstName() << " check recv msg queue...";
-        if (!user_worker->_recv.empty()) {
-            MyListAppend(user_worker->_que, user_worker->_recv);
-        }
-        if (user_worker->_que.size() > 0) {
-            it = _wait_msg_workers.erase(it);
-            LOG(INFO) << "recv " << user_worker->_que.size() << " msg, weakup " << user_worker->GetInstName();
-            user_worker->SendCmdToWorker(MyWorkerCmd::RUN);
-            continue;
-        } else {
-            DLOG(INFO) << user_worker->GetInstName() << " no recv msg, continue wait...";
-        }
-        ++it;
-    }
-    LOG_IF(INFO, _idle_workers.size() == 0) << "worker busy, wait for idle worker...";
+    _worker_mgr->WeakupWorker();
+
+    LOG_IF(INFO, _worker_mgr->IdleWorkerSize() == 0) << "worker busy, wait for idle worker...";
     MyContext* context = nullptr;
-    for (auto it = _idle_workers.begin(); it != _idle_workers.end();) {
-        auto worker = *it;
+    std::shared_ptr<MyWorker> worker = nullptr;
+    while((worker = _worker_mgr->FrontIdleWorker()) != nullptr) {
         if(nullptr == (context = _handle_mgr->GetContextWithMsg())) {
-            LOG(INFO) << "no actor need process, waiting...";
+            DLOG(INFO) << "no actor need process, waiting...";
             break;
         }
         DLOG(INFO) \
@@ -398,20 +392,20 @@ void MyApp::CheckStopWorkers() {
             LOG_IF(WARNING, msg_list.size() > FLAGS_dispatch_or_process_msg_max) \
                 << context->GetModule()->GetActorName() 
                 << " recv msg size too many: " << msg_list.size();
-            LOG(INFO) << "run " << context->GetModule()->GetActorName();
+            DLOG(INFO) << "run " << context->GetModule()->GetActorName();
             MyListAppend(worker->_que, msg_list);
-            worker->SetContext(context);
-            it = _idle_workers.erase(it);
+            _worker_mgr->PopFrontIdleWorker();
+            auto common_idle_worker = std::dynamic_pointer_cast<MyWorkerCommon>(worker);
+            common_idle_worker->SetContext(context);
             worker->SendCmdToWorker(MyWorkerCmd::RUN);
             continue;
         }else{
             LOG(ERROR) << context->GetModule()->GetActorName() << " has no msg";
         }
-        ++it;
     }
 }
 
-void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
+void MyApp::ProcessTimerEvent(std::shared_ptr<MyWorkerTimer> timer_worker) {
     // 将定时器线程的发送队列分发完毕
     DLOG(INFO) << timer_worker->GetInstName() << " dispatch msg...";
     DispatchMsg(timer_worker->_send);
@@ -426,8 +420,7 @@ void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
     case MyWorkerCmd::QUIT: // quit
         LOG(INFO) << timer_worker->GetInstName() << " quit, delete from myframe";
         DelEvent(timer_worker);
-        timer_worker->SendCmdToWorker(MyWorkerCmd::QUIT);
-        _cur_worker_count--;
+        _worker_mgr->Del(timer_worker);
         break;
     default:
         LOG(WARNING) << "Unknown timer worker cmd: " << (char)cmd;
@@ -435,7 +428,7 @@ void MyApp::ProcessTimerEvent(MyWorkerTimer *timer_worker) {
     }
 }
 
-void MyApp::ProcessUserEvent(MyWorker *worker) {
+void MyApp::ProcessUserEvent(std::shared_ptr<MyWorker> worker) {
     // 将用户线程的发送队列分发完毕
     DLOG(INFO) << worker->GetInstName() << " dispatch msg...";
     DispatchMsg(worker->_send);
@@ -447,16 +440,14 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
         DLOG(INFO) << worker->GetInstName() << " run again";
         worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
+    case MyWorkerCmd::WAIT_FOR_MSG:
+        DLOG(INFO) << worker->GetInstName() << " wait for msg...";
+        _worker_mgr->PushWaitWorker(worker);
+        break;
     case MyWorkerCmd::QUIT: // quit
         LOG(INFO) << worker->GetInstName() << " quit, delete from myframe";
         DelEvent(worker);
-        _user_workers.erase(worker->GetInstName());
-        worker->SendCmdToWorker(MyWorkerCmd::QUIT);
-        _cur_worker_count--;
-        break;
-    case MyWorkerCmd::WAIT_FOR_MSG:
-        DLOG(INFO) << worker->GetInstName() << " wait for msg...";
-        _wait_msg_workers[worker->GetInstName()] = worker;
+        _worker_mgr->Del(worker);
         break;
     default:
         LOG(WARNING) << "Unknown user worker cmd: " << (char)cmd;
@@ -465,14 +456,7 @@ void MyApp::ProcessUserEvent(MyWorker *worker) {
 }
 
 /// FIXME: Idle/DispatchMsg 会影响actor的执行顺序
-void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
-    // 将工作线程的发送队列分发完毕
-    DLOG(INFO) \
-        << worker->GetInstName() 
-        << "."
-        << (unsigned long)worker->GetPosixThreadId() 
-        << " dispatch worker msg...";
-    DispatchMsg(worker->_send);
+void MyApp::ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon> worker) {
     // 将actor的发送队列分发完毕
     DLOG_IF(INFO, worker->_context != nullptr) \
         << worker->GetInstName() 
@@ -500,7 +484,7 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
             << (unsigned long)worker->GetPosixThreadId() 
             << " idle, push to idle queue";
         worker->Idle();
-        _idle_workers.emplace_back(worker);
+        _worker_mgr->PushBackIdleWorker(worker);
         break;
     case MyWorkerCmd::QUIT: // quit  
         LOG(INFO) \
@@ -508,36 +492,34 @@ void MyApp::ProcessWorkerEvent(MyWorkerCommon* worker) {
             << "."
             << (unsigned long)worker->GetPosixThreadId() 
             << " quit, delete from myframe";
-        DelEvent(dynamic_cast<MyEvent*>(worker));
-        worker->SendCmdToWorker(MyWorkerCmd::QUIT);
-        _cur_worker_count--;
+        DelEvent(std::dynamic_pointer_cast<MyEvent>(worker));
+        _worker_mgr->Del(worker);
+        // FIXME: 应该将worker加入删除队列，等worker运行结束后再从队列删除
+        // 否则会造成删除智能指针后，worker还没结束运行造成coredump
         break;
     default:
-        LOG(WARNING) << "Unknown common worker cmd: " << (char)cmd;
+        LOG(WARNING) << "unknown common worker cmd: " << (char)cmd;
         break;
     }
 }
 
 void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
-    MyEvent* ev_obj;
-    LOG_IF(INFO, ev_count > 0) << "get " << ev_count << " event";
+    DLOG_IF(INFO, ev_count > 0) << "get " << ev_count << " event";
     for(int i = 0; i < ev_count; ++i) {
-        ev_obj = static_cast<MyEvent*>(evs[i].data.ptr);
+        auto ev_obj = _worker_mgr->Get(evs[i].data.fd);
         ev_obj->RetEpollEventType(evs[i].events);
         switch(ev_obj->GetMyEventType()){
-        case MyEventType::EV_WORKER:
-            // 工作线程事件
-            ProcessWorkerEvent(dynamic_cast<MyWorkerCommon*>(ev_obj));
+        case MyEventType::WORKER_COMMON:
+            ProcessWorkerEvent(std::dynamic_pointer_cast<MyWorkerCommon>(ev_obj));
             break;
-        case MyEventType::EV_TIMER:
-            // 分发超时消息
-            ProcessTimerEvent(dynamic_cast<MyWorkerTimer*>(ev_obj));
+        case MyEventType::WORKER_TIMER:
+            ProcessTimerEvent(std::dynamic_pointer_cast<MyWorkerTimer>(ev_obj));
             break;
-        case MyEventType::EV_USER:
-            ProcessUserEvent(dynamic_cast<MyWorker*>(ev_obj));
+        case MyEventType::WORKER_USER:
+            ProcessUserEvent(ev_obj);
             break;
         default:
-            LOG(WARNING) << "Unknown event";
+            LOG(WARNING) << "unknown event";
             break;
         }
     }
@@ -550,7 +532,7 @@ int MyApp::Exec() {
     struct epoll_event* evs;
     evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
     
-    while(_cur_worker_count) {
+    while(_worker_mgr->WorkerSize()) {
         /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
         CheckStopWorkers();
         /// 等待事件

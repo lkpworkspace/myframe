@@ -1,6 +1,7 @@
 #ifndef __MYAPP_H__
 #define __MYAPP_H__
 #include <memory>
+#include <atomic>
 #include <vector>
 #include <mutex>
 #include <list>
@@ -9,15 +10,16 @@
 #include <jsoncpp/json/json.h>
 
 struct epoll_event;
-class MyMsg;
-class MyEvent;
 class MyContext;
+class MyMsg;
 class MyActor;
+class MyEvent;
 class MyWorker;
-class MyModManager;
-class MyHandleManager;
 class MyWorkerCommon;
 class MyWorkerTimer;
+class MyModManager;
+class MyHandleManager;
+class MyWorkerManager;
 
 /**
  * 该类为单例类，不允许创建多个
@@ -44,11 +46,13 @@ public:
     MyContext* GetContext(uint32_t handle);
     MyContext* GetContext(std::string& actor_name);
 
-    MyWorkerTimer* GetTimerWorker() { return _timer_worker; }
+    bool AddWorker(std::shared_ptr<MyWorker> worker);
+
+    std::shared_ptr<MyWorkerTimer> GetTimerWorker();
     std::shared_ptr<MyHandleManager>& GetHandleManager() { return _handle_mgr; }
 
-    bool AddEvent(MyEvent *ev);
-    bool DelEvent(MyEvent *ev);
+    bool AddEvent(std::shared_ptr<MyEvent> ev);
+    bool DelEvent(std::shared_ptr<MyEvent> ev);
 
     int Exec();                           // mainloop
 
@@ -83,28 +87,20 @@ private:
     void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
     void DispatchMsg(MyContext* context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
-    void ProcessWorkerEvent(MyWorkerCommon*);
-    void ProcessTimerEvent(MyWorkerTimer*);
-    void ProcessUserEvent(MyWorker*);
+    void ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon>);
+    void ProcessTimerEvent(std::shared_ptr<MyWorkerTimer>);
+    void ProcessUserEvent(std::shared_ptr<MyWorker>);
 
     /// 退出标志
-    bool _quit;
+    std::atomic_bool _quit = {true};
     /// epoll文件描述符
     int _epoll_fd;
-    /// 工作线程数
-    int _cur_worker_count;
-    /// 空闲线程链表
-    std::list<MyWorkerCommon*> _idle_workers;
-    /// 等待消息线程
-    std::unordered_map<std::string, MyWorker*> _wait_msg_workers;
-    /// 用户worker
-    std::unordered_map<std::string, MyWorker*> _user_workers;
     /// 句柄管理对象
     std::shared_ptr<MyHandleManager> _handle_mgr; 
     /// 模块管理对象
     std::shared_ptr<MyModManager> _mods;
-    /// 定时器线程对象      
-    MyWorkerTimer* _timer_worker;
+    /// 线程管理对象
+    std::shared_ptr<MyWorkerManager> _worker_mgr;
 
 };
 

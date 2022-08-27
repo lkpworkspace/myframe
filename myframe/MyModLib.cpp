@@ -29,7 +29,7 @@ bool MyModLib::LoadMod(const std::string& dlpath)
     pthread_rwlock_wrlock(&_rw);
     if(_mods.find(dlname) != _mods.end()){
         pthread_rwlock_unlock(&_rw);
-        LOG(INFO) << "The " << dlname << " has loaded";
+        DLOG(INFO) << dlname << " has loaded";
         return true;
     }
 
@@ -69,7 +69,7 @@ bool MyModLib::UnloadMod(const std::string& dlname)
     return true;
 }
 
-MyWorker* MyModLib::CreateWorkerInst(
+std::shared_ptr<MyWorker> MyModLib::CreateWorkerInst(
     const std::string& mod_name,
     const std::string& worker_name) {
     pthread_rwlock_rdlock(&_rw);

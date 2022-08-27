@@ -14,12 +14,12 @@ class MyTestWorkerActor : public MyActor
 {
 public:
     int Init(const char* param) override {
+        return 0;
     }
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
-            auto send_msg = std::make_shared<MyMsg>("this is actor msg from test worker actor");
-            Send(msg->GetSrc(), send_msg);
+            Send(msg->GetSrc(), std::make_shared<MyMsg>("this is MyTestWorkerActor resp"));
         }
     }
 };
@@ -33,7 +33,7 @@ public:
 
     /// override MyWorker virtual method
     void Run() override {
-        auto send_msg = std::make_shared<MyMsg>("this msg is from MyTestWorker");
+        auto send_msg = std::make_shared<MyMsg>("this is MyTestWorker req");
         SendMsg("actor.testworker.#1", send_msg);
         DispatchAndWaitMsg();
         while (1) {
@@ -41,7 +41,7 @@ public:
             if (msg == nullptr) {
                 break;
             }
-            LOG(INFO) << "get msg from " << msg->GetSrc() << " to " << msg->GetDst() << ": " << msg->GetData();
+            LOG(INFO) << "get msg from " << msg->GetSrc() << ": " << msg->GetData();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
@@ -53,6 +53,6 @@ extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_nam
 }
 
 /* 创建worker实例函数 */
-extern "C" MyWorker* my_worker_create(const std::string& worker_name) {
-    return new MyTestWorker();
+extern "C" std::shared_ptr<MyWorker> my_worker_create(const std::string& worker_name) {
+    return std::make_shared<MyTestWorker>();
 }
