@@ -196,6 +196,12 @@ bool MyApp::LoadWorkerFromLib(
         }
         res = true;
         auto worker = _mods->CreateWorkerInst(lib_name, worker_name);
+        if (worker == nullptr) {
+            LOG(ERROR) << "create worker " << lib_name
+                << "." << worker_name << "." << inst["instance_name"].asString()
+                << " failed, continue";
+            continue;
+        }
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
         AddWorker(worker);
     }
@@ -216,6 +222,12 @@ bool MyApp::LoadWorkerFromClass(
         }
         res = true;
         auto worker = _mods->CreateWorkerInst("class", worker_name);
+        if (worker == nullptr) {
+            LOG(ERROR) << "create worker "
+                << "class." << worker_name << "." << inst["instance_name"].asString()
+                << " failed, continue";
+            continue;
+        }
         worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
         AddWorker(worker);
     }
