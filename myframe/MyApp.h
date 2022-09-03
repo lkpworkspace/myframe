@@ -21,45 +21,44 @@ class MyModManager;
 class MyContextManager;
 class MyWorkerManager;
 
-/**
- * 该类为单例类，不允许创建多个
- */
-class MyApp
+class MyApp final : public std::enable_shared_from_this<MyApp>
 {
-private:
+    friend class MyActor;
+    friend class MyContext;
+public:
     MyApp();
     virtual ~MyApp();
-    static MyApp* s_inst;
-public:
-    static MyApp* Create();
-    static MyApp* Inst();
 
     bool Init();
 
+    bool LoadModsFromConf(const std::string& path);
+
+    bool AddActor(
+        const std::string& inst_name, 
+        const std::string& params, 
+        std::shared_ptr<MyActor> actor);
+    bool AddWorker(
+        const std::string& inst_name, 
+        std::shared_ptr<MyWorker> worker);
+
+    std::unique_ptr<MyContextManager>& GetHandleManager() { return _context_mgr; }
+    std::unique_ptr<MyModManager>& GetModManager() { return _mods; }
+
+    bool AddEvent(std::shared_ptr<MyEvent> ev);
+    bool DelEvent(std::shared_ptr<MyEvent> ev);
+
+    int Exec();
+
+private:
     bool CreateContext(
         const std::string& mod_name, 
         const std::string& actor_name, 
         const std::string& instance_name, 
         const std::string& params);
     bool CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params);
-
-    MyContext* GetContext(uint32_t handle);
-    MyContext* GetContext(std::string& actor_name);
-
-    bool AddWorker(std::shared_ptr<MyWorker> worker);
-
+    
     std::shared_ptr<MyWorkerTimer> GetTimerWorker();
-    std::shared_ptr<MyContextManager>& GetHandleManager() { return _context_mgr; }
 
-    bool AddEvent(std::shared_ptr<MyEvent> ev);
-    bool DelEvent(std::shared_ptr<MyEvent> ev);
-
-    int Exec();                           // mainloop
-
-public: // for ut
-    bool LoadModsFromConf(const std::string& path);
-
-private:
     bool LoadActorFromLib(
         const Json::Value& root, 
         const Json::Value& actor_list, 
@@ -76,13 +75,14 @@ private:
         const Json::Value& root, 
         const Json::Value& worker_list, 
         const std::string& worker_name);
+
     /// worker
-    void Start(int worker_count);
-    void StartCommonWorker(int worker_count);
-    void StartTimerWorker();
+    bool StartCommonWorker(int worker_count);
+    bool StartTimerWorker();
 
     /// 通知执行事件
     void CheckStopWorkers();
+
     /// 分发事件
     void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
     void DispatchMsg(MyContext* context);
@@ -96,11 +96,12 @@ private:
     /// epoll文件描述符
     int _epoll_fd;
     /// 句柄管理对象
-    std::shared_ptr<MyContextManager> _context_mgr; 
+    std::unique_ptr<MyContextManager> _context_mgr; 
     /// 模块管理对象
-    std::shared_ptr<MyModManager> _mods;
+    std::unique_ptr<MyModManager> _mods;
     /// 线程管理对象
-    std::shared_ptr<MyWorkerManager> _worker_mgr;
+    std::unique_ptr<MyWorkerManager> _worker_mgr;
+    std::mutex _dispatch_mtx;
 
 };
 

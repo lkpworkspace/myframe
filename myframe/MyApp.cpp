@@ -18,45 +18,35 @@
 #include "MyWorkerCommon.h"
 #include "MyWorkerTimer.h"
 
-MyApp* MyApp::s_inst = nullptr;
-
-MyApp* MyApp::Create() {
-    if (s_inst == nullptr) {
-        s_inst = new MyApp();
-    }
-    return s_inst;
-}
-
-MyApp* MyApp::Inst() {
-    return s_inst;
-}
-
 std::shared_ptr<MyWorkerTimer> MyApp::GetTimerWorker() { 
-    auto w = _worker_mgr->Get(FLAGS_worker_timer_name);
+    auto w = _worker_mgr->Get(myframe::FLAGS_worker_timer_name);
     return std::dynamic_pointer_cast<MyWorkerTimer>(w);
 }
 
-MyApp::MyApp() :
-    _epoll_fd(-1) {
-    s_inst = this;
-}
+MyApp::MyApp() 
+    : _epoll_fd(-1)
+    , _context_mgr(new MyContextManager())
+    , _mods(new MyModManager())
+    , _worker_mgr(new MyWorkerManager())
+{}
 
 MyApp::~MyApp()
 {}
 
 bool MyApp::Init() {
-    _context_mgr = std::make_shared<MyContextManager>();
-    _mods = std::make_shared<MyModManager>();
-    _worker_mgr = std::make_shared<MyWorkerManager>();
-
-    /// start worker
-    Start(FLAGS_worker_count);
-
-    /// load actor and worker
-    if (!LoadModsFromConf(FLAGS_myframe_service_conf_dir)) {
+    _epoll_fd = epoll_create(1024);
+    if(-1 == _epoll_fd){
+        LOG(ERROR) << my_get_error();
         return false;
     }
-    return true;
+    LOG(INFO) << "Create epoll fd " << _epoll_fd;
+
+    bool ret = true;
+    ret &= StartCommonWorker(myframe::FLAGS_worker_count);
+    ret &= StartTimerWorker();
+
+    _quit = false;
+    return ret;
 }
 
 bool MyApp::LoadModsFromConf(const std::string& path) {
@@ -123,7 +113,7 @@ bool MyApp::LoadActorFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_myframe_lib_dir + lib_name)) {
+    if (!_mods->LoadMod(myframe::FLAGS_myframe_lib_dir + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -181,7 +171,7 @@ bool MyApp::LoadWorkerFromLib(
         return false;
     }
     const auto& lib_name = root["lib"].asString();
-    if (!_mods->LoadMod(FLAGS_myframe_lib_dir + lib_name)) {
+    if (!_mods->LoadMod(myframe::FLAGS_myframe_lib_dir + lib_name)) {
         LOG(ERROR) << "load lib " << lib_name <<" failed, skip";
         return false;
     }
@@ -202,8 +192,7 @@ bool MyApp::LoadWorkerFromLib(
                 << " failed, continue";
             continue;
         }
-        worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
-        AddWorker(worker);
+        AddWorker(inst["instance_name"].asString(), worker);
     }
     return res;
 }
@@ -228,13 +217,23 @@ bool MyApp::LoadWorkerFromClass(
                 << " failed, continue";
             continue;
         }
-        worker->SetInstName("worker." + worker_name + "." + inst["instance_name"].asString());
-        AddWorker(worker);
+        AddWorker(inst["instance_name"].asString(), worker);
     }
     return res;
 }
 
-bool MyApp::AddWorker(std::shared_ptr<MyWorker> worker) {
+bool MyApp::AddActor(
+    const std::string& inst_name, 
+    const std::string& params, 
+    std::shared_ptr<MyActor> actor) {
+    actor->SetInstName(inst_name);
+    return CreateContext(actor, params);
+}
+
+bool MyApp::AddWorker(
+    const std::string& inst_name, 
+    std::shared_ptr<MyWorker> worker) {
+    worker->SetInstName(inst_name);
     if (!_worker_mgr->Add(worker)) {
         return false;
     }
@@ -264,14 +263,14 @@ bool MyApp::CreateContext(
         LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
         return false;
     }
-    mod_inst->m_instance_name = instance_name;
+    mod_inst->SetInstName(instance_name);
     return CreateContext(mod_inst, params);
 }
 
 bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params) {
-    MyContext* ctx = new MyContext(mod_inst);
-    _context_mgr->RegHandle(ctx);
+    MyContext* ctx = new MyContext(shared_from_this(), mod_inst);
     ctx->Init(params.c_str());
+    _context_mgr->RegHandle(ctx);
     // 初始化之后, 手动将actor中发送消息队列分发出去
     DispatchMsg(ctx);
     return true;
@@ -306,41 +305,37 @@ bool MyApp::DelEvent(std::shared_ptr<MyEvent> ev) {
     return true;
 }
 
-void MyApp::StartCommonWorker(int worker_count) {
-    std::string worker_common_name = "worker.MyWorkerCommon";
+bool MyApp::StartCommonWorker(int worker_count) {
+    bool ret = false;
     for(int i = 0; i < worker_count; ++i){
         auto worker = std::make_shared<MyWorkerCommon>();
-        std::string cur_name = worker_common_name + "." + std::to_string(i);
-        worker->SetInstName(cur_name);
-        if (AddWorker(worker)) {
-            LOG(INFO) << "start common worker " << cur_name;
+        worker->SetModName("class");
+        worker->SetTypeName("MyWorkerCommon");
+        if (!AddWorker(std::to_string(i), worker)) {
+            LOG(ERROR) << "start common worker " << i << " failed";
+            continue;
         }
+        LOG(INFO) << "start common worker " << worker->GetWorkerName();
+        ret = true;
     }
+    return ret;
 }
 
-void MyApp::StartTimerWorker() {
-    auto timer_worker = std::make_shared<MyWorkerTimer>();
-    if (AddWorker(timer_worker)) {
-        LOG(INFO) << "Timer worker start";
+bool MyApp::StartTimerWorker() {
+    auto worker = std::make_shared<MyWorkerTimer>();
+    worker->SetModName("class");
+    worker->SetTypeName("timer");
+    if (!AddWorker("#1", worker)) {
+        LOG(ERROR) << "start timer worker failed";
+        return false;
     }
-}
-
-void MyApp::Start(int worker_count) {
-    _epoll_fd = epoll_create(1024);
-    if(-1 == _epoll_fd){
-        LOG(ERROR) << my_get_error();
-        return;
-    }
-    LOG(INFO) << "Create epoll fd " << _epoll_fd;
-
-    StartCommonWorker(worker_count);
-    StartTimerWorker();
-
-    _quit = false;
+    LOG(INFO) << "start timer worker " << worker->GetWorkerName();
+    return true;
 }
 
 void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
-    LOG_IF(WARNING, msg_list.size() > FLAGS_dispatch_or_process_msg_max) << " dispatch msg too many";
+    LOG_IF(WARNING, msg_list.size() > myframe::FLAGS_dispatch_or_process_msg_max) << " dispatch msg too many";
+    std::lock_guard<std::mutex> lock(_dispatch_mtx);
     for (auto& msg : msg_list) {
         DLOG(INFO) << "msg from " << msg->GetSrc() << " to " << msg->GetDst();
         auto name_list = SplitMsgName(msg->GetDst());
@@ -395,13 +390,13 @@ void MyApp::CheckStopWorkers() {
             break;
         }
         DLOG(INFO) \
-            << worker->GetInstName() 
+            << worker->GetWorkerName() 
             << "."
             << (unsigned long)worker->GetPosixThreadId() 
             << " dispatch task to idle worker";
         auto& msg_list = context->GetRecvMsgList();
         if(!msg_list.empty()){
-            LOG_IF(WARNING, msg_list.size() > FLAGS_dispatch_or_process_msg_max) \
+            LOG_IF(WARNING, msg_list.size() > myframe::FLAGS_dispatch_or_process_msg_max) \
                 << context->GetModule()->GetActorName() 
                 << " recv msg size too many: " << msg_list.size();
             DLOG(INFO) << "run " << context->GetModule()->GetActorName();
@@ -419,18 +414,18 @@ void MyApp::CheckStopWorkers() {
 
 void MyApp::ProcessTimerEvent(std::shared_ptr<MyWorkerTimer> timer_worker) {
     // 将定时器线程的发送队列分发完毕
-    DLOG(INFO) << timer_worker->GetInstName() << " dispatch msg...";
+    DLOG(INFO) << timer_worker->GetWorkerName() << " dispatch msg...";
     DispatchMsg(timer_worker->_send);
 
     MyWorkerCmd cmd;
     timer_worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
-        DLOG(INFO) << timer_worker->GetInstName() << " run again";
+        DLOG(INFO) << timer_worker->GetWorkerName() << " run again";
         timer_worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
     case MyWorkerCmd::QUIT: // quit
-        LOG(INFO) << timer_worker->GetInstName() << " quit, delete from myframe";
+        LOG(INFO) << timer_worker->GetWorkerName() << " quit, delete from myframe";
         DelEvent(timer_worker);
         _worker_mgr->Del(timer_worker);
         break;
@@ -442,22 +437,22 @@ void MyApp::ProcessTimerEvent(std::shared_ptr<MyWorkerTimer> timer_worker) {
 
 void MyApp::ProcessUserEvent(std::shared_ptr<MyWorker> worker) {
     // 将用户线程的发送队列分发完毕
-    DLOG(INFO) << worker->GetInstName() << " dispatch msg...";
+    DLOG(INFO) << worker->GetWorkerName() << " dispatch msg...";
     DispatchMsg(worker->_send);
 
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);
     switch(cmd){
     case MyWorkerCmd::IDLE: // idle
-        DLOG(INFO) << worker->GetInstName() << " run again";
+        DLOG(INFO) << worker->GetWorkerName() << " run again";
         worker->SendCmdToWorker(MyWorkerCmd::RUN);
         break;
     case MyWorkerCmd::WAIT_FOR_MSG:
-        DLOG(INFO) << worker->GetInstName() << " wait for msg...";
+        DLOG(INFO) << worker->GetWorkerName() << " wait for msg...";
         _worker_mgr->PushWaitWorker(worker);
         break;
     case MyWorkerCmd::QUIT: // quit
-        LOG(INFO) << worker->GetInstName() << " quit, delete from myframe";
+        LOG(INFO) << worker->GetWorkerName() << " quit, delete from myframe";
         DelEvent(worker);
         _worker_mgr->Del(worker);
         break;
@@ -471,14 +466,14 @@ void MyApp::ProcessUserEvent(std::shared_ptr<MyWorker> worker) {
 void MyApp::ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon> worker) {
     // 将actor的发送队列分发完毕
     DLOG_IF(INFO, worker->_context != nullptr) \
-        << worker->GetInstName() 
+        << worker->GetWorkerName() 
         << "."
         << (unsigned long)worker->GetPosixThreadId() 
         << " dispatch "
         << worker->_context->GetModule()->GetActorName()
         << " msg...";
     LOG_IF(WARNING, worker->_context == nullptr) \
-        << worker->GetInstName() 
+        << worker->GetWorkerName() 
         << "."
         << (unsigned long)worker->GetPosixThreadId() 
         << " no context";
@@ -491,7 +486,7 @@ void MyApp::ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon> worker) {
         // 将工作线程中的actor状态设置为全局状态
         // 将线程加入空闲队列
         DLOG(INFO) \
-            << worker->GetInstName() 
+            << worker->GetWorkerName() 
             << "."
             << (unsigned long)worker->GetPosixThreadId() 
             << " idle, push to idle queue";
@@ -500,7 +495,7 @@ void MyApp::ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon> worker) {
         break;
     case MyWorkerCmd::QUIT: // quit  
         LOG(INFO) \
-            << worker->GetInstName() 
+            << worker->GetWorkerName() 
             << "."
             << (unsigned long)worker->GetPosixThreadId() 
             << " quit, delete from myframe";

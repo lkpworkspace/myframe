@@ -12,6 +12,7 @@ class MyActor
     friend class MyApp;
     friend class MyContext;
     friend class MyModLib;
+    friend class MyModManager;
 public:
     MyActor();
     virtual ~MyActor();
@@ -50,14 +51,16 @@ public:
      * 
      * @return:         actor句柄
      */
-    uint32_t GetHandle();
+    uint32_t GetHandle() const;
 
     /**
      * GetActorName() - 获得该actor的actor名
      * 
      * @return:         成功返回：actor名，失败返回：空字符串
      */
-    std::string GetActorName();
+    const std::string GetActorName() const;
+    const std::string& GetTypeName() const { return _actor_name; }
+    const std::string& GetInstName() const { return _instance_name; }
 
     /**
      * Timeout() - 设置定时器
@@ -75,12 +78,16 @@ public:
     int Timeout(const std::string& timer_name, int expired);
 
 private:
+    void SetModName(const std::string& name);
+    void SetTypeName(const std::string& name) { _actor_name = name; }
+    void SetInstName(const std::string& name) { _instance_name = name; }
     bool IsFromLib() { return _is_from_lib; }
     void SetContext(MyContext*);
+
     bool _is_from_lib = false;
-    std::string m_mod_name;
-    std::string m_actor_name;
-    std::string m_instance_name;
+    std::string _mod_name;
+    std::string _actor_name;
+    std::string _instance_name;
     MyContext*  m_ctx;
 };
 

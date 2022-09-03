@@ -159,7 +159,6 @@ std::list<std::shared_ptr<MyMsg>>& MyTimerManager::Updatetime()
 //////////////////////////////////////////////////////
 
 MyWorkerTimer::MyWorkerTimer() {
-    SetInstName(FLAGS_worker_timer_name);
 }
 
 MyWorkerTimer::~MyWorkerTimer()
@@ -175,16 +174,16 @@ void MyWorkerTimer::Run() {
 
 void MyWorkerTimer::OnInit() {
     MyWorker::OnInit();
-    LOG(INFO) << "timer worker " << GetInstName() << " init";
+    LOG(INFO) << "timer worker " << GetWorkerName() << " init";
 }
 
 void MyWorkerTimer::OnExit() {
-    LOG(INFO) << "timer worker " << GetInstName() << " exit";
+    LOG(INFO) << "timer worker " << GetWorkerName() << " exit";
     MyWorker::OnExit();
 }
 
 int MyWorkerTimer::SetTimeout(const std::string& actor_name, const std::string& timer_name, int time) {
-    DLOG(INFO) << actor_name << " set timeout(" << timer_name<< "): " << (time * 10) << "ms";
+    DLOG(INFO) << actor_name << " set timeout(" << timer_name << "): " << (time * 10) << "ms";
     return _timer_mgr.Timeout(actor_name, timer_name, time);
 }
 

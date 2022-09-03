@@ -10,7 +10,7 @@ class MyModLib final
 {
 public:
     MyModLib();
-    ~MyModLib();
+    virtual ~MyModLib();
 
     /**
      * @brief 是否加载动态库

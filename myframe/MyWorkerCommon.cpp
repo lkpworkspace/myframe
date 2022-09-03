@@ -24,12 +24,12 @@ void MyWorkerCommon::Run() {
 
 void MyWorkerCommon::OnInit() {
     MyWorker::OnInit();
-    LOG(INFO) << "Worker " << GetInstName() << " init";
+    LOG(INFO) << "Worker " << GetWorkerName() << " init";
 }
 
 void MyWorkerCommon::OnExit() {
     MyWorker::OnExit();
-    LOG(INFO) << "Worker " << GetInstName() << " exit";
+    LOG(INFO) << "Worker " << GetWorkerName() << " exit";
 }
 
 int MyWorkerCommon::Work() {

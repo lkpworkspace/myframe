@@ -85,6 +85,8 @@ std::shared_ptr<MyWorker> MyModLib::CreateWorkerInst(
         return nullptr;
     }
     auto worker = create(worker_name);
+    worker->SetModName(mod_name);
+    worker->SetTypeName(worker_name);
     pthread_rwlock_unlock(&_rw);
     return worker;
 }
@@ -103,9 +105,8 @@ std::shared_ptr<MyActor> MyModLib::CreateActorInst(const std::string& mod_name, 
         return nullptr;
     }
     auto mod = create(actor_name);
-    mod->_is_from_lib = true;
-    mod->m_mod_name = mod_name;
-    mod->m_actor_name = actor_name;
+    mod->SetModName(mod_name);
+    mod->SetTypeName(actor_name);
     pthread_rwlock_unlock(&_rw);
     return mod;
 }

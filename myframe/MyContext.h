@@ -5,6 +5,7 @@
 #include "MyCommon.h"
 #include "MyList.h"
 
+class MyApp;
 class MyMsg;
 class MyActor;
 class MyWorkerCommon;
@@ -14,7 +15,7 @@ class MyContext : public MyNode
     friend class MyWorkerCommon;
     friend class MyApp;
 public:
-    MyContext(std::shared_ptr<MyActor>& mod);
+    MyContext(std::shared_ptr<MyApp> app, std::shared_ptr<MyActor> mod);
     virtual ~MyContext(){}
 
     int Init(const char *param);
@@ -50,6 +51,7 @@ public:
     bool IsInRunQueue() { return _in_run_que; }
 
     std::shared_ptr<MyActor> GetModule() { return _mod; }
+    std::shared_ptr<MyApp> GetApp();
 
     std::string Print();
 private:
@@ -64,5 +66,5 @@ private:
     /* actor是否在消息队列中 */
     bool                _in_run_que;
     std::shared_ptr<MyActor> _mod;
-
+    std::weak_ptr<MyApp> _app;
 };

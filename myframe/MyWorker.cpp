@@ -17,6 +17,10 @@ MyWorker::~MyWorker() {
     CloseSockPair();
 }
 
+const std::string MyWorker::GetWorkerName() const {
+    return "worker." + _worker_name + "." + _inst_name;
+}
+
 void MyWorker::Start() {
     int res = 0;
     if(_runing == false) {
@@ -76,7 +80,7 @@ int MyWorker::RecvCmdFromWorker(MyWorkerCmd& cmd) {
 }
 
 void MyWorker::SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg) {
-    msg->SetSrc(GetInstName());
+    msg->SetSrc(GetWorkerName());
     msg->SetDst(dst);
     _send.emplace_back(msg);
 }

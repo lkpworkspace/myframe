@@ -27,6 +27,8 @@ enum class MyWorkerState : int {
 class MyWorker : public MyEvent
 {
     friend class MyApp;
+    friend class MyModLib;
+    friend class MyModManager;
     friend class MyWorkerManager;
 public:
     MyWorker();
@@ -54,8 +56,10 @@ public:
     int SendMsgListSize() { return _send.size(); }
     void SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg);
 
-    void SetInstName(const std::string& name) { _inst_name = name; }
-    std::string& GetInstName() { return _inst_name; }
+    const std::string& GetModName() const { return _mod_name; }
+    const std::string& GetTypeName() const { return _worker_name; }
+    const std::string& GetInstName() const { return _inst_name; }
+    const std::string GetWorkerName() const;
 
 protected:
     int DispatchMsg();
@@ -72,9 +76,15 @@ protected:
     static void* ListenThread(void*);
 
 private:
+    void SetModName(const std::string& name) { _mod_name = name; }
+    void SetTypeName(const std::string& name) { _worker_name = name; }
+    void SetInstName(const std::string& name) { _inst_name = name; }
+
     bool CreateSockPair();
     void CloseSockPair();
 
+    std::string _mod_name;
+    std::string _worker_name;
     std::string _inst_name;
     /// idx: 0 used by MyWorkerCommon, 1 used by MyApp
     int _sockpair[2];

@@ -17,10 +17,13 @@ target_link_libraries(myframe_main myframe)
 
 ### install
 file(GLOB header_files 
+    MyLog.h
     MyMsg.h
     MyActor.h
     MyEvent.h
     MyWorker.h
+    MyModLib.h
+    MyModManager.h
     MyApp.h
 )
 install(FILES 

@@ -44,12 +44,12 @@ bool MyWorkerManager::Add(std::shared_ptr<MyWorker> worker) {
     int handle = worker->GetFd();
     pthread_rwlock_wrlock(&_rw);
     if(_workers.find(handle) != _workers.end()) {
-        LOG(ERROR) << worker->GetInstName() << " reg handle " << handle << " has exist";
+        LOG(ERROR) << worker->GetWorkerName() << " reg handle " << handle << " has exist";
         pthread_rwlock_unlock(&_rw);
         return false;
     }
     _workers[handle] = worker;
-    _name_handle_map[worker->GetInstName()] = handle;
+    _name_handle_map[worker->GetWorkerName()] = handle;
     auto ev_type = worker->GetMyEventType();
     if (ev_type == MyEventType::WORKER_COMMON || ev_type == MyEventType::WORKER_USER) {
         ++_cur_worker_count;
@@ -66,7 +66,7 @@ void MyWorkerManager::Del(std::shared_ptr<MyWorker> worker) {
         return;
     }
     _workers.erase(_workers.find(handle));
-    _name_handle_map.erase(worker->GetInstName());
+    _name_handle_map.erase(worker->GetWorkerName());
     auto ev_type = worker->GetMyEventType();
     if (ev_type == MyEventType::WORKER_COMMON || ev_type == MyEventType::WORKER_USER) {
         --_cur_worker_count;
@@ -105,7 +105,7 @@ void MyWorkerManager::WeakupWorker() {
         auto worker = it->lock();
         MyListAppend(worker->_que, worker->_recv);
         if (worker->_que.size() <= 0) {
-            LOG(ERROR) << worker->GetInstName() << " has no msg, continue weak up";
+            LOG(ERROR) << worker->GetWorkerName() << " has no msg, continue weak up";
         }
         it = _weakup_workers.erase(it);
         worker->_state == MyWorkerState::RUN;
