@@ -1,0 +1,26 @@
+{
+    "type":"library",
+    "lib":"libtest_concurrent.so",
+    "actor":{
+        "test_concurrent_trigger":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ],
+        "test_concurrent":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            },
+            {
+                "instance_name":"#2",
+                "instance_params":""
+            },
+            {
+                "instance_name":"#3",
+                "instance_params":""
+            }
+        ]       
+    }
+}

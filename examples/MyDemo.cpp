@@ -1,6 +1,3 @@
-#include <iostream>
-#include <string.h>
-
 #include <glog/logging.h>
 
 #include "myframe/MyActor.h"
@@ -20,11 +17,9 @@ public:
     }
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
-        if (msg->GetMsgType() == "TEXT") {
-            /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
-            LOG(INFO) << "----> from \"" << msg->GetSrc() << "\" to \"" 
-                << GetActorName() << "\": " << msg->GetData();
-        }
+        /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
+        LOG(INFO) << "----> from \"" << msg->GetSrc() << "\" to \"" 
+            << GetActorName() << "\": " << msg->GetData();
     }
 };
 

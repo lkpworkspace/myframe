@@ -1,6 +1,3 @@
-#include <iostream>
-#include <string.h>
-
 #include <glog/logging.h>
 
 #include "myframe/MyActor.h"
@@ -9,9 +6,6 @@
 class MyTestTimer : public MyActor
 {
 public:
-    MyTestTimer(){}
-    virtual ~MyTestTimer(){}
-
     int Init(const char* param) override {
         /* 设置超时时间为 100 * 10 ms */
         Timeout("1000ms", 10);
