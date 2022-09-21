@@ -119,8 +119,8 @@ MyContext* MyContextManager::GetContextWithMsg()
         }else{
             msg_list.DelHead();
 
-            ctx->SetOutOfRunQueueFlag();
-            ctx->SetRunFlag();
+            ctx->SetRuningFlag(true);
+            ctx->SetWaitQueueFlag(false);
             ret = ctx;
             break;
         }
@@ -134,12 +134,12 @@ MyContext* MyContextManager::GetContextWithMsg()
 
 void MyContextManager::PushContext(MyContext* ctx)
 {
-    if(ctx->IsInRunQueue()) {
+    if(ctx->IsInWaitQueue()) {
         DLOG(INFO) << ctx->Print() << " already in wait queue, return";
         PrintWaitQueue();
         return;
     }
-    ctx->SetInRunQueueFlag();
+    ctx->SetWaitQueueFlag(true);
     m_msg_list.AddTail(ctx);
     PrintWaitQueue();
 }

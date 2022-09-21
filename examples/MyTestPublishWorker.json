@@ -1,0 +1,11 @@
+{
+    "type":"library",
+    "lib":"libtest_publish_worker.so",
+    "worker":{
+        "test_publish_worker":[
+            {
+                "instance_name":"#1"
+            }
+        ]
+    }
+}

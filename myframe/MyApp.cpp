@@ -372,7 +372,7 @@ void MyApp::DispatchMsg(MyContext* context) {
         return;
     }
     DLOG(INFO) << context->GetModule()->GetActorName() << " dispatch msg...";
-    context->SetWaitFlag();
+    context->SetRuningFlag(false);
     auto& msg_list = context->GetDispatchMsgList();
     DispatchMsg(msg_list);
 }

@@ -6,6 +6,8 @@ add_library(test_timer SHARED MyTestTimer.cpp)
 add_library(test_worker SHARED MyTestWorker.cpp)
 add_library(test_concurrent SHARED MyTestConcurrent.cpp)
 add_library(test_serial SHARED MyTestSerial.cpp)
+add_library(test_talk_worker SHARED MyTestTalkWorker.cpp)
+add_library(test_publish_worker SHARED MyTestPublishWorker.cpp)
 
 ### install
 FILE(GLOB conf_files "*.json")
@@ -17,7 +19,7 @@ INSTALL(FILES
     WORLD_READ
     DESTINATION ${MYFRAME_SERVICE_CONF_DIR}
 )
-INSTALL(TARGETS demo test_timer test_worker test_concurrent test_serial
+INSTALL(TARGETS demo test_timer test_worker test_concurrent test_serial test_talk_worker test_publish_worker
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_BIN_DIR}

@@ -11,8 +11,7 @@ MyWorkerCommon::~MyWorkerCommon() {
 }
 
 void MyWorkerCommon::Idle() {
-    if(_context){
-        _context->SetWaitFlag();
+    if(_context) {
         _context = nullptr;
     }
 }

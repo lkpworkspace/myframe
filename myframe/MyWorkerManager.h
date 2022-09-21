@@ -37,7 +37,7 @@ private:
     pthread_rwlock_t _rw;
     /// 空闲线程链表
     std::list<std::weak_ptr<MyWorker>> _idle_workers;
-    /// 有消息线程
+    /// 有消息user线程
     std::list<std::weak_ptr<MyWorker>> _weakup_workers;
     /// name/handle 映射表
     std::unordered_map<std::string, int> _name_handle_map;

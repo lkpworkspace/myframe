@@ -12,16 +12,15 @@
 #include "MyMsg.h"
 
 enum class MyWorkerCmd : char {
-    IDLE            = 'i',     ///< 工作线程空闲
-    RUN             = 'r',     ///< 工作线程运行
-    WAIT_FOR_MSG    = 'w',     ///< 工作线程等待消息
-    QUIT            = 'q',     ///< 线程退出命令
+    IDLE            = 'i',     ///< worker空闲(worker发送的指令)
+    WAIT_FOR_MSG    = 'w',     ///< worker等待消息(worker发送的指令)
+    RUN             = 'r',     ///< worker运行(main回复的指令)
+    QUIT            = 'q',     ///< worker退出(main回复的指令)
 };
 
-enum class MyWorkerState : int {
-    RUN,
-    WAIT,
-    WEAKUP,
+enum class MyWorkerCtrlOwner : int {
+    MAIN,
+    WORKER,
 };
 
 class MyWorker : public MyEvent
@@ -48,34 +47,45 @@ public:
     unsigned int ListenEpollEventType() override { return EPOLLIN; }
     void RetEpollEventType(uint32_t ev) override { ev = ev; }
 
-    ////////////////////////////// 线程间通信相关函数
-    int SendCmdToWorker(const MyWorkerCmd& cmd);
-    int RecvCmdFromWorker(MyWorkerCmd& cmd);
+    ////////////////////////////// 接收worker/actor消息
+    int RecvMsgListSize() { return _que.size(); }
+    const std::shared_ptr<const MyMsg> GetRecvMsg();
 
-    ////////////////////////////// 消息处理相关函数
+    ////////////////////////////// 发送消息相关函数
     int SendMsgListSize() { return _send.size(); }
     void SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg);
+    void PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list);
+
+    ////////////////////////////// 接收/发送主线程控制消息
+    int RecvCmdFromMain(MyWorkerCmd& cmd);
+    int SendCmdToMain(const MyWorkerCmd& cmd);
+    /// 分发消息并立即返回
+    int DispatchMsg();
+    /// 分发消息并等待回复消息
+    int DispatchAndWaitMsg();
+    
+    /// worker fd
+    int GetWorkerFd() { return _sockpair[0]; }
 
     const std::string& GetModName() const { return _mod_name; }
     const std::string& GetTypeName() const { return _worker_name; }
     const std::string& GetInstName() const { return _inst_name; }
     const std::string GetWorkerName() const;
 
-protected:
-    int DispatchMsg();
-    int DispatchAndWaitMsg();
-    
-    int RecvCmdFromMain(MyWorkerCmd& cmd);
-    int SendCmdToMain(const MyWorkerCmd& cmd);
-    
-    int RecvMsgListSize() { return _que.size(); }
-    const std::shared_ptr<const MyMsg> GetRecvMsg();
-    
-    void PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list);
-    
-    static void* ListenThread(void*);
-
 private:
+    static void* ListenThread(void*);
+    
+    ////////////////////////////// 线程间通信相关函数
+    int SendCmdToWorker(const MyWorkerCmd& cmd);
+    int RecvCmdFromWorker(MyWorkerCmd& cmd);
+
+    ////////////////////////////// 线程交互控制flag函数
+    void SetCtrlOwnerFlag(MyWorkerCtrlOwner owner) { _ctrl_owner = owner; }
+    MyWorkerCtrlOwner GetOwner() const { return _ctrl_owner; }
+    void SetWaitMsgQueueFlag(bool in_wait_msg_queue) { _in_msg_wait_queue = in_wait_msg_queue; }
+    bool IsInWaitMsgQueue() { return _in_msg_wait_queue; }
+
+    ////////////////////////////// worker name
     void SetModName(const std::string& name) { _mod_name = name; }
     void SetTypeName(const std::string& name) { _worker_name = name; }
     void SetInstName(const std::string& name) { _inst_name = name; }
@@ -83,6 +93,7 @@ private:
     bool CreateSockPair();
     void CloseSockPair();
 
+    /// worker name
     std::string _mod_name;
     std::string _worker_name;
     std::string _inst_name;
@@ -96,8 +107,10 @@ private:
     std::list<std::shared_ptr<MyMsg>> _send;
     /// posix thread id
     pthread_t _posix_thread_id;
+    /// state
     std::atomic_bool _runing;
-    MyWorkerState _state = MyWorkerState::RUN;
+    MyWorkerCtrlOwner _ctrl_owner{MyWorkerCtrlOwner::MAIN};
+    bool _in_msg_wait_queue{false};
 };
 
 extern "C" {

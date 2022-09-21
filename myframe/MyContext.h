@@ -38,17 +38,11 @@ public:
     uint32_t GetHandle() { return _handle; }
     void SetHandle(uint32_t handle) { _handle = handle; }
 
-    void SetRunFlag() { _in_worker = true; }
-
-    void SetWaitFlag() { _in_worker = false; }
-
+    void SetRuningFlag(bool in_worker) { _in_worker = in_worker; }
     bool IsRuning() { return _in_worker; }
 
-    void SetOutOfRunQueueFlag() { _in_run_que = false; }
-
-    void SetInRunQueueFlag() { _in_run_que = true; }
-
-    bool IsInRunQueue() { return _in_run_que; }
+    void SetWaitQueueFlag(bool in_wait_queue) { _in_wait_que = in_wait_queue; }
+    bool IsInWaitQueue() { return _in_wait_que; }
 
     std::shared_ptr<MyActor> GetModule() { return _mod; }
     std::shared_ptr<MyApp> GetApp();
@@ -64,7 +58,7 @@ private:
     /* 该actor的是否在工作线程的标志 */
     bool                _in_worker;
     /* actor是否在消息队列中 */
-    bool                _in_run_que;
+    bool                _in_wait_que;
     std::shared_ptr<MyActor> _mod;
     std::weak_ptr<MyApp> _app;
 };

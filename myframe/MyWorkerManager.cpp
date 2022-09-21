@@ -2,6 +2,7 @@
 #include "MyWorkerManager.h"
 #include "MyCommon.h"
 #include "MyWorker.h"
+#include "MyFlags.h"
 
 MyWorkerManager::MyWorkerManager() {
     pthread_rwlock_init(&_rw, NULL);
@@ -97,18 +98,24 @@ void MyWorkerManager::PushBackIdleWorker(std::shared_ptr<MyWorker> worker) {
 }
 
 void MyWorkerManager::PushWaitWorker(std::shared_ptr<MyWorker>& worker) {
-    worker->_state = MyWorkerState::WAIT;
+    worker->SetCtrlOwnerFlag(MyWorkerCtrlOwner::MAIN);
 }
 
 void MyWorkerManager::WeakupWorker() {
     for (auto it = _weakup_workers.begin(); it != _weakup_workers.end();) {
-        auto worker = it->lock();
-        MyListAppend(worker->_que, worker->_recv);
-        if (worker->_que.size() <= 0) {
-            LOG(ERROR) << worker->GetWorkerName() << " has no msg, continue weak up";
+        if (it->expired()) {
+            it = _weakup_workers.erase(it);
+            continue;
         }
+        auto worker = it->lock();
+        if (worker->GetOwner() == MyWorkerCtrlOwner::WORKER) {
+            continue;
+        }
+        MyListAppend(worker->_que, worker->_recv);
         it = _weakup_workers.erase(it);
-        worker->_state == MyWorkerState::RUN;
+        worker->SetCtrlOwnerFlag(MyWorkerCtrlOwner::WORKER);
+        worker->SetWaitMsgQueueFlag(false);
+        LOG(INFO) << "notify " << worker->GetWorkerName() << " process msg";
         worker->SendCmdToWorker(MyWorkerCmd::RUN);
     }
 }
@@ -129,8 +136,12 @@ void MyWorkerManager::DispatchWorkerMsg(std::shared_ptr<MyMsg>& msg) {
         return;
     }
     worker->_recv.emplace_back(msg);
-    if (worker->_state == MyWorkerState::WAIT) {
-        worker->_state == MyWorkerState::WEAKUP;
-        _weakup_workers.emplace_back(worker);
+    LOG_IF(WARNING, worker->_recv.size() > myframe::FLAGS_dispatch_or_process_msg_max) 
+        << worker->GetWorkerName() << " has " << worker->_recv.size() << " msg not process!!!";
+    if (worker->IsInWaitMsgQueue()) {
+        DLOG(INFO) << worker->GetWorkerName() << " already in wait queue, return";
+        return;
     }
+    worker->SetWaitMsgQueueFlag(true);
+    _weakup_workers.emplace_back(worker);
 }
