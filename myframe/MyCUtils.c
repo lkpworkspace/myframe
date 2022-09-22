@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dlfcn.h>
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
 
 #define NANOSEC 1000000000
 #define MICROSEC 1000000
@@ -55,15 +57,25 @@ uint64_t my_gettime_ms()
     return t;
 }
 
+bool my_set_sock_recv_timeout(int fd, int timeout_ms) {
+    struct timeval timeout = { timeout_ms / 1000, (timeout_ms % 1000) * 1000 };
+    return 0 == setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+}
 
 bool my_set_nonblock(int fd, bool b)
 {
     int flags = fcntl(fd, F_GETFL, 0);
-    if(b)
+    if(b) {
         flags |= O_NONBLOCK;
-    else
+    } else {
         flags &= ~O_NONBLOCK;
+    }
     return fcntl(fd, F_SETFL, flags) != -1;
+}
+
+bool my_is_block(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    return !(flags & O_NONBLOCK);
 }
 
 const char* my_get_error()

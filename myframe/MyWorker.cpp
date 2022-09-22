@@ -65,7 +65,21 @@ int MyWorker::SendCmdToWorker(const MyWorkerCmd& cmd) {
     return write(_sockpair[1], &cmd_char, 1);
 }
 
-int MyWorker::RecvCmdFromMain(MyWorkerCmd& cmd) {
+int MyWorker::RecvCmdFromMain(MyWorkerCmd& cmd, int timeout_ms) {
+    if (timeout_ms < 0) {
+        // block
+        if (!my_is_block(_sockpair[0])) {
+            my_set_nonblock(_sockpair[0], false);
+        }
+    } else if (timeout_ms == 0) {
+        // nonblock
+        if (my_is_block(_sockpair[0])) {
+            my_set_nonblock(_sockpair[0], true);
+        }
+    } else {
+        // timeout
+        my_set_sock_recv_timeout(_sockpair[0], timeout_ms);
+    }
     char cmd_char;
     int ret = read(_sockpair[0], &cmd_char, 1);
     cmd = (MyWorkerCmd)cmd_char;

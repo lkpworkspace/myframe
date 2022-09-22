@@ -57,7 +57,7 @@ public:
     void PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list);
 
     ////////////////////////////// 接收/发送主线程控制消息
-    int RecvCmdFromMain(MyWorkerCmd& cmd);
+    int RecvCmdFromMain(MyWorkerCmd& cmd, int timeout_ms = -1);
     int SendCmdToMain(const MyWorkerCmd& cmd);
     /// 分发消息并立即返回
     int DispatchMsg();
