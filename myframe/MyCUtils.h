@@ -1,5 +1,4 @@
-#ifndef __MYUTILS_H__
-#define __MYUTILS_H__
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -26,4 +25,3 @@ const char* my_get_error();
 }
 #endif
 
-#endif // __MYUTILS_H__

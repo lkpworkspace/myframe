@@ -3,6 +3,8 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
+using namespace myframe;
+
 class ExampleActorTimer : public MyActor
 {
 public:

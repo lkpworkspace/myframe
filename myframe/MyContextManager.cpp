@@ -6,6 +6,8 @@
 #include "MyActor.h"
 #include "MyLog.h"
 
+namespace myframe {
+
 MyContextManager::MyContextManager() 
     : _ctx_count(0)
 {
@@ -93,3 +95,5 @@ void MyContextManager::PushContext(std::shared_ptr<MyContext> ctx) {
     _wait_queue.push_back(ctx);
     PrintWaitQueue();
 }
+
+} // namespace myframe

@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+namespace myframe {
+
 class MyMsg;
 class MyContext;
 class MyActor
@@ -82,6 +84,8 @@ private:
     std::weak_ptr<MyContext> _ctx;
 };
 
+} // namespace myframe
+
 extern "C" {
-    typedef std::shared_ptr<MyActor> (*my_actor_create_func)(const std::string&);
+    typedef std::shared_ptr<myframe::MyActor> (*my_actor_create_func)(const std::string&);
 } // extern "C"

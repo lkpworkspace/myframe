@@ -6,6 +6,8 @@
 #include "MyCommon.h"
 #include "MyList.h"
 
+namespace myframe {
+
 class MyContext;
 class MyContextManager final
 {
@@ -39,3 +41,5 @@ private:
     std::unordered_map<std::string, std::shared_ptr<MyContext>> _ctxs;
 
 };
+
+} // namespace myframe

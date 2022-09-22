@@ -7,6 +7,8 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyWorker.h"
 
+using namespace myframe;
+
 /// 回显worker发来的消息
 class ExampleActorInteractive : public MyActor
 {

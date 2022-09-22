@@ -1,5 +1,4 @@
-#ifndef __MYCOMMON_H__
-#define __MYCOMMON_H__
+#pragma once
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,6 +7,8 @@
 #include <jsoncpp/json/json.h>
 
 #include "MyLog.h"
+
+namespace myframe {
 
 template<typename T>
 void MyListAppend(std::list<std::shared_ptr<T>>& dst, std::list<std::shared_ptr<T>>& src) {
@@ -23,4 +24,4 @@ public:
     static Json::Value LoadJsonFromFile(const std::string& json_file);
 };
 
-#endif // __MYCOMMON_H__
+} // namespace myframe

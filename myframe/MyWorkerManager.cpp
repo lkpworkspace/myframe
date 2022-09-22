@@ -4,6 +4,8 @@
 #include "MyWorker.h"
 #include "MyFlags.h"
 
+namespace myframe {
+
 MyWorkerManager::MyWorkerManager() {
     pthread_rwlock_init(&_rw, NULL);
 }
@@ -145,3 +147,5 @@ void MyWorkerManager::DispatchWorkerMsg(std::shared_ptr<MyMsg>& msg) {
     worker->SetWaitMsgQueueFlag(true);
     _weakup_workers.emplace_back(worker);
 }
+
+} // namespace myframe

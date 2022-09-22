@@ -1,5 +1,4 @@
-#ifndef __MYAPP_H__
-#define __MYAPP_H__
+#pragma once
 #include <memory>
 #include <atomic>
 #include <vector>
@@ -10,6 +9,9 @@
 #include <jsoncpp/json/json.h>
 
 struct epoll_event;
+
+namespace myframe {
+
 class MyContext;
 class MyMsg;
 class MyActor;
@@ -20,7 +22,6 @@ class MyWorkerTimer;
 class MyModManager;
 class MyContextManager;
 class MyWorkerManager;
-
 class MyApp final : public std::enable_shared_from_this<MyApp>
 {
     friend class MyActor;
@@ -105,4 +106,4 @@ private:
 
 };
 
-#endif
+} // namespace myframe

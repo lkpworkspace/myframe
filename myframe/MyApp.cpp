@@ -18,6 +18,8 @@
 #include "MyWorkerCommon.h"
 #include "MyWorkerTimer.h"
 
+namespace myframe {
+
 std::shared_ptr<MyWorkerTimer> MyApp::GetTimerWorker() { 
     auto w = _worker_mgr->Get(myframe::FLAGS_worker_timer_name);
     return std::dynamic_pointer_cast<MyWorkerTimer>(w);
@@ -557,3 +559,5 @@ int MyApp::Exec() {
     LOG(INFO) << "myframe exit";
     return 0;
 }
+
+} // namespace myframe

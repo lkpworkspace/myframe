@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 
+namespace myframe {
+
 std::vector<std::string> SplitMsgName(const std::string& name) {
     std::vector<std::string> name_list;
     std::string item;
@@ -44,3 +46,5 @@ Json::Value MyCommon::LoadJsonFromFile(const std::string& json_file) {
     ifs.close();
     return root;
 }
+
+} // namespace myframe

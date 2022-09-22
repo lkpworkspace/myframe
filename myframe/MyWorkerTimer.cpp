@@ -9,6 +9,8 @@
 #include "MyActor.h"
 #include "MyFlags.h"
 
+namespace myframe {
+
 MyTimerManager::MyTimerManager()
 {
     _tv[0] = _tv2;
@@ -192,3 +194,5 @@ int MyWorkerTimer::Work() {
     PushSendMsgList(timeout_list);
     return SendMsgListSize();
 }
+
+} // namespace myframe

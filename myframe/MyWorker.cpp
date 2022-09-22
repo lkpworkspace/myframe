@@ -7,6 +7,8 @@
 #include "MyLog.h"
 #include "MyCUtils.h"
 
+namespace myframe {
+
 MyWorker::MyWorker() :
     _posix_thread_id(-1),
     _runing(false) {
@@ -154,3 +156,5 @@ void MyWorker::CloseSockPair() {
         LOG(ERROR) << "Worker close sockpair[1]: " << my_get_error();
     }
 }
+
+} // namespace myframe

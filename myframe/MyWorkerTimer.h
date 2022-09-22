@@ -17,6 +17,8 @@
 
 #define MY_RESOLUTION_MS 10
 
+namespace myframe {
+
 class MyTimer : public MyNode
 {
     friend class MyTimerManager;
@@ -89,3 +91,5 @@ private:
 
     MyTimerManager        _timer_mgr;
 };
+
+} // namespace myframe

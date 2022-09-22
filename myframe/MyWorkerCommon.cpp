@@ -3,6 +3,8 @@
 #include "MyContext.h"
 #include "MyMsg.h"
 
+namespace myframe {
+
 MyWorkerCommon::MyWorkerCommon()
 {}
 
@@ -42,3 +44,5 @@ int MyWorkerCommon::Work() {
     
     return 0;
 }
+
+} // namespace myframe

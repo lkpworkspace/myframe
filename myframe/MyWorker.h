@@ -11,6 +11,8 @@
 #include "MyEvent.h"
 #include "MyMsg.h"
 
+namespace myframe {
+
 enum class MyWorkerCmd : char {
     IDLE            = 'i',     ///< worker空闲(worker发送的指令)
     WAIT_FOR_MSG    = 'w',     ///< worker等待消息(worker发送的指令)
@@ -113,6 +115,8 @@ private:
     bool _in_msg_wait_queue{false};
 };
 
+} // namespace myframe
+
 extern "C" {
-    typedef std::shared_ptr<MyWorker> (*my_worker_create_func)(const std::string&);
+    typedef std::shared_ptr<myframe::MyWorker> (*my_worker_create_func)(const std::string&);
 } // extern "C"

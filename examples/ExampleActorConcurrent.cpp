@@ -8,6 +8,8 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
+using namespace myframe;
+
 class ExampleActorConcurrent : public MyActor
 {
 public:

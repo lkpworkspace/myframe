@@ -2,6 +2,7 @@
 /**
  *  双向循环链表
  **/
+namespace myframe {
 
 class MyNode
 {
@@ -70,3 +71,5 @@ private:
     int m_count;
 
 };
+
+} // namespace myframe

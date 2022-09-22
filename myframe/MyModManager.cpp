@@ -4,6 +4,8 @@
 #include "MyActor.h"
 #include "MyWorker.h"
 
+namespace myframe {
+
 MyModManager::MyModManager() {
     pthread_rwlock_init(&_class_actor_rw, NULL);
     pthread_rwlock_init(&_class_worker_rw, NULL);
@@ -77,3 +79,5 @@ std::shared_ptr<MyWorker> MyModManager::CreateWorkerInst(const std::string& mod_
     pthread_rwlock_unlock(&_class_worker_rw);
     return nullptr;
 }
+
+} // namespace myframe

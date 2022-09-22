@@ -3,6 +3,8 @@
 #include "MyCommon.h"
 #include "MyWorker.h"
 
+namespace myframe {
+
 class MyMsg;
 class MyContext;
 class MyWorkerCommon : public MyWorker
@@ -22,7 +24,7 @@ public:
 
     void SetContext(std::shared_ptr<MyContext> context) { _context = context; }
     std::shared_ptr<MyContext> GetContext() {return (_context.expired() ? nullptr : _context.lock()); }
-    
+
 private:
     /* 工作线程消息处理 */
     int Work();
@@ -31,3 +33,5 @@ private:
     //// 当前执行actor的指针
     std::weak_ptr<MyContext> _context;
 };
+
+} // namespace myframe

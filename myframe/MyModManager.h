@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include "MyModLib.h"
 
+namespace myframe {
+
 class MyModManager final {
 public:
     MyModManager();
@@ -26,3 +28,5 @@ private:
     pthread_rwlock_t _class_actor_rw;
     pthread_rwlock_t _class_worker_rw;
 };
+
+} // namespace myframe

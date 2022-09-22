@@ -4,6 +4,8 @@
 
 #include "MyCommon.h"
 
+namespace myframe {
+
 class MyApp;
 class MyMsg;
 class MyActor;
@@ -56,3 +58,5 @@ private:
     std::shared_ptr<MyActor> _mod;
     std::weak_ptr<MyApp> _app;
 };
+
+} // namespace myframe

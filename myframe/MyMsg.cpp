@@ -1,5 +1,7 @@
 #include "MyMsg.h"
 
+namespace myframe {
+
 void MyMsg::SetData(const char* data, unsigned int len)
 {
     _data.clear();
@@ -9,3 +11,5 @@ void MyMsg::SetData(const std::string& data)
 {
     SetData(data.data(), data.size());
 }
+
+} // namespace myframe

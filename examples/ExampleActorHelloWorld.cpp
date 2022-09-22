@@ -3,6 +3,8 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
+using namespace myframe;
+
 /*
     自己给自己发送一条消息
 */

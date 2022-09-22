@@ -7,6 +7,8 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyWorker.h"
 
+using namespace myframe;
+
 class ExampleWorkerTalk : public MyWorker
 {
 public:

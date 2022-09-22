@@ -1,5 +1,7 @@
 #pragma once
 
+namespace myframe {
+
 enum class MyEventType : int {
     WORKER_COMMON,
     WORKER_TIMER,
@@ -29,3 +31,5 @@ public:
     /* 获得的epoll事件类型(call by MyApp) */
     virtual void RetEpollEventType(uint32_t ev) = 0;
 };
+
+} // namespace myframe

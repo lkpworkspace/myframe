@@ -4,6 +4,8 @@
 #include <vector>
 #include <pthread.h>
 
+namespace myframe {
+
 class MyActor;
 class MyWorker;
 class MyModLib final
@@ -60,3 +62,5 @@ private:
     pthread_rwlock_t                       _rw;
 
 };
+
+} // namespace myframe

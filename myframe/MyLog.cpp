@@ -6,6 +6,8 @@ static void signal_handler(const char *data, int size) {
     LOG(ERROR) << str;
 }
 
+namespace myframe {
+
 MyLog::MyLog()
 {
     // output log immediately
@@ -24,3 +26,5 @@ MyLog::MyLog()
     std::string dest_dir = myframe::FLAGS_myframe_log_dir + "/info";
     google::SetLogDestination(google::GLOG_INFO, dest_dir.c_str());
 }
+
+} // namespace myframe

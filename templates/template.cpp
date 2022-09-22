@@ -8,6 +8,8 @@
 #include "MyActor.h"
 #include "MyWorker.h"
 
+using namespace myframe;
+
 class @template_name@Actor : public MyActor
 {
 public:

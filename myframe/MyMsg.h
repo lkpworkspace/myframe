@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <string>
 
+namespace myframe {
+
 class MyMsg final
 {
 public:
@@ -57,3 +59,5 @@ private:
     std::string _desc;
     std::string _data;
 };
+
+} // namespace myframe

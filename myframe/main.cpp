@@ -7,10 +7,10 @@
 int main(int argc, char** argv) {
     google::ParseCommandLineFlags(&argc, &argv, true);
     // 利用构造函数初始化日志系统
-    MyLog log;
+    myframe::MyLog log;
 
     // 初始化并启动线程
-    auto app = std::make_shared<MyApp>();
+    auto app = std::make_shared<myframe::MyApp>();
     if(false == app->Init()) {
         LOG(ERROR) << "Init failed";
         return -1;

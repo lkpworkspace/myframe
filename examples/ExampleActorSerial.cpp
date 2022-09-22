@@ -8,6 +8,8 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
+using namespace myframe;
+
 int random(int min, int max) {
     std::random_device seed;
     std::ranlux48 engine(seed());

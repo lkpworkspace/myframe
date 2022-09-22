@@ -3,6 +3,8 @@
 #include "MyWorkerTimer.h"
 #include "MyApp.h"
 
+namespace myframe {
+
 MyActor::MyActor() {}
 
 MyActor::~MyActor()
@@ -40,3 +42,5 @@ int MyActor::Timeout(const std::string& timer_name, int expired) {
 void MyActor::SetContext(std::shared_ptr<MyContext> c) {
     _ctx = c;
 }
+
+} // namespace myframe

@@ -8,6 +8,8 @@
 #include "MyMsg.h"
 #include "MyApp.h"
 
+namespace myframe {
+
 MyContext::MyContext(std::shared_ptr<MyApp> app, std::shared_ptr<MyActor> mod) :
     _app(app),
     _mod(mod),
@@ -41,3 +43,5 @@ std::string MyContext::Print() {
        << ", in wait queue: " << _in_wait_que;
     return ss.str();
 }
+
+} // namespace myframe

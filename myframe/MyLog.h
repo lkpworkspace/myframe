@@ -1,6 +1,7 @@
-#ifndef __MYLOG_H__
-#define __MYLOG_H__
+#pragma once
 #include "glog/logging.h"
+
+namespace myframe {
 
 class MyLog
 {
@@ -9,4 +10,4 @@ public:
     virtual ~MyLog(){}
 };
 
-#endif // __MYLOG_H__
+} // namespace myframe

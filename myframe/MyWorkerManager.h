@@ -6,6 +6,8 @@
 #include <list>
 #include <unordered_map>
 
+namespace myframe {
+
 class MyMsg;
 class MyWorker;
 class MyWorkerManager final {
@@ -45,3 +47,5 @@ private:
     std::unordered_map<int, std::shared_ptr<MyWorker>> _workers;
 
 };
+
+} // namespace myframe
