@@ -6,6 +6,8 @@
 #include "MyActor.h"
 #include "MyWorker.h"
 
+namespace myframe {
+
 MyModLib::MyModLib() {
     pthread_rwlock_init(&_rw, NULL);
 }
@@ -29,7 +31,7 @@ bool MyModLib::LoadMod(const std::string& dlpath)
     pthread_rwlock_wrlock(&_rw);
     if(_mods.find(dlname) != _mods.end()){
         pthread_rwlock_unlock(&_rw);
-        LOG(INFO) << "The " << dlname << " has loaded";
+        DLOG(INFO) << dlname << " has loaded";
         return true;
     }
 
@@ -69,7 +71,7 @@ bool MyModLib::UnloadMod(const std::string& dlname)
     return true;
 }
 
-MyWorker* MyModLib::CreateWorkerInst(
+std::shared_ptr<MyWorker> MyModLib::CreateWorkerInst(
     const std::string& mod_name,
     const std::string& worker_name) {
     pthread_rwlock_rdlock(&_rw);
@@ -85,6 +87,8 @@ MyWorker* MyModLib::CreateWorkerInst(
         return nullptr;
     }
     auto worker = create(worker_name);
+    worker->SetModName(mod_name);
+    worker->SetTypeName(worker_name);
     pthread_rwlock_unlock(&_rw);
     return worker;
 }
@@ -103,9 +107,10 @@ std::shared_ptr<MyActor> MyModLib::CreateActorInst(const std::string& mod_name, 
         return nullptr;
     }
     auto mod = create(actor_name);
-    mod->_is_from_lib = true;
-    mod->m_mod_name = mod_name;
-    mod->m_actor_name = actor_name;
+    mod->SetModName(mod_name);
+    mod->SetTypeName(actor_name);
     pthread_rwlock_unlock(&_rw);
     return mod;
 }
+
+} // namespace myframe

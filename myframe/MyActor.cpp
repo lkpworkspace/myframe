@@ -3,31 +3,44 @@
 #include "MyWorkerTimer.h"
 #include "MyApp.h"
 
-MyActor::MyActor() : 
-    m_ctx(nullptr) {
-}
+namespace myframe {
+
+MyActor::MyActor() {}
 
 MyActor::~MyActor()
 {}
 
+void MyActor::SetModName(const std::string& name) {
+    if (_mod_name == "class") {
+        _is_from_lib = false;
+    } else {
+        _is_from_lib = true;
+    }
+    _mod_name = name;
+}
+
 int MyActor::Send(const std::string& dst, std::shared_ptr<MyMsg> msg) {
+    if (_ctx.expired()) {
+        return -1;
+    }
     msg->SetSrc(GetActorName());
     msg->SetDst(dst);
-    return m_ctx->SendMsg(msg);
+    return _ctx.lock()->SendMsg(msg);
 }
 
-uint32_t MyActor::GetHandle() {
-    return m_ctx->GetHandle();
+const std::string MyActor::GetActorName() const {
+    return "actor." + _actor_name + "." + _instance_name;
 }
 
-std::string MyActor::GetActorName() {
-    return m_actor_name + "." + m_instance_name;
+int MyActor::Timeout(const std::string& timer_name, int expired) {
+    if (_ctx.expired()) {
+        return -1;
+    }
+    return _ctx.lock()->GetApp()->GetTimerWorker()->SetTimeout(GetActorName(), timer_name, expired);
 }
 
-int MyActor::Timeout(int time) {
-    return MyApp::Inst()->GetTimerWorker()->SetTimeout(GetActorName(), time);
+void MyActor::SetContext(std::shared_ptr<MyContext> c) {
+    _ctx = c;
 }
 
-void MyActor::SetContext(MyContext* c) {
-    m_ctx = c;
-}
+} // namespace myframe

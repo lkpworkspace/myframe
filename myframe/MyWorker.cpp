@@ -2,9 +2,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "MyCommon.h"
 #include "MyWorker.h"
 #include "MyLog.h"
 #include "MyCUtils.h"
+
+namespace myframe {
 
 MyWorker::MyWorker() :
     _posix_thread_id(-1),
@@ -13,8 +16,11 @@ MyWorker::MyWorker() :
 }
 
 MyWorker::~MyWorker() {
-    Stop();
     CloseSockPair();
+}
+
+const std::string MyWorker::GetWorkerName() const {
+    return "worker." + _worker_name + "." + _inst_name;
 }
 
 void MyWorker::Start() {
@@ -38,6 +44,8 @@ void MyWorker::Start() {
 
 void MyWorker::Stop() {
     _runing = false;
+    MyWorkerCmd cmd = MyWorkerCmd::QUIT;
+    SendCmdToMain(cmd);
 }
 
 void* MyWorker::ListenThread(void* obj) {
@@ -59,7 +67,21 @@ int MyWorker::SendCmdToWorker(const MyWorkerCmd& cmd) {
     return write(_sockpair[1], &cmd_char, 1);
 }
 
-int MyWorker::RecvCmdFromMain(MyWorkerCmd& cmd) {
+int MyWorker::RecvCmdFromMain(MyWorkerCmd& cmd, int timeout_ms) {
+    if (timeout_ms < 0) {
+        // block
+        if (!my_is_block(_sockpair[0])) {
+            my_set_nonblock(_sockpair[0], false);
+        }
+    } else if (timeout_ms == 0) {
+        // nonblock
+        if (my_is_block(_sockpair[0])) {
+            my_set_nonblock(_sockpair[0], true);
+        }
+    } else {
+        // timeout
+        my_set_sock_recv_timeout(_sockpair[0], timeout_ms);
+    }
     char cmd_char;
     int ret = read(_sockpair[0], &cmd_char, 1);
     cmd = (MyWorkerCmd)cmd_char;
@@ -73,14 +95,35 @@ int MyWorker::RecvCmdFromWorker(MyWorkerCmd& cmd) {
     return ret;
 }
 
-void MyWorker::PushMsg(std::shared_ptr<MyMsg> msg) {
+void MyWorker::SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg) {
+    msg->SetSrc(GetWorkerName());
+    msg->SetDst(dst);
     _send.emplace_back(msg);
-}   
+}
+
+void MyWorker::PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list) {
+    MyListAppend(_send, msg_list);
+}
 
 int MyWorker::DispatchMsg() {
     MyWorkerCmd cmd = MyWorkerCmd::IDLE;
     SendCmdToMain(cmd);
     return RecvCmdFromMain(cmd);
+}
+
+int MyWorker::DispatchAndWaitMsg() {
+    MyWorkerCmd cmd = MyWorkerCmd::WAIT_FOR_MSG;
+    SendCmdToMain(cmd);
+    return RecvCmdFromMain(cmd);
+}
+
+const std::shared_ptr<const MyMsg> MyWorker::GetRecvMsg() { 
+    if (_que.empty()) {
+        return nullptr;
+    }
+    auto msg = _que.front();
+    _que.pop_front();
+    return msg;
 }
 
 bool MyWorker::CreateSockPair() {
@@ -113,3 +156,5 @@ void MyWorker::CloseSockPair() {
         LOG(ERROR) << "Worker close sockpair[1]: " << my_get_error();
     }
 }
+
+} // namespace myframe

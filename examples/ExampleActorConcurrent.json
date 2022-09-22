@@ -1,0 +1,26 @@
+{
+    "type":"library",
+    "lib":"libexample_actor_concurrent.so",
+    "actor":{
+        "example_actor_concurrent_trigger":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ],
+        "example_actor_concurrent":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            },
+            {
+                "instance_name":"#2",
+                "instance_params":""
+            },
+            {
+                "instance_name":"#3",
+                "instance_params":""
+            }
+        ]       
+    }
+}

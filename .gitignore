@@ -10,3 +10,5 @@ build/
 *.user
 
 .vscode
+
+myframe/MyFlags.cpp

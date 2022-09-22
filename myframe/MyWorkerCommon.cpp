@@ -3,18 +3,17 @@
 #include "MyContext.h"
 #include "MyMsg.h"
 
-MyWorkerCommon::MyWorkerCommon() :
-    _context(nullptr) {
-    SetInstName("MyWorkerCommon");
-}
+namespace myframe {
+
+MyWorkerCommon::MyWorkerCommon()
+{}
 
 MyWorkerCommon::~MyWorkerCommon() {
 }
 
 void MyWorkerCommon::Idle() {
-    if(_context){
-        _context->SetWaitFlag();
-        _context = nullptr;
+    if(!_context.expired()) {
+        _context.reset();
     }
 }
 
@@ -25,24 +24,25 @@ void MyWorkerCommon::Run() {
 
 void MyWorkerCommon::OnInit() {
     MyWorker::OnInit();
-    LOG(INFO) << "Worker " << GetPosixThreadId() << " init";
+    LOG(INFO) << "Worker " << GetWorkerName() << " init";
 }
 
 void MyWorkerCommon::OnExit() {
     MyWorker::OnExit();
-    LOG(INFO) << "Worker " << GetPosixThreadId() << " exit";
+    LOG(INFO) << "Worker " << GetWorkerName() << " exit";
 }
 
 int MyWorkerCommon::Work() {
-    MyContext* ctx = _context;
+    auto ctx = (_context.expired() ? nullptr : _context.lock());
     if (ctx == nullptr) {
         LOG(ERROR) << "context is nullptr";
         return -1;
     }
-
-    for (auto msg : _que) {
-        ctx->CB(msg);
+    while (RecvMsgListSize() > 0) {
+        ctx->CB(GetRecvMsg());
     }
-    _que.clear();
+    
     return 0;
 }
+
+} // namespace myframe

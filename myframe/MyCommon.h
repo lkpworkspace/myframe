@@ -1,5 +1,4 @@
-#ifndef __MYCOMMON_H__
-#define __MYCOMMON_H__
+#pragma once
 #include <memory>
 #include <string>
 #include <vector>
@@ -9,11 +8,15 @@
 
 #include "MyLog.h"
 
+namespace myframe {
+
 template<typename T>
-void MyListAppend(std::list<std::shared_ptr<T>>& src, std::list<std::shared_ptr<T>>& dst) {
-    src.insert(src.end(), dst.begin(), dst.end());
-    dst.clear();
+void MyListAppend(std::list<std::shared_ptr<T>>& dst, std::list<std::shared_ptr<T>>& src) {
+    dst.insert(dst.end(), src.begin(), src.end());
+    src.clear();
 }
+
+std::vector<std::string> SplitMsgName(const std::string& name);
 
 class MyCommon {
 public:
@@ -21,4 +24,4 @@ public:
     static Json::Value LoadJsonFromFile(const std::string& json_file);
 };
 
-#endif // __MYCOMMON_H__
+} // namespace myframe

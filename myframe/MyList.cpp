@@ -1,5 +1,7 @@
 #include "MyList.h"
 
+namespace myframe {
+
 // init
 void MyList::__Init()
 {
@@ -134,3 +136,5 @@ void MyList::Clear(bool b)
     while(!IsEmpty()){DelHead(b);}
     m_count = 0;
 }
+
+} // namespace myframe

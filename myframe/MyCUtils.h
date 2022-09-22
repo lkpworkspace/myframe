@@ -1,5 +1,4 @@
-#ifndef __MYUTILS_H__
-#define __MYUTILS_H__
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -16,7 +15,9 @@ void my_systime_ms(uint32_t *sec, uint32_t *ms);
 
 uint64_t my_gettime_ms();
 
+bool my_set_sock_recv_timeout(int fd, int timeout_ms);
 bool my_set_nonblock(int fd, bool b);
+bool my_is_block(int fd);
 
 const char* my_get_error();
 
@@ -24,4 +25,3 @@ const char* my_get_error();
 }
 #endif
 
-#endif // __MYUTILS_H__

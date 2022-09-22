@@ -2,6 +2,19 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <fstream>
+#include <sstream>
+
+namespace myframe {
+
+std::vector<std::string> SplitMsgName(const std::string& name) {
+    std::vector<std::string> name_list;
+    std::string item;
+    std::stringstream ss(name);
+    while (std::getline(ss, item, '.')) {
+        name_list.push_back(item);
+    }
+    return name_list;
+}
 
 std::vector<std::string> MyCommon::GetDirFiles(const std::string& conf_path) {
     std::vector<std::string> res;
@@ -33,3 +46,5 @@ Json::Value MyCommon::LoadJsonFromFile(const std::string& json_file) {
     ifs.close();
     return root;
 }
+
+} // namespace myframe

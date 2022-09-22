@@ -17,6 +17,8 @@
 
 #define MY_RESOLUTION_MS 10
 
+namespace myframe {
+
 class MyTimer : public MyNode
 {
     friend class MyTimerManager;
@@ -25,6 +27,7 @@ public:
     virtual ~MyTimer(){}
 
     std::string _actor_name;
+    std::string _timer_name;
     uint32_t m_expire;        // interval
     bool     m_run;
 };
@@ -35,7 +38,7 @@ public:
     MyTimerManager();
     virtual ~MyTimerManager();
 
-    int Timeout(const std::string& actor_name, int time);
+    int Timeout(const std::string& actor_name, const std::string& timer_name, int time);
 
     std::list<std::shared_ptr<MyMsg>>& Updatetime();
 
@@ -68,7 +71,7 @@ public:
     MyWorkerTimer();
     virtual ~MyWorkerTimer();
 
-    int SetTimeout(const std::string& actor_name, int time);
+    int SetTimeout(const std::string& actor_name, const std::string& timer_name, int time);
 
     /**
      * override MyWorker virtual method
@@ -81,10 +84,12 @@ public:
      * override MyEvent virtual method
      */
     MyEventType GetMyEventType() override
-    { return MyEventType::EV_TIMER; }
+    { return MyEventType::WORKER_TIMER; }
 
 private:
     int Work();
 
     MyTimerManager        _timer_mgr;
 };
+
+} // namespace myframe

@@ -1,0 +1,19 @@
+{
+    "type":"library",
+    "lib":"libexample_worker_actor_interactive.so",
+    "actor":{
+        "example_actor_interactive":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ]
+    },
+    "worker":{
+        "example_worker_interactive":[
+            {
+                "instance_name":"#1"
+            }
+        ]
+    }
+}

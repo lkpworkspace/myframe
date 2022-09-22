@@ -4,13 +4,15 @@
 #include <vector>
 #include <pthread.h>
 
+namespace myframe {
+
 class MyActor;
 class MyWorker;
 class MyModLib final
 {
 public:
     MyModLib();
-    ~MyModLib();
+    virtual ~MyModLib();
 
     /**
      * @brief 是否加载动态库
@@ -48,7 +50,7 @@ public:
      * @param worker_name eg: /my/test
      * @return MyWorker*
      */
-    MyWorker* CreateWorkerInst(
+    std::shared_ptr<MyWorker> CreateWorkerInst(
         const std::string& mod_name,
         const std::string& worker_name);
 
@@ -60,3 +62,5 @@ private:
     pthread_rwlock_t                       _rw;
 
 };
+
+} // namespace myframe

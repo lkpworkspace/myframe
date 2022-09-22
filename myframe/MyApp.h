@@ -1,59 +1,65 @@
-#ifndef __MYAPP_H__
-#define __MYAPP_H__
+#pragma once
 #include <memory>
+#include <atomic>
 #include <vector>
 #include <mutex>
 #include <list>
+#include <unordered_map>
 
 #include <jsoncpp/json/json.h>
 
 struct epoll_event;
-class MyMsg;
-class MyEvent;
+
+namespace myframe {
+
 class MyContext;
+class MyMsg;
 class MyActor;
+class MyEvent;
 class MyWorker;
-class MyModManager;
-class MyHandleManager;
 class MyWorkerCommon;
 class MyWorkerTimer;
-
-/**
- * 该类为单例类，不允许创建多个
- */
-class MyApp
+class MyModManager;
+class MyContextManager;
+class MyWorkerManager;
+class MyApp final : public std::enable_shared_from_this<MyApp>
 {
-private:
+    friend class MyActor;
+    friend class MyContext;
+public:
     MyApp();
     virtual ~MyApp();
-    static MyApp* s_inst;
-public:
-    static MyApp* Create();
-    static MyApp* Inst();
 
     bool Init();
 
+    bool LoadModsFromConf(const std::string& path);
+
+    bool AddActor(
+        const std::string& inst_name, 
+        const std::string& params, 
+        std::shared_ptr<MyActor> actor);
+    bool AddWorker(
+        const std::string& inst_name, 
+        std::shared_ptr<MyWorker> worker);
+
+    std::unique_ptr<MyContextManager>& GetContextManager() { return _context_mgr; }
+    std::unique_ptr<MyModManager>& GetModManager() { return _mods; }
+
+    bool AddEvent(std::shared_ptr<MyEvent> ev);
+    bool DelEvent(std::shared_ptr<MyEvent> ev);
+
+    int Exec();
+
+private:
     bool CreateContext(
         const std::string& mod_name, 
         const std::string& actor_name, 
         const std::string& instance_name, 
         const std::string& params);
     bool CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params);
+    
+    std::shared_ptr<MyWorkerTimer> GetTimerWorker();
 
-    MyContext* GetContext(uint32_t handle);
-    MyContext* GetContext(std::string& actor_name);
-
-    MyWorkerTimer* GetTimerWorker() { return _timer_worker; }
-
-    bool AddEvent(MyEvent *ev);
-    bool DelEvent(MyEvent *ev);
-
-    int Exec();                           // mainloop
-
-public: // for ut
-    bool LoadModsFromConf(const std::string& path);
-
-private:
     bool LoadActorFromLib(
         const Json::Value& root, 
         const Json::Value& actor_list, 
@@ -70,41 +76,34 @@ private:
         const Json::Value& root, 
         const Json::Value& worker_list, 
         const std::string& worker_name);
-    /// worker
-    void Start(int worker_count);
-    void StartCommonWorker(int worker_count);
-    void StartTimerWorker();
 
-    /// 获取有消息的actor
-    MyContext* GetContextWithMsg();
+    /// worker
+    bool StartCommonWorker(int worker_count);
+    bool StartTimerWorker();
+
     /// 通知执行事件
     void CheckStopWorkers();
+
     /// 分发事件
     void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
-    void DispatchMsg(MyContext* context);
+    void DispatchMsg(std::shared_ptr<MyContext> context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
-    void ProcessWorkerEvent(MyWorkerCommon*);
-    void ProcessTimerEvent(MyWorkerTimer*);
-    void ProcessUserEvent(MyWorker*);
-    void HandleSysMsg(std::shared_ptr<MyMsg>& msg);
+    void ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon>);
+    void ProcessTimerEvent(std::shared_ptr<MyWorkerTimer>);
+    void ProcessUserEvent(std::shared_ptr<MyWorker>);
 
     /// 退出标志
-    bool _quit;
+    std::atomic_bool _quit = {true};
     /// epoll文件描述符
     int _epoll_fd;
-    /// 工作线程数
-    int _cur_worker_count;
-    /// 空闲线程链表
-    std::list<MyWorker*> _idle_workers;
-    /// 缓存消息队列
-    std::list<std::shared_ptr<MyMsg>> _cache_que;          
     /// 句柄管理对象
-    std::shared_ptr<MyHandleManager> _handle_mgr; 
+    std::unique_ptr<MyContextManager> _context_mgr; 
     /// 模块管理对象
-    std::shared_ptr<MyModManager> _mods;
-    /// 定时器线程对象      
-    MyWorkerTimer* _timer_worker;
+    std::unique_ptr<MyModManager> _mods;
+    /// 线程管理对象
+    std::unique_ptr<MyWorkerManager> _worker_mgr;
+    std::mutex _dispatch_mtx;
 
 };
 
-#endif
+} // namespace myframe

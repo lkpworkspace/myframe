@@ -3,6 +3,8 @@
 #include "MyCommon.h"
 #include "MyWorker.h"
 
+namespace myframe {
+
 class MyMsg;
 class MyContext;
 class MyWorkerCommon : public MyWorker
@@ -18,17 +20,18 @@ public:
     void OnExit() override;
 
     /// override MyEvent virtual method
-    MyEventType GetMyEventType() { return MyEventType::EV_WORKER; }
+    MyEventType GetMyEventType() { return MyEventType::WORKER_COMMON; }
 
-    void SetContext(MyContext* context){ _context = context; }
+    void SetContext(std::shared_ptr<MyContext> context) { _context = context; }
+    std::shared_ptr<MyContext> GetContext() {return (_context.expired() ? nullptr : _context.lock()); }
 
 private:
     /* 工作线程消息处理 */
     int Work();
     /* 工作线程进入空闲链表之前进行的操作 */
     void Idle();
-    /// 运行时消息队列
-    std::list<std::shared_ptr<MyMsg>> _que;
     //// 当前执行actor的指针
-    MyContext* _context;
+    std::weak_ptr<MyContext> _context;
 };
+
+} // namespace myframe

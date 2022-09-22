@@ -1,0 +1,24 @@
+{
+    "type":"library",
+    "lib":"libexample_actor_serial.so",
+    "actor":{
+        "example_serial1":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ],
+        "example_serial2":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ],
+        "example_serial3":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ]
+    }
+}

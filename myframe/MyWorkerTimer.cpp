@@ -7,6 +7,9 @@
 #include "MyApp.h"
 #include "MyMsg.h"
 #include "MyActor.h"
+#include "MyFlags.h"
+
+namespace myframe {
 
 MyTimerManager::MyTimerManager()
 {
@@ -42,11 +45,12 @@ void MyTimerManager::_AddTimerNode(MyTimer* node)
     }
 }
 
-int MyTimerManager::Timeout(const std::string& actor_name, int time)
+int MyTimerManager::Timeout(const std::string& actor_name, const std::string& timer_name, int time)
 {
     if(time <= 0) return -1;
     MyTimer* timer = new MyTimer();
     timer->_actor_name = actor_name;
+    timer->_timer_name = timer_name;
 
     // add node
     _mutex.lock();
@@ -70,9 +74,10 @@ void MyTimerManager::_Dispath(MyList* cur)
         temp = begin->next;
         cur->Del(begin);
         timer = dynamic_cast<MyTimer*>(begin);
-        auto msg = std::make_shared<MyTextMsg>();
-        msg->SetSrc(MY_FRAME_DST_NAME);
+        auto msg = std::make_shared<MyMsg>();
+        msg->SetSrc("worker.timer");
         msg->SetDst(timer->_actor_name);
+        msg->SetMsgDesc(timer->_timer_name);
         msg->SetMsgType("TIMER");
         delete begin;
         _timeout_list.emplace_back(msg);
@@ -156,7 +161,6 @@ std::list<std::shared_ptr<MyMsg>>& MyTimerManager::Updatetime()
 //////////////////////////////////////////////////////
 
 MyWorkerTimer::MyWorkerTimer() {
-    SetInstName("MyWorkerTimer");
 }
 
 MyWorkerTimer::~MyWorkerTimer()
@@ -172,20 +176,23 @@ void MyWorkerTimer::Run() {
 
 void MyWorkerTimer::OnInit() {
     MyWorker::OnInit();
-    LOG(INFO) << "Timer task " << GetPosixThreadId() << " init";
+    LOG(INFO) << "timer worker " << GetWorkerName() << " init";
 }
 
 void MyWorkerTimer::OnExit() {
-    LOG(INFO) << "Timer task " << GetPosixThreadId() << " exit";
+    LOG(INFO) << "timer worker " << GetWorkerName() << " exit";
     MyWorker::OnExit();
 }
 
-int MyWorkerTimer::SetTimeout(const std::string& actor_name, int time) {
-    return _timer_mgr.Timeout(actor_name, time);
+int MyWorkerTimer::SetTimeout(const std::string& actor_name, const std::string& timer_name, int time) {
+    DLOG(INFO) << actor_name << " set timeout(" << timer_name << "): " << (time * 10) << "ms";
+    return _timer_mgr.Timeout(actor_name, timer_name, time);
 }
 
 int MyWorkerTimer::Work() {
     auto& timeout_list = _timer_mgr.Updatetime();
-    MyListAppend(GetMsgList(), timeout_list);
-    return (GetMsgList().empty() == false) ? 1 : 0;
+    PushSendMsgList(timeout_list);
+    return SendMsgListSize();
 }
+
+} // namespace myframe

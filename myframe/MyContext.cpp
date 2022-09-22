@@ -1,30 +1,47 @@
-#include "MyContext.h"
-
 #include <assert.h>
 
+#include <sstream>
+
+#include "MyContext.h"
 #include "MyLog.h"
 #include "MyActor.h"
 #include "MyMsg.h"
+#include "MyApp.h"
 
-MyContext::MyContext(std::shared_ptr<MyActor>& mod) :
+namespace myframe {
+
+MyContext::MyContext(std::shared_ptr<MyApp> app, std::shared_ptr<MyActor> mod) :
+    _app(app),
     _mod(mod),
-    _handle(0),
     _in_worker(false),
-    _in_run_que(false) {
-    _mod->SetContext(this);
+    _in_wait_que(false) {
+}
+
+std::shared_ptr<MyApp> MyContext::GetApp() { 
+    return _app.lock(); 
 }
 
 int MyContext::SendMsg(std::shared_ptr<MyMsg>& msg) {
     if(nullptr == msg) return -1;
-    LOG(INFO) << "actor \"" << _mod->GetActorName() << "\" send message type: " << msg->GetMsgType();
     _send.emplace_back(msg);
     return 0;
 }
 
 int MyContext::Init(const char* param) {
+    _mod->SetContext(shared_from_this());
     return _mod->Init(param);
 }
 
-void MyContext::CB(std::shared_ptr<MyMsg>& msg) {
+void MyContext::CB(const std::shared_ptr<const MyMsg>& msg) {
     _mod->CB(msg);
 }
+
+std::string MyContext::Print() {
+    std::stringstream ss;
+    ss << "context " << _mod->GetActorName()
+       << ", in worker: " << _in_worker
+       << ", in wait queue: " << _in_wait_que;
+    return ss.str();
+}
+
+} // namespace myframe

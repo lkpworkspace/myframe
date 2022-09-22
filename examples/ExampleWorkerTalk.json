@@ -1,0 +1,11 @@
+{
+    "type":"library",
+    "lib":"libexample_worker_talk.so",
+    "worker":{
+        "example_worker_talk":[
+            {
+                "instance_name":"#1"
+            }
+        ]
+    }
+}

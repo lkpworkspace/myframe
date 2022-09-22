@@ -5,9 +5,7 @@
 #include <memory>
 #include <string>
 
-/* 系统的句柄号 */
-#define MY_FRAME_DST 0xffffff
-#define MY_FRAME_DST_NAME "myframe"
+namespace myframe {
 
 class MyMsg;
 class MyContext;
@@ -16,6 +14,7 @@ class MyActor
     friend class MyApp;
     friend class MyContext;
     friend class MyModLib;
+    friend class MyModManager;
 public:
     MyActor();
     virtual ~MyActor();
@@ -34,11 +33,11 @@ public:
      * @msg:      actor收到的消息
      * 
      */
-    virtual void CB(std::shared_ptr<MyMsg>& msg) = 0;
+    virtual void CB(const std::shared_ptr<const MyMsg>& msg) = 0;
 
     /**
      * Send() - 发送消息给别的actor
-     * @dst:            目的actor
+     * @dst:            目的actor, eg: actor.demo.hellow_world
      * @msg:            发送的消息
      * 
      *      将消息添加到该actor的消息发送队列中，等待actor执行完成后，myframe会将消息分发给其他actor
@@ -48,43 +47,45 @@ public:
     int Send(const std::string& dst, std::shared_ptr<MyMsg> msg);
 
     /**
-     * GetHandle() - 获得该actor的句柄号
-     * 
-     *      actor句柄主要用于在给另一个actor发送消息时，指定另一个actor的句柄号时会用到
-     * 
-     * @return:         actor句柄
-     */
-    uint32_t GetHandle();
-
-    /**
      * GetActorName() - 获得该actor的actor名
      * 
      * @return:         成功返回：actor名，失败返回：空字符串
      */
-    std::string GetActorName();
+    const std::string GetActorName() const;
+    const std::string& GetTypeName() const { return _actor_name; }
+    const std::string& GetInstName() const { return _instance_name; }
 
     /**
      * Timeout() - 设置定时器
-     * @time:           超时时间(单位:10ms, 比如 time = 1, 那么超时时间就是10ms)
+     * @expired: 超时时间(单位:10ms, 比如 expired = 1, 那么超时时间就是10ms)
      * 
      *      定时器设置之后，过了超时时间，actor就会收到超时消息;
      *      如果想实现周期性的定时器，可以在收到超时消息之后，
      *      再次调用此函数设置下一次的超时。
      * 
+     *      msg->GetMsgType() == "TIMER" 确认是定时器消息
+     *      msg->GetMsgDesc() == timer_name 确认是那个定时器消息
+     * 
      * @return:         成功返回: 0, 失败返回: -1
      */
-    int Timeout(int time);
+    int Timeout(const std::string& timer_name, int expired);
 
 private:
+    void SetModName(const std::string& name);
+    void SetTypeName(const std::string& name) { _actor_name = name; }
+    void SetInstName(const std::string& name) { _instance_name = name; }
     bool IsFromLib() { return _is_from_lib; }
-    void SetContext(MyContext*);
+    void SetContext(std::shared_ptr<MyContext>);
+
     bool _is_from_lib = false;
-    std::string m_mod_name;
-    std::string m_actor_name;
-    std::string m_instance_name;
-    MyContext*  m_ctx;
+    std::string _mod_name;
+    std::string _actor_name;
+    std::string _instance_name;
+    std::weak_ptr<MyContext> _ctx;
 };
 
+} // namespace myframe
+
 extern "C" {
-    typedef std::shared_ptr<MyActor> (*my_actor_create_func)(const std::string&);
+    typedef std::shared_ptr<myframe::MyActor> (*my_actor_create_func)(const std::string&);
 } // extern "C"
