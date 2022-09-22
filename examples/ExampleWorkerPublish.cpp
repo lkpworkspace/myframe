@@ -7,11 +7,11 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyWorker.h"
 
-class MyTestPublicWorker : public MyWorker
+class ExampleWorkerPublic : public MyWorker
 {
 public:
-    MyTestPublicWorker() {}
-    virtual ~MyTestPublicWorker() {}
+    ExampleWorkerPublic() {}
+    virtual ~ExampleWorkerPublic() {}
 
     void Run() override {
         DispatchAndWaitMsg();
@@ -25,5 +25,5 @@ public:
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<MyWorker> my_worker_create(const std::string& worker_name) {
-    return std::make_shared<MyTestPublicWorker>();
+    return std::make_shared<ExampleWorkerPublic>();
 }

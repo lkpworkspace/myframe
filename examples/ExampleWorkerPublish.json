@@ -1,8 +1,8 @@
 {
     "type":"library",
-    "lib":"libtest_talk_worker.so",
+    "lib":"libexample_worker_publish.so",
     "worker":{
-        "test_talk_worker":[
+        "example_worker_publish":[
             {
                 "instance_name":"#1"
             }

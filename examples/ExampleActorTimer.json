@@ -1,8 +1,8 @@
 {
     "type":"library",
-    "lib":"libtest_timer.so",
+    "lib":"libexample_actor_timer.so",
     "actor":{
-        "test_timer":[
+        "example_actor_timer":[
             {
                 "instance_name":"echo_per_one_second",
                 "instance_params":""

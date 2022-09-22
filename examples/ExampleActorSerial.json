@@ -1,26 +1,24 @@
 {
     "type":"library",
-    "lib":"libtest_concurrent.so",
+    "lib":"libexample_actor_serial.so",
     "actor":{
-        "test_concurrent_trigger":[
+        "example_serial1":[
             {
                 "instance_name":"#1",
                 "instance_params":""
             }
         ],
-        "test_concurrent":[
+        "example_serial2":[
             {
                 "instance_name":"#1",
                 "instance_params":""
-            },
+            }
+        ],
+        "example_serial3":[
             {
-                "instance_name":"#2",
-                "instance_params":""
-            },
-            {
-                "instance_name":"#3",
+                "instance_name":"#1",
                 "instance_params":""
             }
-        ]       
+        ]
     }
 }

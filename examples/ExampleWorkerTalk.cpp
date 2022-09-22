@@ -7,11 +7,11 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyWorker.h"
 
-class MyTestTalkWorker : public MyWorker
+class ExampleWorkerTalk : public MyWorker
 {
 public:
-    MyTestTalkWorker() {}
-    virtual ~MyTestTalkWorker() {}
+    ExampleWorkerTalk() {}
+    virtual ~ExampleWorkerTalk() {}
 
     void Run() override {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -24,5 +24,5 @@ public:
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<MyWorker> my_worker_create(const std::string& worker_name) {
-    return std::make_shared<MyTestTalkWorker>();
+    return std::make_shared<ExampleWorkerTalk>();
 }

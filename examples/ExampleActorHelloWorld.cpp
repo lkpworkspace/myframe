@@ -4,16 +4,15 @@
 #include "myframe/MyMsg.h"
 
 /*
-    该actor实现：
-        自己给自己发送一条消息
+    自己给自己发送一条消息
 */
-class MyDemo : public MyActor
+class ExampleActorHelloWorld : public MyActor
 {
 public:
     /* actor模块加载完毕后调用 */
     int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
-        return Send("actor.demo.echo_hello_world", std::make_shared<MyMsg>("hello,world"));
+        return Send("actor.example.hello_world", std::make_shared<MyMsg>("hello,world"));
     }
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
@@ -25,5 +24,5 @@ public:
 
 /* 创建actor模块实例函数 */
 extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
-    return std::make_shared<MyDemo>();
+    return std::make_shared<ExampleActorHelloWorld>();
 }

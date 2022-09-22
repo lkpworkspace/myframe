@@ -3,7 +3,7 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
-class MyTestTimer : public MyActor
+class ExampleActorTimer : public MyActor
 {
 public:
     int Init(const char* param) override {
@@ -23,5 +23,5 @@ public:
 };
 
 extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
-    return std::make_shared<MyTestTimer>();
+    return std::make_shared<ExampleActorTimer>();
 }

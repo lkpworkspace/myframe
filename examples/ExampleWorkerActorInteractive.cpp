@@ -8,7 +8,7 @@
 #include "myframe/MyWorker.h"
 
 /// 回显worker发来的消息
-class MyTestWorkerActor : public MyActor
+class ExampleActorInteractive : public MyActor
 {
 public:
     int Init(const char* param) override {
@@ -17,22 +17,22 @@ public:
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
-            Send(msg->GetSrc(), std::make_shared<MyMsg>("this is MyTestWorkerActor resp"));
+            Send(msg->GetSrc(), std::make_shared<MyMsg>("this is ExampleActorInteractive resp"));
         }
     }
 };
 
 /// 给MyTestWorkerActor发送消息，并打印收到的消息
-class MyTestWorker : public MyWorker
+class ExampleWorkerInteractive : public MyWorker
 {
 public:
-    MyTestWorker() {}
-    virtual ~MyTestWorker() {}
+    ExampleWorkerInteractive() {}
+    virtual ~ExampleWorkerInteractive() {}
 
     /// override MyWorker virtual method
     void Run() override {
-        auto send_msg = std::make_shared<MyMsg>("this is MyTestWorker req");
-        SendMsg("actor.testworker.#1", send_msg);
+        auto send_msg = std::make_shared<MyMsg>("this is ExampleWorkerInteractive req");
+        SendMsg("actor.example_actor_interactive.#1", send_msg);
         DispatchAndWaitMsg();
         while (1) {
             const auto& msg = GetRecvMsg();
@@ -47,10 +47,10 @@ public:
 
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
-    return std::make_shared<MyTestWorkerActor>();
+    return std::make_shared<ExampleActorInteractive>();
 }
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<MyWorker> my_worker_create(const std::string& worker_name) {
-    return std::make_shared<MyTestWorker>();
+    return std::make_shared<ExampleWorkerInteractive>();
 }

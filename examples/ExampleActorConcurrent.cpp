@@ -8,7 +8,7 @@
 #include "myframe/MyActor.h"
 #include "myframe/MyMsg.h"
 
-class MyTestConcurrent : public MyActor
+class ExampleActorConcurrent : public MyActor
 {
 public:
     int random(int min, int max) {
@@ -23,7 +23,7 @@ public:
     }
 
     void CB(const std::shared_ptr<const MyMsg>& msg) override {
-        if (msg->GetSrc() == "actor.test_concurrent_trigger.#1") {
+        if (msg->GetSrc() == "actor.example_actor_concurrent_trigger.#1") {
             int cost_ms = random(100, 500);
             LOG(INFO) << "-----> " << GetActorName() << " begin runing...";
             std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
@@ -33,14 +33,14 @@ public:
     }
 };
 
-class MyTestConcurrentTrigger : public MyActor
+class ExampleActorConcurrentTrigger : public MyActor
 {
 public:
     int Init(const char* param) override {
         _state = {
-            {"actor.test_concurrent.#1", false},
-            {"actor.test_concurrent.#2", false},
-            {"actor.test_concurrent.#3", false},
+            {"actor.example_actor_concurrent.#1", false},
+            {"actor.example_actor_concurrent.#2", false},
+            {"actor.example_actor_concurrent.#3", false},
         };
         LOG(INFO) << "begin concurrent task...";
         for (auto it : _state) {
@@ -70,11 +70,11 @@ private:
 };
 
 extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& actor_name) {
-    if (actor_name == "test_concurrent") {
-        return std::make_shared<MyTestConcurrent>();
+    if (actor_name == "example_actor_concurrent") {
+        return std::make_shared<ExampleActorConcurrent>();
     }
-    if (actor_name == "test_concurrent_trigger") {
-        return std::make_shared<MyTestConcurrentTrigger>();
+    if (actor_name == "example_actor_concurrent_trigger") {
+        return std::make_shared<ExampleActorConcurrentTrigger>();
     }
     return nullptr;
 }
