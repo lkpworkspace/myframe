@@ -3,13 +3,12 @@
 #include <list>
 
 #include "MyCommon.h"
-#include "MyList.h"
 
 class MyApp;
 class MyMsg;
 class MyActor;
 class MyWorkerCommon;
-class MyContext : public MyNode
+class MyContext final : public std::enable_shared_from_this<MyContext>
 {
     friend class MyContextManager;
     friend class MyWorkerCommon;
@@ -35,9 +34,6 @@ public:
     /* 主线程获得该actor发送消息链表 */
     std::list<std::shared_ptr<MyMsg>>& GetDispatchMsgList(){ return _send; }
 
-    uint32_t GetHandle() { return _handle; }
-    void SetHandle(uint32_t handle) { _handle = handle; }
-
     void SetRuningFlag(bool in_worker) { _in_worker = in_worker; }
     bool IsRuning() { return _in_worker; }
 
@@ -49,16 +45,14 @@ public:
 
     std::string Print();
 private:
-    /* actor句柄 */
-    uint32_t            _handle;
     /* 主线程分发给actor的消息链表，主线程操作该链表 */
     std::list<std::shared_ptr<MyMsg>> _recv;
     /* actor发送给别的actor的消息链表，工作线程处理该actor时可以操作该链表, 空闲时主线程操作该链表 */
     std::list<std::shared_ptr<MyMsg>> _send;
     /* 该actor的是否在工作线程的标志 */
-    bool                _in_worker;
+    bool _in_worker;
     /* actor是否在消息队列中 */
-    bool                _in_wait_que;
+    bool _in_wait_que;
     std::shared_ptr<MyActor> _mod;
     std::weak_ptr<MyApp> _app;
 };

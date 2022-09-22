@@ -41,7 +41,7 @@ public:
         const std::string& inst_name, 
         std::shared_ptr<MyWorker> worker);
 
-    std::unique_ptr<MyContextManager>& GetHandleManager() { return _context_mgr; }
+    std::unique_ptr<MyContextManager>& GetContextManager() { return _context_mgr; }
     std::unique_ptr<MyModManager>& GetModManager() { return _mods; }
 
     bool AddEvent(std::shared_ptr<MyEvent> ev);
@@ -85,7 +85,7 @@ private:
 
     /// 分发事件
     void DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list);
-    void DispatchMsg(MyContext* context);
+    void DispatchMsg(std::shared_ptr<MyContext> context);
     void ProcessEvent(struct epoll_event *evs, int ev_count);
     void ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon>);
     void ProcessTimerEvent(std::shared_ptr<MyWorkerTimer>);

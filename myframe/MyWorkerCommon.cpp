@@ -3,16 +3,15 @@
 #include "MyContext.h"
 #include "MyMsg.h"
 
-MyWorkerCommon::MyWorkerCommon() :
-    _context(nullptr) {
-}
+MyWorkerCommon::MyWorkerCommon()
+{}
 
 MyWorkerCommon::~MyWorkerCommon() {
 }
 
 void MyWorkerCommon::Idle() {
-    if(_context) {
-        _context = nullptr;
+    if(!_context.expired()) {
+        _context.reset();
     }
 }
 
@@ -32,7 +31,7 @@ void MyWorkerCommon::OnExit() {
 }
 
 int MyWorkerCommon::Work() {
-    MyContext* ctx = _context;
+    auto ctx = (_context.expired() ? nullptr : _context.lock());
     if (ctx == nullptr) {
         LOG(ERROR) << "context is nullptr";
         return -1;

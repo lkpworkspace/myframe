@@ -11,10 +11,8 @@
 MyContext::MyContext(std::shared_ptr<MyApp> app, std::shared_ptr<MyActor> mod) :
     _app(app),
     _mod(mod),
-    _handle(0),
     _in_worker(false),
     _in_wait_que(false) {
-    _mod->SetContext(this);
 }
 
 std::shared_ptr<MyApp> MyContext::GetApp() { 
@@ -28,6 +26,7 @@ int MyContext::SendMsg(std::shared_ptr<MyMsg>& msg) {
 }
 
 int MyContext::Init(const char* param) {
+    _mod->SetContext(shared_from_this());
     return _mod->Init(param);
 }
 

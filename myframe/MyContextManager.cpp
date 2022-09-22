@@ -6,118 +6,69 @@
 #include "MyActor.h"
 #include "MyLog.h"
 
-#define MY_DEFAULT_SLOT_SIZE 4
-
-MyContextManager::MyContextManager() :
-    m_harbor(0),
-    m_slot_size(MY_DEFAULT_SLOT_SIZE),
-    m_slot_idx(0),
-    m_ctx_count(0),
-    m_handle_index(0)
+MyContextManager::MyContextManager() 
+    : _ctx_count(0)
 {
-    pthread_rwlock_init(&m_rw, NULL);
-    m_slot = (MyContext**)malloc(sizeof(MyContext*) * m_slot_size);
-    memset(m_slot, 0, sizeof(MyContext*) * m_slot_size);
+    pthread_rwlock_init(&_rw, NULL);
 }
 
 MyContextManager::~MyContextManager()
 {
-    pthread_rwlock_destroy(&m_rw);
+    pthread_rwlock_destroy(&_rw);
 }
 
-uint32_t MyContextManager::RegHandle(MyContext* ctx)
-{
-    pthread_rwlock_wrlock(&m_rw);
-    for (;;) {
-        int i;
-        for (i = 0; i < m_slot_size; i++) {
-            uint32_t handle = (i + m_handle_index) & MY_HANDLE_MASK;
-            int hash = handle & (m_slot_size-1);
-            if (m_slot[hash] == NULL) {
-                m_slot[hash] = ctx;
-                m_handle_index = handle + 1;
-
-                handle |= m_harbor;
-                ctx->SetHandle(handle);
-                if(m_named_ctxs.find(ctx->GetModule()->GetActorName()) == m_named_ctxs.end()){
-                    m_named_ctxs[ctx->GetModule()->GetActorName()] = handle;
-                }else{
-                    LOG(WARNING) << "reg the same actor name: " << ctx->GetModule()->GetActorName();
-                }
-                m_ctx_count++;
-                pthread_rwlock_unlock(&m_rw);
-                return handle;
-            }
-        }
-        assert((m_slot_size * 2 - 1) <= MY_HANDLE_MASK);
-        MyContext** new_slot = (MyContext**)malloc(m_slot_size * 2 * sizeof(MyContext*));
-        memset(new_slot, 0, m_slot_size * 2 * sizeof(MyContext*));
-        for (i = 0; i < m_slot_size; i++) {
-            int hash = m_slot[i]->GetHandle() & (m_slot_size * 2 - 1);
-            assert(new_slot[hash] == NULL);
-            new_slot[hash] = m_slot[i];
-        }
-        free(m_slot);
-        m_slot = new_slot;
-        m_slot_size *= 2;
+bool MyContextManager::RegContext(std::shared_ptr<MyContext> ctx) {
+    pthread_rwlock_wrlock(&_rw);
+    if(_ctxs.find(ctx->GetModule()->GetActorName()) != _ctxs.end()){
+        LOG(WARNING) << "reg the same actor name: " << ctx->GetModule()->GetActorName();
+        pthread_rwlock_unlock(&_rw);
+        return false;
     }
-    pthread_rwlock_unlock(&m_rw);
-    return 0;
+    LOG(INFO) << "reg actor " << ctx->GetModule()->GetActorName();
+    _ctxs[ctx->GetModule()->GetActorName()] = ctx;
+    pthread_rwlock_unlock(&_rw);
+    return true;
 }
 
-MyContext* MyContextManager::GetContext(const std::string& actor_name)
-{
-    uint32_t handle = 0x00;
-    pthread_rwlock_rdlock(&m_rw);
-    if(m_named_ctxs.find(actor_name) != m_named_ctxs.end()){
-        handle = m_named_ctxs[actor_name];
-        pthread_rwlock_unlock(&m_rw);
-        return GetContext(handle);
+std::shared_ptr<MyContext> MyContextManager::GetContext(const std::string& actor_name) {
+    pthread_rwlock_rdlock(&_rw);
+    if(_ctxs.find(actor_name) == _ctxs.end()){
+        LOG(WARNING) << "not found " << actor_name;
+        pthread_rwlock_unlock(&_rw);
+        return nullptr;
     }
-    pthread_rwlock_unlock(&m_rw);
-    return nullptr;
-}
-
-MyContext* MyContextManager::GetContext(uint32_t handle)
-{
-    MyContext* result = nullptr;
-    pthread_rwlock_rdlock(&m_rw);
-    uint32_t hash = handle & (m_slot_size-1);
-    MyContext* ctx = m_slot[hash];
-    if (ctx && ctx->GetHandle() == handle) {
-        result = ctx;
-    }
-    pthread_rwlock_unlock(&m_rw);
-    return result;
+    auto ctx = _ctxs[actor_name];
+    pthread_rwlock_unlock(&_rw);
+    return ctx;
 }
 
 void MyContextManager::PrintWaitQueue() {
     DLOG(INFO) << "cur wait queue actor:";
-    auto begin = m_msg_list.Begin();
-    while (begin != m_msg_list.End()) {
-        auto next = begin->next;
-        auto ctx = dynamic_cast<MyContext*>(begin);
-        DLOG(INFO) << ctx->Print();
-        begin = next;
+    auto it = _wait_queue.begin();
+    while (it != _wait_queue.end()) {
+        DLOG(INFO) << "---> " << it->lock()->Print();
+        ++it;
     }
 }
 
-MyContext* MyContextManager::GetContextWithMsg()
-{
-    MyList& msg_list = m_msg_list;
-    if(msg_list.IsEmpty()) return nullptr;
+std::shared_ptr<MyContext> MyContextManager::GetContextWithMsg() {
+    if(_wait_queue.empty()) {
+        return nullptr;
+    }
 
-    std::vector<MyContext*> in_runing_context;
-    MyContext* ret = nullptr;
-    while(!msg_list.IsEmpty()){
-        auto ctx_node = msg_list.Begin();
-        auto ctx = dynamic_cast<MyContext*>(ctx_node);
-
+    std::vector<std::shared_ptr<MyContext>> in_runing_context;
+    std::shared_ptr<MyContext> ret = nullptr;
+    while(!_wait_queue.empty()){
+        if (_wait_queue.front().expired()) {
+            _wait_queue.pop_front();
+            continue;
+        }
+        auto ctx = _wait_queue.front().lock();
         if(ctx->IsRuning()){
-            msg_list.DelHead();
+            _wait_queue.pop_front();
             in_runing_context.push_back(ctx);
         }else{
-            msg_list.DelHead();
+            _wait_queue.pop_front();
 
             ctx->SetRuningFlag(true);
             ctx->SetWaitQueueFlag(false);
@@ -127,19 +78,18 @@ MyContext* MyContextManager::GetContextWithMsg()
     }
     for (int i = 0; i < in_runing_context.size(); ++i) {
         DLOG(INFO) << in_runing_context[i]->GetModule()->GetActorName() << " is runing, move to wait queue back";
-        msg_list.AddTail(in_runing_context[i]);
+        _wait_queue.push_back(in_runing_context[i]);
     }
     return ret;
 }
 
-void MyContextManager::PushContext(MyContext* ctx)
-{
+void MyContextManager::PushContext(std::shared_ptr<MyContext> ctx) {
     if(ctx->IsInWaitQueue()) {
         DLOG(INFO) << ctx->Print() << " already in wait queue, return";
         PrintWaitQueue();
         return;
     }
     ctx->SetWaitQueueFlag(true);
-    m_msg_list.AddTail(ctx);
+    _wait_queue.push_back(ctx);
     PrintWaitQueue();
 }

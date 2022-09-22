@@ -45,15 +45,6 @@ public:
     int Send(const std::string& dst, std::shared_ptr<MyMsg> msg);
 
     /**
-     * GetHandle() - 获得该actor的句柄号
-     * 
-     *      actor句柄主要用于在给另一个actor发送消息时，指定另一个actor的句柄号时会用到
-     * 
-     * @return:         actor句柄
-     */
-    uint32_t GetHandle() const;
-
-    /**
      * GetActorName() - 获得该actor的actor名
      * 
      * @return:         成功返回：actor名，失败返回：空字符串
@@ -82,13 +73,13 @@ private:
     void SetTypeName(const std::string& name) { _actor_name = name; }
     void SetInstName(const std::string& name) { _instance_name = name; }
     bool IsFromLib() { return _is_from_lib; }
-    void SetContext(MyContext*);
+    void SetContext(std::shared_ptr<MyContext>);
 
     bool _is_from_lib = false;
     std::string _mod_name;
     std::string _actor_name;
     std::string _instance_name;
-    MyContext*  m_ctx;
+    std::weak_ptr<MyContext> _ctx;
 };
 
 extern "C" {

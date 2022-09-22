@@ -268,9 +268,9 @@ bool MyApp::CreateContext(
 }
 
 bool MyApp::CreateContext(std::shared_ptr<MyActor>& mod_inst, const std::string& params) {
-    MyContext* ctx = new MyContext(shared_from_this(), mod_inst);
+    auto ctx = std::make_shared<MyContext>(shared_from_this(), mod_inst);
     ctx->Init(params.c_str());
-    _context_mgr->RegHandle(ctx);
+    _context_mgr->RegContext(ctx);
     // 初始化之后, 手动将actor中发送消息队列分发出去
     DispatchMsg(ctx);
     return true;
@@ -367,7 +367,7 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
 }
 
 // 将获得的消息分发给其他actor
-void MyApp::DispatchMsg(MyContext* context) {
+void MyApp::DispatchMsg(std::shared_ptr<MyContext> context) {
     if(nullptr == context) {
         return;
     }
@@ -382,7 +382,7 @@ void MyApp::CheckStopWorkers() {
     _worker_mgr->WeakupWorker();
 
     LOG_IF(INFO, _worker_mgr->IdleWorkerSize() == 0) << "worker busy, wait for idle worker...";
-    MyContext* context = nullptr;
+    std::shared_ptr<MyContext> context = nullptr;
     std::shared_ptr<MyWorker> worker = nullptr;
     while((worker = _worker_mgr->FrontIdleWorker()) != nullptr) {
         if(nullptr == (context = _context_mgr->GetContextWithMsg())) {
@@ -465,19 +465,19 @@ void MyApp::ProcessUserEvent(std::shared_ptr<MyWorker> worker) {
 /// FIXME: Idle/DispatchMsg 会影响actor的执行顺序
 void MyApp::ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon> worker) {
     // 将actor的发送队列分发完毕
-    DLOG_IF(INFO, worker->_context != nullptr) \
+    DLOG_IF(INFO, worker->GetContext() != nullptr) \
         << worker->GetWorkerName() 
         << "."
         << (unsigned long)worker->GetPosixThreadId() 
         << " dispatch "
-        << worker->_context->GetModule()->GetActorName()
+        << worker->GetContext()->GetModule()->GetActorName()
         << " msg...";
-    LOG_IF(WARNING, worker->_context == nullptr) \
+    LOG_IF(WARNING, worker->GetContext() == nullptr) \
         << worker->GetWorkerName() 
         << "."
         << (unsigned long)worker->GetPosixThreadId() 
         << " no context";
-    DispatchMsg(worker->_context);
+    DispatchMsg(worker->GetContext());
 
     MyWorkerCmd cmd;
     worker->RecvCmdFromWorker(cmd);

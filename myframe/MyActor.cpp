@@ -3,9 +3,7 @@
 #include "MyWorkerTimer.h"
 #include "MyApp.h"
 
-MyActor::MyActor() : 
-    m_ctx(nullptr) {
-}
+MyActor::MyActor() {}
 
 MyActor::~MyActor()
 {}
@@ -20,13 +18,12 @@ void MyActor::SetModName(const std::string& name) {
 }
 
 int MyActor::Send(const std::string& dst, std::shared_ptr<MyMsg> msg) {
+    if (_ctx.expired()) {
+        return -1;
+    }
     msg->SetSrc(GetActorName());
     msg->SetDst(dst);
-    return m_ctx->SendMsg(msg);
-}
-
-uint32_t MyActor::GetHandle() const {
-    return m_ctx->GetHandle();
+    return _ctx.lock()->SendMsg(msg);
 }
 
 const std::string MyActor::GetActorName() const {
@@ -34,9 +31,12 @@ const std::string MyActor::GetActorName() const {
 }
 
 int MyActor::Timeout(const std::string& timer_name, int expired) {
-    return m_ctx->GetApp()->GetTimerWorker()->SetTimeout(GetActorName(), timer_name, expired);
+    if (_ctx.expired()) {
+        return -1;
+    }
+    return _ctx.lock()->GetApp()->GetTimerWorker()->SetTimeout(GetActorName(), timer_name, expired);
 }
 
-void MyActor::SetContext(MyContext* c) {
-    m_ctx = c;
+void MyActor::SetContext(std::shared_ptr<MyContext> c) {
+    _ctx = c;
 }
