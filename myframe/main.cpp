@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     }
 
     // 从配置文件加载服务
-    if(!app->LoadModsFromConf(myframe::FLAGS_myframe_service_conf_dir)) {
+    if(!app->LoadModsFromConf(myframe::FLAGS_myframe_service_dir)) {
         LOG(ERROR) << "Load service failed, exit";
         return -1;
     }

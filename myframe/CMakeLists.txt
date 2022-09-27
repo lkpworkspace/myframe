@@ -25,6 +25,8 @@ file(GLOB header_files
     MyModLib.h
     MyModManager.h
     MyApp.h
+    MyCommon.h
+    MyFlags.h
 )
 install(FILES 
     ${header_files}
