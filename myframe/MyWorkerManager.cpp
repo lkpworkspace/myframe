@@ -111,6 +111,7 @@ void MyWorkerManager::WeakupWorker() {
         }
         auto worker = it->lock();
         if (worker->GetOwner() == MyWorkerCtrlOwner::WORKER) {
+            ++it;
             continue;
         }
         MyListAppend(worker->_que, worker->_recv);
