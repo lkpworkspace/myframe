@@ -49,6 +49,7 @@ python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_n
 #include "MyActor.h"
 #include "MyMsg.h"
 
+using namespace myframe;
 /*
     该actor实现：
         自己给自己发送一条消息
@@ -59,15 +60,14 @@ public:
     /* actor模块加载完毕后调用 */
     int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
-        return Send("actor.demo.echo_hello_world", std::make_shared<MyTextMsg>("hello,world"));
+        return Send("actor.demo.echo_hello_world", std::make_shared<MyMsg>("hello,world"));
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
             /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
-            const auto& tmsg = std::dynamic_pointer_cast<const MyTextMsg>(msg);
-            std::cout << "----> from \"" << tmsg->GetSrc() << "\" to \"" 
-                << GetActorName() << "\": " << tmsg->GetData() << std::endl;
+            std::cout << "----> from \"" << msg->GetSrc() << "\" to \"" 
+                << GetActorName() << "\": " << msg->GetData() << std::endl;
         }
     }
 };

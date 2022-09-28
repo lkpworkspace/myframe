@@ -32,8 +32,8 @@ int MyContext::Init(const char* param) {
     return _mod->Init(param);
 }
 
-void MyContext::CB(const std::shared_ptr<const MyMsg>& msg) {
-    _mod->CB(msg);
+void MyContext::Proc(const std::shared_ptr<const MyMsg>& msg) {
+    _mod->Proc(msg);
 }
 
 std::string MyContext::Print() {

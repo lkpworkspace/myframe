@@ -39,7 +39,7 @@ int MyWorkerCommon::Work() {
         return -1;
     }
     while (RecvMsgListSize() > 0) {
-        ctx->CB(GetRecvMsg());
+        ctx->Proc(GetRecvMsg());
     }
     
     return 0;

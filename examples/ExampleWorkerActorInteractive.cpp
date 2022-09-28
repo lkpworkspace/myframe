@@ -17,7 +17,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
             Send(msg->GetSrc(), std::make_shared<MyMsg>("this is ExampleActorInteractive resp"));
         }

@@ -18,7 +18,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TEXT") {
             /* 获得文本消息， 打印 源地址 目的地址 消息内容*/
             LOG(INFO) << "get msg from \"" << msg->GetSrc() << ": " << msg->GetData();

@@ -17,7 +17,7 @@ public:
         return Send("actor.example.hello_world", std::make_shared<MyMsg>("hello,world"));
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
         LOG(INFO) << "----> from \"" << msg->GetSrc() << "\" to \"" 
             << GetActorName() << "\": " << msg->GetData();
