@@ -27,7 +27,7 @@ sudo cp *.a /usr/lib
 ```sh
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make install
 ```
 
