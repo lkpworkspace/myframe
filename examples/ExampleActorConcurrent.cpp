@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include <random>
 #include <thread>
 #include <chrono>
@@ -24,7 +31,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetSrc() == "actor.example_actor_concurrent_trigger.#1") {
             int cost_ms = random(100, 500);
             LOG(INFO) << "-----> " << GetActorName() << " begin runing...";
@@ -61,7 +68,7 @@ public:
         return true;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         if (WaitEnd(msg->GetSrc())) {
             LOG(INFO) << "concurrent task finished";
         }

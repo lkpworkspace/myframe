@@ -1,8 +1,16 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include "MyFlags.h"
 
 #define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
 #define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"
-#define MYFRAME_SERVICE_CONF_DIR "@MYFRAME_SERVICE_CONF_DIR@"
+#define MYFRAME_SERVICE_DIR "@MYFRAME_SERVICE_DIR@"
+#define MYFRAME_CONF_DIR "@MYFRAME_CONF_DIR@"
 
 namespace myframe {
 
@@ -14,6 +22,7 @@ DEFINE_string(worker_timer_name, "worker.timer.#1", "");
 // path
 DEFINE_string(myframe_lib_dir, MYFRAME_LIB_DIR, "");
 DEFINE_string(myframe_log_dir, MYFRAME_LOG_DIR, "");
-DEFINE_string(myframe_service_conf_dir, MYFRAME_SERVICE_CONF_DIR, "");
+DEFINE_string(myframe_service_dir, MYFRAME_SERVICE_DIR, "");
+DEFINE_string(myframe_conf_dir, MYFRAME_CONF_DIR, "");
 
 } // namespace myframe

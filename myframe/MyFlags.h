@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #pragma once
 #include <gflags/gflags.h>
 
@@ -11,6 +18,7 @@ DECLARE_string(worker_timer_name);
 // path
 DECLARE_string(myframe_lib_dir);
 DECLARE_string(myframe_log_dir);
-DECLARE_string(myframe_service_conf_dir);
+DECLARE_string(myframe_service_dir);
+DECLARE_string(myframe_conf_dir);
 
 } // namespace myframe

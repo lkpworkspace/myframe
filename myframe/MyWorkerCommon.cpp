@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include "MyWorkerCommon.h"
 #include "MyLog.h"
 #include "MyContext.h"
@@ -39,7 +46,7 @@ int MyWorkerCommon::Work() {
         return -1;
     }
     while (RecvMsgListSize() > 0) {
-        ctx->CB(GetRecvMsg());
+        ctx->Proc(GetRecvMsg());
     }
     
     return 0;

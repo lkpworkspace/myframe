@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include <random>
 #include <thread>
 #include <chrono>
@@ -25,7 +32,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         int cost_ms = random(100, 500);
         LOG(INFO) << "-----> begin runing task " << GetActorName() << "...";
         std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
@@ -41,7 +48,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         int cost_ms = random(100, 500);
         LOG(INFO) << "-----> begin runing task " << GetActorName() << "...";
         std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
@@ -57,7 +64,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         int cost_ms = random(100, 500);
         LOG(INFO) << "-----> begin runing task " << GetActorName() << "...";
         std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));

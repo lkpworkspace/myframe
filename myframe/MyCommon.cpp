@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include "MyCommon.h"
 #include <sys/types.h>
 #include <dirent.h>

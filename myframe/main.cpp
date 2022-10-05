@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include "gflags/gflags.h"
 
 #include "MyCommon.h"
@@ -17,7 +24,7 @@ int main(int argc, char** argv) {
     }
 
     // 从配置文件加载服务
-    if(!app->LoadModsFromConf(myframe::FLAGS_myframe_service_conf_dir)) {
+    if(!app->LoadModsFromConf(myframe::FLAGS_myframe_service_dir)) {
         LOG(ERROR) << "Load service failed, exit";
         return -1;
     }

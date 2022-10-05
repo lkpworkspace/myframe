@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include "MyModManager.h"
 #include <jsoncpp/json/json.h>
 #include "MyLog.h"

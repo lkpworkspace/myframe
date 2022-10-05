@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #pragma once
 #include <memory>
 #include <list>
@@ -25,7 +32,7 @@ public:
     int SendMsg(std::shared_ptr<MyMsg>& msg);
 
     /* 工作线程调用回调让actor去处理消息 */
-    void CB(const std::shared_ptr<const MyMsg>& msg);
+    void Proc(const std::shared_ptr<const MyMsg>& msg);
 
     /* 主线程发送消息给该actor */
     void PushMsg(std::shared_ptr<MyMsg>& msg){ _recv.emplace_back(msg); }

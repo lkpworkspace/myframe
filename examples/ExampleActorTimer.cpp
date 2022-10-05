@@ -1,3 +1,10 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+ 
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+
 #include <glog/logging.h>
 
 #include "myframe/MyActor.h"
@@ -14,7 +21,7 @@ public:
         return 0;
     }
 
-    void CB(const std::shared_ptr<const MyMsg>& msg) override {
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         if (msg->GetMsgType() == "TIMER" && msg->GetMsgDesc() == "1000ms") {
             /* 设置下一次超时时间 100 * 10 ms */
             Timeout("1000ms", 100);
