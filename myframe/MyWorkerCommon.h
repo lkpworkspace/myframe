@@ -14,7 +14,7 @@ namespace myframe {
 
 class MyMsg;
 class MyContext;
-class MyWorkerCommon : public MyWorker
+class MyWorkerCommon final : public MyWorker
 {
     friend class MyApp;
 public:

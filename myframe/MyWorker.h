@@ -20,11 +20,18 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+/**
+ * @brief worker与main交互命令
+ *  QUIT main主动发起的退出命令
+ *  IDLE与RUN为一对请求回复命令
+ *  WAIT_FOR_MSG与RUN_WITH_MSG为一对请求回复命令
+ */
 enum class MyWorkerCmd : char {
+    QUIT            = 'q',     ///< worker退出(worker发送的指令)
     IDLE            = 'i',     ///< worker空闲(worker发送的指令)
     WAIT_FOR_MSG    = 'w',     ///< worker等待消息(worker发送的指令)
     RUN             = 'r',     ///< worker运行(main回复的指令)
-    QUIT            = 'q',     ///< worker退出(main回复的指令)
+    RUN_WITH_MSG    = 'm',     ///< worker运行(main回复的指令)
 };
 
 enum class MyWorkerCtrlOwner : int {
@@ -66,6 +73,7 @@ public:
     void PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list);
 
     ////////////////////////////// 接收/发送主线程控制消息
+    /// 不建议使用,除非你知道你在做什么
     int RecvCmdFromMain(MyWorkerCmd& cmd, int timeout_ms = -1);
     int SendCmdToMain(const MyWorkerCmd& cmd);
     /// 分发消息并立即返回
@@ -118,7 +126,7 @@ private:
     pthread_t _posix_thread_id;
     /// state
     std::atomic_bool _runing;
-    MyWorkerCtrlOwner _ctrl_owner{MyWorkerCtrlOwner::MAIN};
+    MyWorkerCtrlOwner _ctrl_owner{MyWorkerCtrlOwner::WORKER};
     bool _in_msg_wait_queue{false};
 };
 

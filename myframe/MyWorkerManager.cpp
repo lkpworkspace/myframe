@@ -125,7 +125,7 @@ void MyWorkerManager::WeakupWorker() {
         worker->SetCtrlOwnerFlag(MyWorkerCtrlOwner::WORKER);
         worker->SetWaitMsgQueueFlag(false);
         DLOG(INFO) << "notify " << worker->GetWorkerName() << " process msg";
-        worker->SendCmdToWorker(MyWorkerCmd::RUN);
+        worker->SendCmdToWorker(MyWorkerCmd::RUN_WITH_MSG);
     }
 }
 

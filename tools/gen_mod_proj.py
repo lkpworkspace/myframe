@@ -6,12 +6,12 @@ import re
 import shutil
 
 def dumpUsage():
-    print("Usage: python3 /opt/myframe/tools/gen_mod_proj.py --name=MOD_NAME --dir=MOD_DIR")
+    print("Usage: python3 ~/myframe/tools/gen_mod_proj.py --name=MOD_NAME --dir=MOD_DIR")
     print("Options:")
     print("  --name   MOD_NAME            Base module name, for example: usermod")
     print("  --dir    MOD_DIR             Base module project dirtory, for example: /home/yourname/")
     print("")
-    print("Sample: python3 /opt/myframe/tools/gen_mod_proj.py --name=\"usermod\" --dir=\"/home/yourname/\"")
+    print("Sample: python3 ~/myframe/tools/gen_mod_proj.py --name=\"usermod\" --dir=\"/home/yourname/\"")
     print("")
 
 def checkParams(opts):
