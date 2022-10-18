@@ -5,9 +5,12 @@ add_library(example_actor_hello_world SHARED ExampleActorHelloWorld.cpp)
 add_library(example_actor_timer SHARED ExampleActorTimer.cpp)
 add_library(example_actor_serial SHARED ExampleActorSerial.cpp)
 add_library(example_actor_concurrent SHARED ExampleActorConcurrent.cpp)
+
+### worker
 add_library(example_worker_publish SHARED ExampleWorkerPublish.cpp)
 add_library(example_worker_talk SHARED ExampleWorkerTalk.cpp)
 add_library(example_worker_actor_interactive SHARED ExampleWorkerActorInteractive.cpp)
+add_library(example_worker_interactive_with_3rd_frame SHARED ExampleWorkerInteractiveWith3rdFrame.cpp)
 
 ### install
 FILE(GLOB conf_files "*.json")
@@ -27,6 +30,7 @@ INSTALL(TARGETS
     example_worker_actor_interactive 
     example_worker_publish
     example_worker_talk 
+    example_worker_interactive_with_3rd_frame
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_BIN_DIR}

@@ -27,6 +27,7 @@ file(GLOB header_files
     MyApp.h
     MyCommon.h
     MyFlags.h
+    MyQueue.h
 )
 install(FILES 
     ${header_files}
