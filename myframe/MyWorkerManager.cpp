@@ -27,7 +27,7 @@ int MyWorkerManager::WorkerSize() {
 std::shared_ptr<MyWorker> MyWorkerManager::Get(int handle) {
     pthread_rwlock_wrlock(&_rw);
     if(_workers.find(handle) == _workers.end()) {
-        LOG(ERROR) << "can't find worker, handle " << handle;
+        DLOG(WARNING) << "can't find worker, handle " << handle;
         pthread_rwlock_unlock(&_rw);
         return nullptr;
     }

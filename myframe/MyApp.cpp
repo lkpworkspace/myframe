@@ -24,6 +24,8 @@ Author: likepeng <likepeng0418@163.com>
 #include "MyWorkerManager.h"
 #include "MyWorkerCommon.h"
 #include "MyWorkerTimer.h"
+#include "MyEventConn.h"
+#include "MyEventConnManager.h"
 
 namespace myframe {
 
@@ -37,6 +39,7 @@ MyApp::MyApp()
     , _context_mgr(new MyContextManager())
     , _mods(new MyModManager())
     , _worker_mgr(new MyWorkerManager())
+    , _ev_conn_mgr(new MyEventConnManager())
 {}
 
 MyApp::~MyApp()
@@ -51,6 +54,7 @@ bool MyApp::Init() {
     LOG(INFO) << "Create epoll fd " << _epoll_fd;
 
     bool ret = true;
+    ret &= _ev_conn_mgr->Init(shared_from_this(), myframe::FLAGS_conn_count);
     ret &= StartCommonWorker(myframe::FLAGS_worker_count);
     ret &= StartTimerWorker();
 
@@ -253,6 +257,15 @@ bool MyApp::AddWorker(
     return true;
 }
 
+std::shared_ptr<MyMsg> MyApp::SendRequest(
+        const std::string& name, 
+        std::shared_ptr<MyMsg> msg) {
+    auto conn = _ev_conn_mgr->Get();
+    auto resp = conn->SendRequest(name, msg);
+    _ev_conn_mgr->Release(conn);
+    return resp;
+}
+
 /**
  * 创建一个新的actor:
  *      1. 从MyModManager中获得对应模块对象
@@ -366,6 +379,14 @@ void MyApp::DispatchMsg(std::list<std::shared_ptr<MyMsg>>& msg_list) {
             }
             ctx->PushMsg(msg);
             _context_mgr->PushContext(ctx);
+        } else if (name_list[0] == "event") {
+            if (name_list[1] == "conn") {
+                _ev_conn_mgr->Notify(msg->GetDst(), msg);
+            } else {
+                LOG(ERROR) \
+                    << "Unknown msg from " 
+                    << msg->GetSrc() << " to " << msg->GetDst();
+            }
         } else {
             LOG(ERROR) \
                 << "Unknown msg from " 
@@ -519,10 +540,34 @@ void MyApp::ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon> worker) {
     }
 }
 
+void MyApp::ProcessEventConn(std::shared_ptr<MyEventConn> ev) {
+    // 将event_conn的发送队列分发完毕
+    DispatchMsg(ev->_send);
+
+    MyWorkerCmd cmd;
+    ev->RecvCmdFromWorker(cmd);
+    switch(cmd){
+    case MyWorkerCmd::IDLE: // idle
+        // do nothing
+        break;
+    default:
+        LOG(WARNING) << "unknown common worker cmd: " << (char)cmd;
+        break;
+    }
+}
+
 void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
     DLOG_IF(INFO, ev_count > 0) << "get " << ev_count << " event";
     for(int i = 0; i < ev_count; ++i) {
-        auto ev_obj = _worker_mgr->Get(evs[i].data.fd);
+        std::shared_ptr<MyEvent> ev_obj = nullptr;
+        ev_obj = _worker_mgr->Get(evs[i].data.fd);
+        if (ev_obj == nullptr) {
+            ev_obj = _ev_conn_mgr->Get(evs[i].data.fd);    
+            if (ev_obj == nullptr) {
+                LOG(ERROR) << "can't find ev obj, handle " << evs[i].data.fd;
+                continue;
+            }
+        }
         ev_obj->RetEpollEventType(evs[i].events);
         switch(ev_obj->GetMyEventType()){
         case MyEventType::WORKER_COMMON:
@@ -532,7 +577,10 @@ void MyApp::ProcessEvent(struct epoll_event* evs, int ev_count) {
             ProcessTimerEvent(std::dynamic_pointer_cast<MyWorkerTimer>(ev_obj));
             break;
         case MyEventType::WORKER_USER:
-            ProcessUserEvent(ev_obj);
+            ProcessUserEvent(std::dynamic_pointer_cast<MyWorker>(ev_obj));
+            break;
+        case MyEventType::EVENT_CONN:
+            ProcessEventConn(std::dynamic_pointer_cast<MyEventConn>(ev_obj));
             break;
         default:
             LOG(WARNING) << "unknown event";
