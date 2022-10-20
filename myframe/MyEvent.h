@@ -13,6 +13,7 @@ enum class MyEventType : int {
     WORKER_COMMON,
     WORKER_TIMER,
     WORKER_USER,
+    EVENT_CONN,
 };
 
 class MyEvent

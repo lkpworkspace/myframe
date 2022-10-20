@@ -19,6 +19,23 @@ Author: likepeng <likepeng0418@163.com>
 
 using namespace myframe;
 
+class EchoActorTest : public MyActor {
+public:
+     int Init(const char* param) override {
+        LOG(INFO) << "init EchoActorTest";
+        return 0;
+    }
+
+    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
+        LOG(INFO) << "recv " << msg->GetSrc() << ":" << msg->GetData();
+        auto re = std::make_shared<MyMsg>("resp:" + std::to_string(_seq++));
+        Send(msg->GetSrc(), re);
+    }
+
+private:
+    int _seq{0};
+};
+
 class TransMsgCostTest : public MyActor
 {
 public:
@@ -252,6 +269,13 @@ TEST(MyApp, performance_test) {
     // mod manager
     auto& mod = app->GetModManager();
 
+    // 注册echo Actor
+    {
+        mod->RegActor("EchoActorTest", [](const std::string&){ return std::make_shared<EchoActorTest>(); });
+        auto actor = mod->CreateActorInst("class", "EchoActorTest");
+        app->AddActor("1", "", actor);
+    }
+
     // 发送单条消息耗时（测试时长1分钟，每隔10毫秒发送1条消息）
     // 耗时
     //   平均值:
@@ -304,6 +328,16 @@ TEST(MyApp, performance_test) {
             app->AddActor(std::to_string(i), std::to_string(i), actor);
         }
     }
+
+    // 创建一个线程请求服务
+    std::thread th([&](){
+        int cnt = 100;
+        while(cnt--) {
+            auto resp = app->SendRequest("actor.EchoActorTest.1", std::make_shared<MyMsg>("hello"));
+            LOG(INFO) << "get resp: " << resp->GetData();
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    });
 
     app->Exec();
 }

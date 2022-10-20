@@ -29,6 +29,8 @@ class MyWorkerTimer;
 class MyModManager;
 class MyContextManager;
 class MyWorkerManager;
+class MyEventConn;
+class MyEventConnManager;
 class MyApp final : public std::enable_shared_from_this<MyApp>
 {
     friend class MyActor;
@@ -48,6 +50,10 @@ public:
     bool AddWorker(
         const std::string& inst_name, 
         std::shared_ptr<MyWorker> worker);
+
+    std::shared_ptr<MyMsg> SendRequest(
+        const std::string& name, 
+        std::shared_ptr<MyMsg> msg);
 
     std::unique_ptr<MyContextManager>& GetContextManager() { return _context_mgr; }
     std::unique_ptr<MyModManager>& GetModManager() { return _mods; }
@@ -98,6 +104,7 @@ private:
     void ProcessWorkerEvent(std::shared_ptr<MyWorkerCommon>);
     void ProcessTimerEvent(std::shared_ptr<MyWorkerTimer>);
     void ProcessUserEvent(std::shared_ptr<MyWorker>);
+    void ProcessEventConn(std::shared_ptr<MyEventConn>);
 
     /// 退出标志
     std::atomic_bool _quit = {true};
@@ -109,6 +116,8 @@ private:
     std::unique_ptr<MyModManager> _mods;
     /// 线程管理对象
     std::unique_ptr<MyWorkerManager> _worker_mgr;
+    /// 与框架通信管理对象
+    std::unique_ptr<MyEventConnManager> _ev_conn_mgr;
     std::mutex _dispatch_mtx;
 
 };
