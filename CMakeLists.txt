@@ -3,10 +3,10 @@ project(myframe)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
+
 # -DNDEBUG -DDCHECK_ALWAYS_ON=0
-set(CMAKE_C_FLGAS "-fPIC -DPIC -DNDEBUG -DDCHECK_ALWAYS_ON=0")
-set(CMAKE_CXX_FLGAS "-fPIC -DPIC -DNDEBUG -DDCHECK_ALWAYS_ON=0") 
-add_compile_options(-Werror=return-type)
+set(CMAKE_C_FLAGS "-fPIC -DPIC -Werror=return-type -DNDEBUG -DDCHECK_ALWAYS_ON=0")
+set(CMAKE_CXX_FLAGS "-fPIC -DPIC -Werror=return-type -DNDEBUG -DDCHECK_ALWAYS_ON=0")
 
 option(GENERATE_EXAMPLE "generate example library" ON)
 option(GENERATE_TEST "generate test exec" ON)
