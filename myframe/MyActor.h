@@ -11,6 +11,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <memory>
 #include <string>
+#include <any>
 
 namespace myframe {
 
@@ -52,6 +53,7 @@ public:
      * @return:         成功 0， 失败 -1
      */
     int Send(const std::string& dst, std::shared_ptr<MyMsg> msg);
+    int Send(const std::string& dst, std::any data);
 
     /**
      * GetActorName() - 获得该actor的actor名

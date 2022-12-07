@@ -70,6 +70,7 @@ public:
     ////////////////////////////// 发送消息相关函数
     int SendMsgListSize() { return _send.size(); }
     void SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg);
+    void SendMsg(const std::string& dst, std::any data);
     void PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list);
 
     ////////////////////////////// 接收/发送主线程控制消息

@@ -108,6 +108,11 @@ void MyWorker::SendMsg(const std::string& dst, std::shared_ptr<MyMsg> msg) {
     _send.emplace_back(msg);
 }
 
+void MyWorker::SendMsg(const std::string& dst, std::any data) {
+    auto msg = std::make_shared<MyMsg>(data);
+    SendMsg(dst, msg);
+}
+
 void MyWorker::PushSendMsgList(std::list<std::shared_ptr<MyMsg>>& msg_list) {
     MyListAppend(_send, msg_list);
 }

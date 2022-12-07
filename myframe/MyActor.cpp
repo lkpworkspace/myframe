@@ -35,6 +35,11 @@ int MyActor::Send(const std::string& dst, std::shared_ptr<MyMsg> msg) {
     return _ctx.lock()->SendMsg(msg);
 }
 
+int MyActor::Send(const std::string& dst, std::any data) {
+    auto msg = std::make_shared<MyMsg>(data);
+    return Send(dst, msg);
+}
+
 const std::string MyActor::GetActorName() const {
     return "actor." + _actor_name + "." + _instance_name;
 }

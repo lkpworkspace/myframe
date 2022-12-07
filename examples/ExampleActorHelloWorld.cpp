@@ -21,13 +21,14 @@ public:
     /* actor模块加载完毕后调用 */
     int Init(const char* param) override {
         /* 构造 hello,world 消息发送给自己 */
-        return Send("actor.example.hello_world", std::make_shared<MyMsg>("hello,world"));
+        return Send("actor.example.hello_world", std::string("hello,world"));
     }
 
     void Proc(const std::shared_ptr<const MyMsg>& msg) override {
         /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
+        auto data = msg->GetAnyData<std::string>();
         LOG(INFO) << "----> from \"" << msg->GetSrc() << "\" to \"" 
-            << GetActorName() << "\": " << msg->GetData();
+            << GetActorName() << "\": (" << msg->GetMsgType() << ") "<< data;
     }
 };
 

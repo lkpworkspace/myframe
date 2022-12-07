@@ -8,19 +8,22 @@ Author: likepeng <likepeng0418@163.com>
 #pragma once
 #include <cstdint>
 #include <string>
+#include <any>
 
 namespace myframe {
 
 class MyMsg final
 {
 public:
-    MyMsg()
-        : _type("TEXT")
-    {}
+    MyMsg() {}
     MyMsg(const std::string& data)
         : _type("TEXT")
         , _data(data)
     {}
+    template<typename T>
+    MyMsg(const T& data) {
+        SetAnyData(data);
+    }
 
     /**
      * @brief 获得消息源地址
@@ -51,6 +54,10 @@ public:
      * @return const std::string& 数据
      */
     const std::string& GetData() const { return _data; }
+    template<typename T>
+    const T GetAnyData() const {
+        return std::any_cast<T>(_any_data);
+    }
 
     void SetSrc(const std::string& src) { _src = src; }
     void SetDst(const std::string& dst) { _dst = dst; }
@@ -58,6 +65,7 @@ public:
     void SetMsgDesc(const std::string& desc) { _desc = desc; }
     void SetData(const char* data, unsigned int len);
     void SetData(const std::string& data);
+    void SetAnyData(const std::any& any_data);
 
 private:
     std::string _src;
@@ -65,6 +73,7 @@ private:
     std::string _type;
     std::string _desc;
     std::string _data;
+    std::any _any_data;
 };
 
 } // namespace myframe
