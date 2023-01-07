@@ -10,7 +10,7 @@ worker自驱动，可以通过消息与actor交互;
 
 ## 开发/运行环境
 操作系统: Ubuntu 18.04+  
-开发语言：[![cpp](https://img.shields.io/badge/language-cpp-green.svg)](https://img.shields.io/badge/language-cpp-green.svg)
+开发语言：C++17
 
 ## 安装依赖
 ```sh
@@ -33,7 +33,7 @@ make install
 
 ## 运行
 ```sh
-bash ~/myframe/bin/start_myframe.bash
+cd ~/myframe/bin && ./myframe_main
 ```
 
 ## 创建模块工程
@@ -46,35 +46,32 @@ python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_n
 #include <iostream>
 #include <string.h>
 
-#include "MyActor.h"
-#include "MyMsg.h"
+#include "myframe/actor.h"
+#include "myframe/msg.h"
 
 using namespace myframe;
 /*
-    该actor实现：
-        自己给自己发送一条消息
+  该actor实现：
+    自己给自己发送一条消息
 */
-class MyDemo : public MyActor
+class Demo : public Actor
 {
-public:
-    /* actor模块加载完毕后调用 */
-    int Init(const char* param) override {
-        /* 构造 hello,world 消息发送给自己 */
-        return Send("actor.demo.echo_hello_world", std::make_shared<MyMsg>("hello,world"));
-    }
+ public:
+  /* actor模块加载完毕后调用 */
+  int Init(const char* param) override {
+    /* 构造 hello,world 消息发送给自己 */
+    return Send("actor.demo.echo_hello_world", std::make_shared<Msg>("hello,world"));
+  }
 
-    void Proc(const std::shared_ptr<const MyMsg>& msg) override {
-        if (msg->GetMsgType() == "TEXT") {
-            /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容*/
-            std::cout << "----> from \"" << msg->GetSrc() << "\" to \"" 
-                << GetActorName() << "\": " << msg->GetData() << std::endl;
-        }
-    }
+  void Proc(const std::shared_ptr<const Msg>& msg) override {
+    /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容 */
+    std::cout << *msg << ": " << msg->GetData() << std::endl;
+  }
 };
 
 /* 创建actor模块实例函数 */
-extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& Actor_name) {
-    return std::make_shared<MyDemo>();
+extern "C" std::shared_ptr<Actor> my_actor_create(const std::string& actor_name) {
+  return std::make_shared<Demo>();
 }
 
 ```
@@ -82,30 +79,30 @@ extern "C" std::shared_ptr<MyActor> my_actor_create(const std::string& Actor_nam
 ### actor配置文件
 ```json
 {
-    "type":"library",
-    "lib":"libdemo.so",
-    "actor":{
-        "demo":[
-            {
-                "instance_name":"echo_hello_world",
-                "instance_params":""
-            }
-        ]
-    }
+  "type":"library",
+  "lib":"libdemo.so",
+  "actor":{
+    "demo":[
+      {
+        "instance_name":"echo_hello_world",
+        "instance_params":""
+      }
+    ]
+  }
 }
 ```
 - type: [ library | class ]
 - lib: 库名称
 - actor: 需要创建的actor列表
-    - demo: actor名
-        - instance_name：实例名称
-        - instance_params：实例参数
+  - demo: actor名
+    - instance_name：实例名称
+    - instance_params：实例参数
 
 ## 程序接口
 
-- [Actor模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/MyActor.h)
-- [Worker模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/MyWorker.h)
-- [消息类型](https://github.com/lkpworkspace/myframe/blob/master/myframe/MyMsg.h)
+- [Actor模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/actor.h)
+- [Worker模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/worker.h)
+- [消息类型](https://github.com/lkpworkspace/myframe/blob/master/myframe/msg.h)
 
 ## 文档
 - [文档入口](https://github.com/lkpworkspace/myframe/wiki)

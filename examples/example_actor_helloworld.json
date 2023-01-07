@@ -1,0 +1,12 @@
+{
+    "type":"library",
+    "lib":"libexample_actor_helloworld.so",
+    "actor":{
+        "example":[
+            {
+                "instance_name":"helloworld",
+                "instance_params":""
+            }
+        ]
+    }
+}

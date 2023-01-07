@@ -1,16 +1,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
-### Actor
-add_library(example_actor_hello_world SHARED ExampleActorHelloWorld.cpp)
-add_library(example_actor_timer SHARED ExampleActorTimer.cpp)
-add_library(example_actor_serial SHARED ExampleActorSerial.cpp)
-add_library(example_actor_concurrent SHARED ExampleActorConcurrent.cpp)
+### actor
+add_library(example_actor_helloworld SHARED example_actor_helloworld.cpp)
+add_library(example_actor_timer SHARED example_actor_timer.cpp)
+add_library(example_actor_serial SHARED example_actor_serial.cpp)
+add_library(example_actor_concurrent SHARED example_actor_concurrent.cpp)
 
 ### worker
-add_library(example_worker_publish SHARED ExampleWorkerPublish.cpp)
-add_library(example_worker_talk SHARED ExampleWorkerTalk.cpp)
-add_library(example_worker_actor_interactive SHARED ExampleWorkerActorInteractive.cpp)
-add_library(example_worker_interactive_with_3rd_frame SHARED ExampleWorkerInteractiveWith3rdFrame.cpp)
+add_library(example_worker_publish SHARED example_worker_publish.cpp)
+add_library(example_worker_talk SHARED example_worker_talk.cpp)
+add_library(example_worker_actor_interactive SHARED example_worker_actor_interactive.cpp)
+add_library(example_worker_interactive_with_3rd_frame SHARED example_worker_interactive_with_3rd_frame.cpp)
 
 ### install
 FILE(GLOB conf_files "*.json")
@@ -23,7 +23,7 @@ INSTALL(FILES
     DESTINATION ${MYFRAME_SERVICE_DIR}
 )
 INSTALL(TARGETS 
-    example_actor_hello_world 
+    example_actor_helloworld
     example_actor_timer
     example_actor_serial
     example_actor_concurrent
