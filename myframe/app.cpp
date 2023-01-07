@@ -30,18 +30,27 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
+  if (!worker_mgr_) {
+    return nullptr;
+  }
   auto w = worker_mgr_->Get(myframe::FLAGS_myframe_worker_timer_name);
   return std::dynamic_pointer_cast<WorkerTimer>(w);
 }
 
 App::App()
-    : epoll_fd_(-1),
-      context_mgr_(new ContextManager()),
-      mods_(new ModManager()),
-      worker_mgr_(new WorkerManager()),
-      ev_conn_mgr_(new EventConnManager()) {}
+  : epoll_fd_(-1),
+    context_mgr_(new ContextManager()),
+    mods_(new ModManager()),
+    worker_mgr_(new WorkerManager()),
+    ev_conn_mgr_(new EventConnManager()) {}
 
-App::~App() {}
+App::~App() {
+  if (epoll_fd_ != -1) {
+    close(epoll_fd_);
+    epoll_fd_ = -1;
+  }
+  LOG(INFO) << "app deconstruct";
+}
 
 bool App::Init() {
   epoll_fd_ = epoll_create(1024);
@@ -64,15 +73,16 @@ bool App::Init() {
 }
 
 bool App::LoadModsFromConf(const std::string& path) {
-  auto actor_conf_list = Common::GetDirFiles(path);
-  LOG(INFO) << "Search " << actor_conf_list.size() << " actor conf"
+  auto service_list = Common::GetDirFiles(path);
+  LOG(INFO) << "Search " << service_list.size() << " service conf"
             << ", from " << path;
-  if (actor_conf_list.size() <= 0) {
-    LOG(WARNING) << "Search actor failed, exit";
+  if (service_list.empty()) {
+    LOG(WARNING) << "Can't find service conf file,"
+                 << " skip load from service conf file";
     return false;
   }
   bool res = false;
-  for (const auto& it : actor_conf_list) {
+  for (const auto& it : service_list) {
     LOG(INFO) << "Load " << it << " ...";
     auto root = Common::LoadJsonFromFile(it);
     if (root.isNull()) {
@@ -359,7 +369,7 @@ bool App::StartTimerWorker() {
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
   LOG_IF(WARNING,
-      (*msg_list).size() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
+      msg_list->size() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
     << " dispatch msg too many";
   std::lock_guard<std::mutex> lock(dispatch_mtx_);
   for (auto& msg : (*msg_list)) {
@@ -396,7 +406,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
                  << msg->GetDst();
     }
   }
-  (*msg_list).clear();
+  msg_list->clear();
 }
 
 // 将获得的消息分发给其他actor
@@ -590,7 +600,7 @@ void App::ProcessEvent(struct epoll_event* evs, int ev_count) {
 int App::Exec() {
   int ev_count = 0;
   int max_ev_count = 64;
-  int time_wait = -1;
+  int time_wait_ms = 1000;
   struct epoll_event* evs;
   evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
 
@@ -598,7 +608,8 @@ int App::Exec() {
     /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
     CheckStopWorkers();
     /// 等待事件
-    if (0 > (ev_count = epoll_wait(epoll_fd_, evs, max_ev_count, time_wait))) {
+    ev_count = epoll_wait(epoll_fd_, evs, max_ev_count, time_wait_ms);
+    if (0 > ev_count) {
       LOG(ERROR) << "epoll wait error: " << strerror(errno);
     }
     /// 处理事件
@@ -608,8 +619,8 @@ int App::Exec() {
   // quit App
   free(evs);
   close(epoll_fd_);
-
-  LOG(INFO) << "myframe exit";
+  epoll_fd_ = -1;
+  LOG(INFO) << "app exit exec";
   return 0;
 }
 

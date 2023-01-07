@@ -14,8 +14,12 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-EventConnManager::EventConnManager() {}
+EventConnManager::EventConnManager() {
+  LOG(INFO) << "EventConnManager create";
+}
+
 EventConnManager::~EventConnManager() {
+  LOG(INFO) << "EventConnManager deconstruct";
   std::lock_guard<std::mutex> g(mtx_);
   auto app = app_.lock();
   if (app == nullptr) {

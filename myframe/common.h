@@ -17,9 +17,9 @@ namespace myframe {
 
 template <typename T>
 void ListAppend(std::list<std::shared_ptr<T>>* dst,
-                  std::list<std::shared_ptr<T>>* src) {
-  (*dst).insert((*dst).end(), (*src).begin(), (*src).end());
-  (*src).clear();
+                std::list<std::shared_ptr<T>>* src) {
+  dst->insert(dst->end(), src->begin(), src->end());
+  src->clear();
 }
 
 std::vector<std::string> SplitMsgName(const std::string& name);

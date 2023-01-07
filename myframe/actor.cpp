@@ -27,12 +27,13 @@ void Actor::SetModName(const std::string& name) {
 }
 
 int Actor::Send(const std::string& dst, std::shared_ptr<Msg> msg) {
-  if (ctx_.expired()) {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
     return -1;
   }
   msg->SetSrc(GetActorName());
   msg->SetDst(dst);
-  return ctx_.lock()->SendMsg(msg);
+  return ctx->SendMsg(msg);
 }
 
 int Actor::Send(const std::string& dst, std::any data) {
@@ -45,11 +46,19 @@ const std::string Actor::GetActorName() const {
 }
 
 int Actor::Timeout(const std::string& timer_name, int expired) {
-  if (ctx_.expired()) {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
     return -1;
   }
-  return ctx_.lock()->GetApp()->GetTimerWorker()->SetTimeout(
-      GetActorName(), timer_name, expired);
+  auto app = ctx->GetApp();
+  if (app == nullptr) {
+    return -1;
+  }
+  auto timer_worker = app->GetTimerWorker();
+  if (timer_worker == nullptr) {
+    return -1;
+  }
+  return timer_worker->SetTimeout(GetActorName(), timer_name, expired);
 }
 
 void Actor::SetContext(std::shared_ptr<Context> c) { ctx_ = c; }

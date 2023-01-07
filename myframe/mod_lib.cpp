@@ -18,9 +18,12 @@ namespace myframe {
 ModLib::ModLib() { pthread_rwlock_init(&rw_, NULL); }
 
 ModLib::~ModLib() {
+  pthread_rwlock_wrlock(&rw_);
   for (const auto& p : mods_) {
-    UnloadMod(p.first);
+    dlclose(p.second);
   }
+  mods_.clear();
+  pthread_rwlock_unlock(&rw_);
   pthread_rwlock_destroy(&rw_);
 }
 

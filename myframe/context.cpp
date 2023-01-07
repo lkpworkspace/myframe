@@ -19,12 +19,20 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 Context::Context(std::shared_ptr<App> app, std::shared_ptr<Actor> mod)
-    : app_(app), actor_(mod), in_worker_(false), in_wait_que_(false) {}
+    : app_(app), actor_(mod), in_worker_(false), in_wait_que_(false) {
+  LOG(INFO) << actor_->GetActorName() << " context create";
+}
+
+Context::~Context() {
+  LOG(INFO) << actor_->GetActorName() << " context deconstruct";
+}
 
 std::shared_ptr<App> Context::GetApp() { return app_.lock(); }
 
 int Context::SendMsg(std::shared_ptr<Msg> msg) {
-  if (nullptr == msg) return -1;
+  if (nullptr == msg) {
+    return -1;
+  }
   send_.emplace_back(msg);
   return 0;
 }

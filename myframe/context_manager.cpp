@@ -19,10 +19,14 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 ContextManager::ContextManager() : ctx_count_(0) {
+  LOG(INFO) << "ContextManager create";
   pthread_rwlock_init(&rw_, NULL);
 }
 
-ContextManager::~ContextManager() { pthread_rwlock_destroy(&rw_); }
+ContextManager::~ContextManager() {
+  LOG(INFO) << "ContextManager deconstruct";
+  pthread_rwlock_destroy(&rw_);
+}
 
 bool ContextManager::RegContext(std::shared_ptr<Context> ctx) {
   pthread_rwlock_wrlock(&rw_);
@@ -55,7 +59,12 @@ void ContextManager::PrintWaitQueue() {
   DLOG(INFO) << "cur wait queue actor:";
   auto it = wait_queue_.begin();
   while (it != wait_queue_.end()) {
-    DLOG(INFO) << "---> " << it->lock()->Print();
+    auto ctx = it->lock();
+    if (ctx == nullptr) {
+      LOG(ERROR) << "context is nullptr";
+      continue;
+    }
+    DLOG(INFO) << "---> " << ctx->Print();
     ++it;
   }
 }

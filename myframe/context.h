@@ -23,7 +23,7 @@ class Context final : public std::enable_shared_from_this<Context> {
 
  public:
   Context(std::shared_ptr<App> app, std::shared_ptr<Actor> mod);
-  virtual ~Context() {}
+  virtual ~Context();
 
   int Init(const char* param);
 

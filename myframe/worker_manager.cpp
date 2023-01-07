@@ -14,14 +14,20 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-WorkerManager::WorkerManager() { pthread_rwlock_init(&rw_, NULL); }
+WorkerManager::WorkerManager() {
+  LOG(INFO) << "WorkerManager create";
+  pthread_rwlock_init(&rw_, NULL);
+}
 
-WorkerManager::~WorkerManager() { pthread_rwlock_destroy(&rw_); }
+WorkerManager::~WorkerManager() {
+  LOG(INFO) << "WorkerManager deconstruct";
+  pthread_rwlock_destroy(&rw_);
+}
 
 int WorkerManager::WorkerSize() { return cur_worker_count_; }
 
 std::shared_ptr<Worker> WorkerManager::Get(int handle) {
-  pthread_rwlock_wrlock(&rw_);
+  pthread_rwlock_rdlock(&rw_);
   if (workers_.find(handle) == workers_.end()) {
     DLOG(WARNING) << "can't find worker, handle " << handle;
     pthread_rwlock_unlock(&rw_);
@@ -33,7 +39,7 @@ std::shared_ptr<Worker> WorkerManager::Get(int handle) {
 }
 
 std::shared_ptr<Worker> WorkerManager::Get(const std::string& name) {
-  pthread_rwlock_wrlock(&rw_);
+  pthread_rwlock_rdlock(&rw_);
   if (name_handle_map_.find(name) == name_handle_map_.end()) {
     LOG(ERROR) << "can't find worker, name " << name;
     pthread_rwlock_unlock(&rw_);
@@ -82,24 +88,40 @@ void WorkerManager::Del(std::shared_ptr<Worker> worker) {
   pthread_rwlock_unlock(&rw_);
 }
 
-int WorkerManager::IdleWorkerSize() { return idle_workers_.size(); }
+int WorkerManager::IdleWorkerSize() {
+  int sz = 0;
+  pthread_rwlock_rdlock(&rw_);
+  sz = idle_workers_.size();
+  pthread_rwlock_unlock(&rw_);
+  return sz;
+}
 
 std::shared_ptr<Worker> WorkerManager::FrontIdleWorker() {
+  std::shared_ptr<Worker> w = nullptr;
+  pthread_rwlock_rdlock(&rw_);
   if (idle_workers_.empty()) {
+    pthread_rwlock_unlock(&rw_);
     return nullptr;
   }
-  return idle_workers_.front().lock();
+  w = idle_workers_.front().lock();
+  pthread_rwlock_unlock(&rw_);
+  return w;
 }
 
 void WorkerManager::PopFrontIdleWorker() {
+  pthread_rwlock_wrlock(&rw_);
   if (idle_workers_.empty()) {
+    pthread_rwlock_unlock(&rw_);
     return;
   }
   idle_workers_.pop_front();
+  pthread_rwlock_unlock(&rw_);
 }
 
 void WorkerManager::PushBackIdleWorker(std::shared_ptr<Worker> worker) {
+  pthread_rwlock_wrlock(&rw_);
   idle_workers_.emplace_back(worker);
+  pthread_rwlock_unlock(&rw_);
 }
 
 void WorkerManager::PushWaitWorker(std::shared_ptr<Worker> worker) {
@@ -107,6 +129,7 @@ void WorkerManager::PushWaitWorker(std::shared_ptr<Worker> worker) {
 }
 
 void WorkerManager::WeakupWorker() {
+  pthread_rwlock_wrlock(&rw_);
   for (auto it = weakup_workers_.begin(); it != weakup_workers_.end();) {
     if (it->expired()) {
       it = weakup_workers_.erase(it);
@@ -124,6 +147,7 @@ void WorkerManager::WeakupWorker() {
     DLOG(INFO) << "notify " << worker->GetWorkerName() << " process msg";
     worker->SendCmdToWorker(WorkerCmd::RUN_WITH_MSG);
   }
+  pthread_rwlock_unlock(&rw_);
 }
 
 void WorkerManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
@@ -150,7 +174,9 @@ void WorkerManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
     return;
   }
   worker->SetWaitMsgQueueFlag(true);
+  pthread_rwlock_wrlock(&rw_);
   weakup_workers_.emplace_back(worker);
+  pthread_rwlock_unlock(&rw_);
 }
 
 }  // namespace myframe

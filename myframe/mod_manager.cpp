@@ -16,11 +16,13 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 ModManager::ModManager() {
+  LOG(INFO) << "ModManager create";
   pthread_rwlock_init(&class_actor_rw_, NULL);
   pthread_rwlock_init(&class_worker_rw_, NULL);
 }
 
 ModManager::~ModManager() {
+  LOG(INFO) << "ModManager deconstruct";
   pthread_rwlock_destroy(&class_actor_rw_);
   pthread_rwlock_destroy(&class_worker_rw_);
 }

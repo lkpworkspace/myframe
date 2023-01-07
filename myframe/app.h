@@ -103,14 +103,14 @@ class App final : public std::enable_shared_from_this<App> {
   std::mutex dispatch_mtx_;
   /// epoll文件描述符
   int epoll_fd_;
-  /// 句柄管理对象
-  std::unique_ptr<ContextManager> context_mgr_;
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
-  /// 线程管理对象
-  std::unique_ptr<WorkerManager> worker_mgr_;
+  /// 句柄管理对象
+  std::unique_ptr<ContextManager> context_mgr_;
   /// 与框架通信管理对象
   std::unique_ptr<EventConnManager> ev_conn_mgr_;
+  /// 线程管理对象
+  std::unique_ptr<WorkerManager> worker_mgr_;
 };
 
 }  // namespace myframe

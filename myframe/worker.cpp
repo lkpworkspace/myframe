@@ -11,53 +11,49 @@ Author: likepeng <likepeng0418@163.com>
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <functional>
+
 #include "myframe/common.h"
 #include "myframe/log.h"
 
 namespace myframe {
 
-Worker::Worker() : posix_thread_id_(-1), runing_(false) {
+Worker::Worker() : runing_(false) {
   CreateSockPair();
 }
 
-Worker::~Worker() { CloseSockPair(); }
+Worker::~Worker() {
+  LOG(INFO) << GetWorkerName() << " deconstruct";
+  CloseSockPair();
+}
 
 const std::string Worker::GetWorkerName() const {
   return "worker." + worker_name_ + "." + inst_name_;
 }
 
 void Worker::Start() {
-  int res = 0;
-  if (runing_ == false) {
-    runing_ = true;
-    res =
-        pthread_create(&posix_thread_id_, NULL, &Worker::ListenThread, this);
-    if (res != 0) {
-      runing_ = false;
-      LOG(ERROR) << "pthread create failed";
-      return;
-    }
-    res = pthread_detach(posix_thread_id_);
-    if (res != 0) {
-      runing_ = false;
-      LOG(ERROR) << "pthread detach failed";
-      return;
-    }
+  if (runing_.load() == false) {
+    runing_.store(true);
+    th_ = std::thread(
+        std::bind(&Worker::ListenThread,
+                  std::dynamic_pointer_cast<Worker>(shared_from_this())));
+    th_.detach();
   }
 }
 
 void Worker::Stop() {
-  runing_ = false;
+  runing_.store(false);
   WorkerCmd cmd = WorkerCmd::QUIT;
   SendCmdToMain(cmd);
 }
 
-void* Worker::ListenThread(void* obj) {
-  Worker* t = static_cast<Worker*>(obj);
-  t->OnInit();
-  while (t->runing_) t->Run();
-  t->OnExit();
-  return nullptr;
+void Worker::ListenThread(std::shared_ptr<Worker> w) {
+  thread_local std::shared_ptr<Worker> worker_local = w;
+  w->OnInit();
+  while (w->runing_.load()) {
+    w->Run();
+  }
+  w->OnExit();
 }
 
 int Worker::SendCmdToMain(const WorkerCmd& cmd) {

@@ -4,8 +4,8 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
+#include <memory>
 
 namespace myframe {
 
@@ -16,7 +16,7 @@ enum class EventType : int {
   EVENT_CONN,
 };
 
-class Event {
+class Event : public std::enable_shared_from_this<Event> {
  public:
   Event() {}
   virtual ~Event() {}

@@ -14,6 +14,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <list>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "myframe/event.h"
 #include "myframe/msg.h"
@@ -56,7 +57,7 @@ class Worker : public Event {
   void Start();
   void Stop();
   bool IsRuning() { return runing_; }
-  pthread_t GetPosixThreadId() { return posix_thread_id_; }
+  pthread_t GetPosixThreadId() { return th_.native_handle(); }
 
   ////////////////////////////// event 相关函数
   int GetFd() override { return sock_pair_[1]; }
@@ -91,7 +92,7 @@ class Worker : public Event {
   const std::string GetWorkerName() const;
 
  private:
-  static void* ListenThread(void*);
+  static void ListenThread(std::shared_ptr<Worker> w);
 
   ////////////////////////////// 线程间通信相关函数
   int SendCmdToWorker(const WorkerCmd& cmd);
@@ -119,18 +120,18 @@ class Worker : public Event {
   std::string inst_name_;
   /// idx: 0 used by WorkerCommon, 1 used by app
   int sock_pair_[2];
+  /// state
+  std::atomic_bool runing_;
+  WorkerCtrlOwner ctrl_owner_{ WorkerCtrlOwner::WORKER };
+  bool in_msg_wait_queue_{false};
   /// 接收消息队列
   std::list<std::shared_ptr<Msg>> recv_;
   /// 运行时消息队列
   std::list<std::shared_ptr<Msg>> que_;
   /// 发送消息队列
   std::list<std::shared_ptr<Msg>> send_;
-  /// posix thread id
-  pthread_t posix_thread_id_;
-  /// state
-  std::atomic_bool runing_;
-  WorkerCtrlOwner ctrl_owner_{ WorkerCtrlOwner::WORKER };
-  bool in_msg_wait_queue_{false};
+  /// thread
+  std::thread th_;
 };
 
 }  // namespace myframe
