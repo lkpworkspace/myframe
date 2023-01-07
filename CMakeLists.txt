@@ -33,10 +33,9 @@ set(MYFRAME_CONF_DIR "${CMAKE_INSTALL_PREFIX}/conf/")
 find_package(jsoncpp REQUIRED)
 find_package(gflags REQUIRED)
 find_package(GTest REQUIRED)
-find_package(glog REQUIRED)
 
 link_libraries(pthread dl rt m)
-link_libraries(glog::glog gflags jsoncpp)
+link_libraries(glog gflags jsoncpp)
 if (CMAKE_COMPILER_IS_GNUCC)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpfullversion -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)

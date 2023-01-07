@@ -18,14 +18,13 @@ SET(MYFRAME_INSTALL_LIB_DIR ${MYFRAME_ROOT}/lib)
 FIND_PACKAGE(jsoncpp REQUIRED)
 FIND_PACKAGE(gflags REQUIRED)
 FIND_PACKAGE(GTest REQUIRED)
-find_package(glog REQUIRED)
 
 #### include directory
 INCLUDE_DIRECTORIES(${MYFRAME_ROOT}/inc)
 
 #### lib path
 LINK_LIBRARIES(dl pthread)
-LINK_LIBRARIES(glog::glog gflags jsoncpp)
+LINK_LIBRARIES(glog gflags jsoncpp)
 LINK_DIRECTORIES(${MYFRAME_ROOT}/lib)
 
 #### genrate mod lib
