@@ -138,8 +138,9 @@ bool App::LoadActorFromLib(const Json::Value& root,
                << " key \"lib\": no key or not string, skip";
     return false;
   }
+  auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
   const auto& lib_name = root["lib"].asString();
-  if (!mods_->LoadMod(myframe::FLAGS_myframe_lib_dir + lib_name)) {
+  if (!mods_->LoadMod(lib_dir + lib_name)) {
     LOG(ERROR) << "load lib " << lib_name << " failed, skip";
     return false;
   }
@@ -197,8 +198,9 @@ bool App::LoadWorkerFromLib(const Json::Value& root,
                << "\" key \"lib\": no key or not string, skip";
     return false;
   }
+  auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
   const auto& lib_name = root["lib"].asString();
-  if (!mods_->LoadMod(myframe::FLAGS_myframe_lib_dir + lib_name)) {
+  if (!mods_->LoadMod(lib_dir + lib_name)) {
     LOG(ERROR) << "load lib " << lib_name << " failed, skip";
     return false;
   }

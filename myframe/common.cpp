@@ -7,10 +7,12 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/common.h"
 
+#include <string.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <sstream>
@@ -86,6 +88,41 @@ bool Common::SetNonblockFd(int fd, bool b) {
 bool Common::IsBlockFd(int fd) {
   int flags = fcntl(fd, F_GETFL, 0);
   return !(flags & O_NONBLOCK);
+}
+
+stdfs::path Common::GetWorkRoot() {
+  char path_buf[256];
+  memset(path_buf, 0, sizeof(path_buf));
+  int ret = readlink("/proc/self/exe", path_buf, sizeof(path_buf));
+  if (ret == -1) {
+    return "";
+  }
+  if (ret >= sizeof(path_buf)) {
+    path_buf[sizeof(path_buf) - 1] = '\0';
+  }
+  stdfs::path p(path_buf);
+  if (p.has_parent_path()) {
+    p = p.parent_path();
+    if (p.has_parent_path()) {
+      p = p.parent_path();
+    }
+  }
+  return p;
+}
+
+std::string Common::GetAbsolutePath(const std::string& flag_path) {
+  stdfs::path p(flag_path);
+  if (p.is_absolute()) {
+    return flag_path;
+  }
+  p += "/";
+  auto root = GetWorkRoot();
+  if (root.empty()) {
+    return flag_path;
+  }
+  root += "/";
+  root += p;
+  return root;
 }
 
 }  // namespace myframe

@@ -10,6 +10,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <string>
 
 #include "myframe/flags.h"
+#include "myframe/common.h"
 
 static void signal_handler(const char *data, int size) {
   std::string str = std::string(data, size);
@@ -32,7 +33,8 @@ Log::Log() {
   // log with level >=ERROR is output to stderr
   google::SetStderrLogging(google::GLOG_FATAL);
   // set the path for the log file
-  std::string dest_dir = myframe::FLAGS_myframe_log_dir + "/info";
+  auto log_dir = Common::GetAbsolutePath(FLAGS_myframe_log_dir);
+  std::string dest_dir = log_dir + "info";
   google::SetLogDestination(google::GLOG_INFO, dest_dir.c_str());
 }
 
