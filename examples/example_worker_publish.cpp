@@ -20,8 +20,9 @@ class ExampleWorkerPublic : public myframe::Worker {
 
   void Run() override {
     DispatchAndWaitMsg();
-    while (RecvMsgListSize() > 0) {
-      const auto& msg = GetRecvMsg();
+    auto mailbox = GetMailbox();
+    while (!mailbox->RecvEmpty()) {
+      const auto& msg = mailbox->PopRecv();
       // send msg by udp/tcp/zmq/...
       LOG(INFO) << "public msg " << msg->GetData() << " ...";
     }

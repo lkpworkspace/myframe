@@ -60,7 +60,8 @@ class Demo : public Actor
   /* actor模块加载完毕后调用 */
   int Init(const char* param) override {
     /* 构造 hello,world 消息发送给自己 */
-    return Send("actor.demo.echo_hello_world", std::make_shared<Msg>("hello,world"));
+    auto mailbox = GetMailbox();
+    mailbox->Send("actor.demo.echo_hello_world", std::make_shared<Msg>("hello,world"));
   }
 
   void Proc(const std::shared_ptr<const Msg>& msg) override {

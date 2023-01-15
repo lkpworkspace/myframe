@@ -30,20 +30,23 @@ unsigned int EventConn::ListenEpollEventType() { return EPOLLIN; }
 
 void EventConn::RetEpollEventType(uint32_t ev) { ev = ev; }
 
-std::shared_ptr<Msg> EventConn::SendRequest(const std::string& dst,
-                                                std::shared_ptr<Msg> req) {
-  req->SetSrc(ev_conn_name_);
-  req->SetDst(dst);
-  send_.clear();
-  send_.emplace_back(req);
-  SendCmdToMain(WorkerCmd::IDLE);
+Mailbox* EventConn::GetMailbox() {
+  return &mailbox_;
+}
+
+const std::shared_ptr<const Msg> EventConn::SendRequest(
+  const std::string& dst,
+  std::shared_ptr<Msg> req) {
+  mailbox_.SendClear();
+  mailbox_.Send(dst, req);
+  SendCmdToMain(WorkerCmd::RUN);
   WorkerCmd cmd;
   RecvCmdFromMain(&cmd);
-  if (recv_.empty()) {
+  if (mailbox_.RecvEmpty()) {
     return nullptr;
   }
-  auto msg = recv_.front();
-  recv_.clear();
+  auto msg = mailbox_.PopRecv();
+  mailbox_.RecvClear();
   return msg;
 }
 
@@ -115,11 +118,5 @@ void EventConn::CloseSockPair() {
     LOG(ERROR) << "Worker close sockpair[1]: " << strerror(errno);
   }
 }
-
-void EventConn::SetEvConnName(const std::string& name) {
-  ev_conn_name_ = name;
-}
-
-std::string EventConn::GetEvConnName() { return ev_conn_name_; }
 
 }  // namespace myframe

@@ -10,11 +10,12 @@ Author: likepeng <likepeng0418@163.com>
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <glog/logging.h>
+
+#include "myframe/flags.h"
+#include "myframe/common.h"
 #include "myframe/actor.h"
 #include "myframe/app.h"
-#include "myframe/common.h"
-#include "myframe/flags.h"
-#include "myframe/log.h"
 
 namespace myframe {
 
@@ -137,7 +138,7 @@ void TimerManager::_Updatetime() {
   _Execute();
   mtx_.unlock();
 }
-std::list<std::shared_ptr<Msg>>& TimerManager::Updatetime() {
+std::list<std::shared_ptr<Msg>>* TimerManager::Updatetime() {
   uint64_t cp = Common::GetMonoTimeMs() / MY_RESOLUTION_MS;
   if (cp < cur_point_) {
     LOG(ERROR) << "Future time: " << cp << ":" << cur_point_;
@@ -150,7 +151,7 @@ std::list<std::shared_ptr<Msg>>& TimerManager::Updatetime() {
       _Updatetime();
     }
   }
-  return timeout_list_;
+  return &timeout_list_;
 }
 
 //////////////////////////////////////////////////////
@@ -185,9 +186,9 @@ int WorkerTimer::SetTimeout(const std::string& actor_name,
 }
 
 int WorkerTimer::Work() {
-  auto& timeout_list = timer_mgr_.Updatetime();
-  PushSendMsgList(&timeout_list);
-  return SendMsgListSize();
+  auto timeout_list = timer_mgr_.Updatetime();
+  GetMailbox()->Send(timeout_list);
+  return GetMailbox()->SendSize();
 }
 
 }  // namespace myframe

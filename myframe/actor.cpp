@@ -26,24 +26,31 @@ void Actor::SetModName(const std::string& name) {
   mod_name_ = name;
 }
 
-int Actor::Send(const std::string& dst, std::shared_ptr<Msg> msg) {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
-    return -1;
-  }
-  msg->SetSrc(GetActorName());
-  msg->SetDst(dst);
-  return ctx->SendMsg(msg);
+const std::string& Actor::GetModName() const {
+  return mod_name_;
 }
 
-int Actor::Send(const std::string& dst, std::any data) {
-  auto msg = std::make_shared<Msg>(data);
-  return Send(dst, msg);
+bool Actor::IsFromLib() const { return is_from_lib_; }
+
+Mailbox* Actor::GetMailbox() {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
+    return nullptr;
+  }
+  return ctx->GetMailbox();
 }
+
+const std::string& Actor::GetTypeName() const { return actor_name_; }
+
+const std::string& Actor::GetInstName() const { return instance_name_; }
 
 const std::string Actor::GetActorName() const {
   return "actor." + actor_name_ + "." + instance_name_;
 }
+
+void Actor::SetTypeName(const std::string& name) { actor_name_ = name; }
+
+void Actor::SetInstName(const std::string& name) { instance_name_ = name; }
 
 int Actor::Timeout(const std::string& timer_name, int expired) {
   auto ctx = ctx_.lock();

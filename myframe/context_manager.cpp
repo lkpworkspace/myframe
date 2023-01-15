@@ -12,9 +12,11 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <vector>
 
+#include <glog/logging.h>
+
 #include "myframe/actor.h"
 #include "myframe/context.h"
-#include "myframe/log.h"
+#include "myframe/msg.h"
 
 namespace myframe {
 
@@ -26,6 +28,17 @@ ContextManager::ContextManager() : ctx_count_(0) {
 ContextManager::~ContextManager() {
   LOG(INFO) << "ContextManager deconstruct";
   pthread_rwlock_destroy(&rw_);
+}
+
+void ContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
+  auto ctx = GetContext(msg->GetDst());
+  if (nullptr == ctx) {
+    LOG(ERROR) << "Unknown msg " << *msg;
+    return;
+  }
+  auto mailbox = ctx->GetMailbox();
+  mailbox->Recv(msg);
+  PushContext(ctx);
 }
 
 bool ContextManager::RegContext(std::shared_ptr<Context> ctx) {
@@ -64,7 +77,7 @@ void ContextManager::PrintWaitQueue() {
       LOG(ERROR) << "context is nullptr";
       continue;
     }
-    DLOG(INFO) << "---> " << ctx->Print();
+    DLOG(INFO) << "---> " << *ctx;
     ++it;
   }
 }
@@ -104,7 +117,7 @@ std::shared_ptr<Context> ContextManager::GetContextWithMsg() {
 
 void ContextManager::PushContext(std::shared_ptr<Context> ctx) {
   if (ctx->IsInWaitQueue()) {
-    DLOG(INFO) << ctx->Print() << " already in wait queue, return";
+    DLOG(INFO) << *ctx << " already in wait queue, return";
     PrintWaitQueue();
     return;
   }

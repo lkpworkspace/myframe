@@ -6,16 +6,17 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #include <gflags/gflags.h>
+#include <glog/logging.h>
 
-#include "myframe/app.h"
-#include "myframe/common.h"
 #include "myframe/flags.h"
 #include "myframe/log.h"
+#include "myframe/common.h"
+#include "myframe/app.h"
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   // 利用构造函数初始化日志系统
-  myframe::Log log;
+  myframe::InitLog();
 
   // 初始化并启动线程
   auto app = std::make_shared<myframe::App>();

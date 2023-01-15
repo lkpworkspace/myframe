@@ -44,17 +44,23 @@ class App final : public std::enable_shared_from_this<App> {
 
   bool LoadModsFromConf(const std::string& path);
 
-  bool AddActor(const std::string& inst_name, const std::string& params,
-                std::shared_ptr<Actor> actor);
-  bool AddWorker(const std::string& inst_name,
-                 std::shared_ptr<Worker> worker);
+  bool AddActor(
+    const std::string& inst_name,
+    const std::string& params,
+    std::shared_ptr<Actor> actor);
 
-  std::shared_ptr<Msg> SendRequest(const std::string& name,
-                                     std::shared_ptr<Msg> msg);
+  bool AddWorker(
+    const std::string& inst_name,
+    std::shared_ptr<Worker> worker);
+
+  const std::shared_ptr<const Msg> SendRequest(
+    const std::string& name,
+    std::shared_ptr<Msg> msg);
 
   std::unique_ptr<ContextManager>& GetContextManager() {
     return context_mgr_;
   }
+
   std::unique_ptr<ModManager>& GetModManager() { return mods_; }
 
   bool AddEvent(std::shared_ptr<Event> ev);
@@ -63,25 +69,33 @@ class App final : public std::enable_shared_from_this<App> {
   int Exec();
 
  private:
-  bool CreateContext(const std::string& mod_name, const std::string& actor_name,
-                     const std::string& instance_name,
-                     const std::string& params);
-  bool CreateContext(std::shared_ptr<Actor> mod_inst,
-                     const std::string& params);
+  bool CreateContext(
+    const std::string& mod_name,
+    const std::string& actor_name,
+    const std::string& instance_name,
+    const std::string& params);
+  bool CreateContext(
+    std::shared_ptr<Actor> mod_inst,
+    const std::string& params);
 
   std::shared_ptr<WorkerTimer> GetTimerWorker();
 
-  bool LoadActorFromLib(const Json::Value& root, const Json::Value& actor_list,
-                        const std::string& actor_name);
-  bool LoadActorFromClass(const Json::Value& root,
-                          const Json::Value& actor_list,
-                          const std::string& actor_name);
-  bool LoadWorkerFromLib(const Json::Value& root,
-                         const Json::Value& worker_list,
-                         const std::string& worker_name);
-  bool LoadWorkerFromClass(const Json::Value& root,
-                           const Json::Value& worker_list,
-                           const std::string& worker_name);
+  bool LoadActorFromLib(
+    const Json::Value& root,
+    const Json::Value& actor_list,
+    const std::string& actor_name);
+  bool LoadActorFromClass(
+    const Json::Value& root,
+    const Json::Value& actor_list,
+    const std::string& actor_name);
+  bool LoadWorkerFromLib(
+    const Json::Value& root,
+    const Json::Value& worker_list,
+    const std::string& worker_name);
+  bool LoadWorkerFromClass(
+    const Json::Value& root,
+    const Json::Value& worker_list,
+    const std::string& worker_name);
 
   /// worker
   bool StartCommonWorker(int worker_count);

@@ -141,8 +141,9 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
   }
 
   void ProcessMainMsg() {
-    while (RecvMsgListSize() > 0) {
-      const auto& msg = GetRecvMsg();
+    auto mailbox = GetMailbox();
+    while (!mailbox->RecvEmpty()) {
+      const auto& msg = mailbox->PopRecv();
       // ...
       LOG(INFO) << "get msg from main " << msg->GetData();
     }
@@ -162,9 +163,11 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     if (msg->GetType() == "TIMER") {
-      Send("worker.example_worker_interactive_with_3rd_frame.#1",
-           std::make_shared<myframe::Msg>(
-               "this is interactive_with_3rd_frame actor"));
+      auto mailbox = GetMailbox();
+      mailbox->Send(
+        "worker.example_worker_interactive_with_3rd_frame.#1",
+        std::make_shared<myframe::Msg>(
+          "this is interactive_with_3rd_frame actor"));
       Timeout("1000ms", 100);
     }
   }

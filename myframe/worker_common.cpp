@@ -7,8 +7,9 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/worker_common.h"
 
+#include <glog/logging.h>
+
 #include "myframe/context.h"
-#include "myframe/log.h"
 #include "myframe/msg.h"
 
 namespace myframe {
@@ -44,8 +45,8 @@ int WorkerCommon::Work() {
     LOG(ERROR) << "context is nullptr";
     return -1;
   }
-  while (RecvMsgListSize() > 0) {
-    ctx->Proc(GetRecvMsg());
+  while (!GetMailbox()->RecvEmpty()) {
+    ctx->Proc(GetMailbox()->PopRecv());
   }
 
   return 0;

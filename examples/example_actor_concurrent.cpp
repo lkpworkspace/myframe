@@ -32,7 +32,8 @@ class ExampleActorConcurrent : public myframe::Actor {
       std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
       LOG(INFO) << "-----> " << GetActorName() << " process end, cost "
                 << cost_ms << " ms";
-      Send(msg->GetSrc(), std::make_shared<myframe::Msg>(""));
+      auto mailbox = GetMailbox();
+      mailbox->Send(msg->GetSrc(), std::make_shared<myframe::Msg>(""));
     }
   }
 };
@@ -47,7 +48,8 @@ class ExampleActorConcurrentTrigger : public myframe::Actor {
     };
     LOG(INFO) << "begin concurrent task...";
     for (auto it : state_) {
-      Send(it.first, std::make_shared<myframe::Msg>(""));
+      auto mailbox = GetMailbox();
+      mailbox->Send(it.first, std::make_shared<myframe::Msg>(""));
     }
     return 0;
   }

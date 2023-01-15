@@ -7,10 +7,10 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/mod_manager.h"
 
+#include <glog/logging.h>
 #include <jsoncpp/json/json.h>
 
 #include "myframe/actor.h"
-#include "myframe/log.h"
 #include "myframe/worker.h"
 
 namespace myframe {

@@ -19,6 +19,7 @@ target_link_libraries(myframe_main myframe)
 file(GLOB header_files 
     log.h
     msg.h
+    mailbox.h
     actor.h
     event.h
     worker.h

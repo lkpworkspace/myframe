@@ -15,7 +15,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <unordered_map>
 
 namespace myframe {
-
+class Msg;
 class Context;
 class ContextManager final {
  public:
@@ -25,16 +25,16 @@ class ContextManager final {
   /* 注册actor */
   bool RegContext(std::shared_ptr<Context> ctx);
 
-  /* 获得actor名对应的actor */
-  std::shared_ptr<Context> GetContext(const std::string& actor_name);
+  void DispatchMsg(std::shared_ptr<Msg> msg);
 
   /* 获得一个待处理的actor */
   std::shared_ptr<Context> GetContextWithMsg();
 
+ private:
+  /* 获得actor名对应的actor */
+  std::shared_ptr<Context> GetContext(const std::string& actor_name);
   /* 将有消息的actor放入链表 */
   void PushContext(std::shared_ptr<Context> ctx);
-
- private:
   void PrintWaitQueue();
 
   /// 当前注册actor数量

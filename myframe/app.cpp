@@ -13,6 +13,8 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "myframe/actor.h"
 #include "myframe/common.h"
 #include "myframe/context.h"
@@ -20,12 +22,12 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/event_conn.h"
 #include "myframe/event_conn_manager.h"
 #include "myframe/flags.h"
-#include "myframe/log.h"
 #include "myframe/mod_manager.h"
 #include "myframe/msg.h"
 #include "myframe/worker_common.h"
 #include "myframe/worker_manager.h"
 #include "myframe/worker_timer.h"
+#include "myframe/mailbox.h"
 
 namespace myframe {
 
@@ -130,9 +132,10 @@ bool App::LoadModsFromConf(const std::string& path) {
   return res;
 }
 
-bool App::LoadActorFromLib(const Json::Value& root,
-                             const Json::Value& actor_list,
-                             const std::string& actor_name) {
+bool App::LoadActorFromLib(
+  const Json::Value& root,
+  const Json::Value& actor_list,
+  const std::string& actor_name) {
   if (!root.isMember("lib") || !root["lib"].isString()) {
     LOG(ERROR) << "actor " << actor_name
                << " key \"lib\": no key or not string, skip";
@@ -166,9 +169,10 @@ bool App::LoadActorFromLib(const Json::Value& root,
   return res;
 }
 
-bool App::LoadActorFromClass(const Json::Value& root,
-                               const Json::Value& actor_list,
-                               const std::string& actor_name) {
+bool App::LoadActorFromClass(
+  const Json::Value& root,
+  const Json::Value& actor_list,
+  const std::string& actor_name) {
   const auto& insts = actor_list[actor_name];
   bool res = false;
   for (const auto& inst : insts) {
@@ -190,9 +194,10 @@ bool App::LoadActorFromClass(const Json::Value& root,
   return res;
 }
 
-bool App::LoadWorkerFromLib(const Json::Value& root,
-                              const Json::Value& worker_list,
-                              const std::string& worker_name) {
+bool App::LoadWorkerFromLib(
+  const Json::Value& root,
+  const Json::Value& worker_list,
+  const std::string& worker_name) {
   if (!root.isMember("lib") || !root["lib"].isString()) {
     LOG(ERROR) << "worker \"" << worker_name
                << "\" key \"lib\": no key or not string, skip";
@@ -227,9 +232,10 @@ bool App::LoadWorkerFromLib(const Json::Value& root,
   return res;
 }
 
-bool App::LoadWorkerFromClass(const Json::Value& root,
-                                const Json::Value& worker_list,
-                                const std::string& worker_name) {
+bool App::LoadWorkerFromClass(
+  const Json::Value& root,
+  const Json::Value& worker_list,
+  const std::string& worker_name) {
   const auto& insts = worker_list[worker_name];
   bool res = false;
   for (const auto& inst : insts) {
@@ -253,14 +259,17 @@ bool App::LoadWorkerFromClass(const Json::Value& root,
   return res;
 }
 
-bool App::AddActor(const std::string& inst_name, const std::string& params,
-                     std::shared_ptr<Actor> actor) {
+bool App::AddActor(
+  const std::string& inst_name,
+  const std::string& params,
+  std::shared_ptr<Actor> actor) {
   actor->SetInstName(inst_name);
   return CreateContext(actor, params);
 }
 
-bool App::AddWorker(const std::string& inst_name,
-                      std::shared_ptr<Worker> worker) {
+bool App::AddWorker(
+  const std::string& inst_name,
+  std::shared_ptr<Worker> worker) {
   worker->SetInstName(inst_name);
   if (!worker_mgr_->Add(worker)) {
     return false;
@@ -272,8 +281,9 @@ bool App::AddWorker(const std::string& inst_name,
   return true;
 }
 
-std::shared_ptr<Msg> App::SendRequest(const std::string& name,
-                                          std::shared_ptr<Msg> msg) {
+const std::shared_ptr<const Msg> App::SendRequest(
+  const std::string& name,
+  std::shared_ptr<Msg> msg) {
   auto conn = ev_conn_mgr_->Get();
   auto resp = conn->SendRequest(name, msg);
   ev_conn_mgr_->Release(conn);
@@ -289,10 +299,11 @@ std::shared_ptr<Msg> App::SendRequest(const std::string& name,
  *      3. 注册句柄
  *      4. 初始化actor
  */
-bool App::CreateContext(const std::string& mod_name,
-                          const std::string& actor_name,
-                          const std::string& instance_name,
-                          const std::string& params) {
+bool App::CreateContext(
+  const std::string& mod_name,
+  const std::string& actor_name,
+  const std::string& instance_name,
+  const std::string& params) {
   auto mod_inst = mods_->CreateActorInst(mod_name, actor_name);
   if (mod_inst == nullptr) {
     LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
@@ -302,10 +313,14 @@ bool App::CreateContext(const std::string& mod_name,
   return CreateContext(mod_inst, params);
 }
 
-bool App::CreateContext(std::shared_ptr<Actor> mod_inst,
-                          const std::string& params) {
+bool App::CreateContext(
+  std::shared_ptr<Actor> mod_inst,
+  const std::string& params) {
   auto ctx = std::make_shared<Context>(shared_from_this(), mod_inst);
-  ctx->Init(params.c_str());
+  if (ctx->Init(params.c_str())) {
+    LOG(ERROR) << "init " << mod_inst->GetActorName() << " fail";
+    return false;
+  }
   context_mgr_->RegContext(ctx);
   // 初始化之后, 手动将actor中发送消息队列分发出去
   DispatchMsg(ctx);
@@ -375,11 +390,10 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
     << " dispatch msg too many";
   std::lock_guard<std::mutex> lock(dispatch_mtx_);
   for (auto& msg : (*msg_list)) {
-    DLOG(INFO) << "msg from " << msg->GetSrc() << " to " << msg->GetDst();
+    DLOG(INFO) << *msg;
     auto name_list = SplitMsgName(msg->GetDst());
     if (name_list.size() < 2) {
-      LOG(ERROR) << "Unknown msg dst " << msg->GetDst() << " from "
-                 << msg->GetSrc();
+      LOG(ERROR) << "Unknown msg " << *msg;
       continue;
     }
 
@@ -388,24 +402,15 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
       worker_mgr_->DispatchWorkerMsg(msg);
     } else if (name_list[0] == "actor") {
       // dispatch to actor
-      auto ctx = context_mgr_->GetContext(msg->GetDst());
-      if (nullptr == ctx) {
-        LOG(ERROR) << "Unknown msg from " << msg->GetSrc() << " to "
-                   << msg->GetDst();
-        continue;
-      }
-      ctx->PushMsg(msg);
-      context_mgr_->PushContext(ctx);
+      context_mgr_->DispatchMsg(msg);
     } else if (name_list[0] == "event") {
       if (name_list[1] == "conn") {
         ev_conn_mgr_->Notify(msg->GetDst(), msg);
       } else {
-        LOG(ERROR) << "Unknown msg from " << msg->GetSrc() << " to "
-                   << msg->GetDst();
+        LOG(ERROR) << "Unknown msg " << *msg;
       }
     } else {
-      LOG(ERROR) << "Unknown msg from " << msg->GetSrc() << " to "
-                 << msg->GetDst();
+      LOG(ERROR) << "Unknown msg " << *msg;
     }
   }
   msg_list->clear();
@@ -418,8 +423,8 @@ void App::DispatchMsg(std::shared_ptr<Context> context) {
   }
   DLOG(INFO) << context->GetActor()->GetActorName() << " dispatch msg...";
   context->SetRuningFlag(false);
-  auto& msg_list = context->GetDispatchMsgList();
-  DispatchMsg(&msg_list);
+  auto msg_list = context->GetMailbox()->GetSendList();
+  DispatchMsg(msg_list);
 }
 
 void App::CheckStopWorkers() {
@@ -438,22 +443,21 @@ void App::CheckStopWorkers() {
     DLOG(INFO) << worker->GetWorkerName() << "."
                << worker->GetPosixThreadId()
                << " dispatch task to idle worker";
-    auto& msg_list = context->GetRecvMsgList();
-    if (!msg_list.empty()) {
-      LOG_IF(WARNING, msg_list.size() >
+    auto msg_list = context->GetMailbox()->GetRecvList();
+    if (!msg_list->empty()) {
+      LOG_IF(WARNING, msg_list->size() >
                           myframe::FLAGS_myframe_dispatch_or_process_msg_max)
           << context->GetActor()->GetActorName()
-          << " recv msg size too many: " << msg_list.size();
+          << " recv msg size too many: " << msg_list->size();
       DLOG(INFO) << "run " << context->GetActor()->GetActorName();
-      ListAppend(&worker->que_, &msg_list);
+      worker->GetMailbox()->Recv(msg_list);
       DLOG(INFO) << context->GetActor()->GetActorName()
-        << " has " << worker->que_.size() << " msg need process";
+        << " has " << worker->GetMailbox()->RecvSize() << " msg need process";
       worker_mgr_->PopFrontIdleWorker();
       auto common_idle_worker =
           std::dynamic_pointer_cast<WorkerCommon>(worker);
       common_idle_worker->SetContext(context);
       worker->SendCmdToWorker(WorkerCmd::RUN);
-      continue;
     } else {
       LOG(ERROR) << context->GetActor()->GetActorName() << " has no msg";
     }
@@ -463,7 +467,7 @@ void App::CheckStopWorkers() {
 void App::ProcessTimerEvent(std::shared_ptr<WorkerTimer> timer_worker) {
   // 将定时器线程的发送队列分发完毕
   DLOG(INFO) << timer_worker->GetWorkerName() << " dispatch msg...";
-  DispatchMsg(&timer_worker->send_);
+  DispatchMsg(timer_worker->GetMailbox()->GetSendList());
 
   WorkerCmd cmd;
   timer_worker->RecvCmdFromWorker(&cmd);
@@ -487,7 +491,7 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerTimer> timer_worker) {
 void App::ProcessUserEvent(std::shared_ptr<Worker> worker) {
   // 将用户线程的发送队列分发完毕
   DLOG(INFO) << worker->GetWorkerName() << " dispatch msg...";
-  DispatchMsg(&worker->send_);
+  DispatchMsg(worker->GetMailbox()->GetSendList());
 
   WorkerCmd cmd;
   worker->RecvCmdFromWorker(&cmd);
@@ -552,12 +556,15 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerCommon> worker) {
 
 void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
   // 将event_conn的发送队列分发完毕
-  DispatchMsg(&ev->send_);
+  DispatchMsg(ev->GetMailbox()->GetSendList());
 
   WorkerCmd cmd;
   ev->RecvCmdFromWorker(&cmd);
   switch (cmd) {
-    case WorkerCmd::IDLE:  // idle
+    case WorkerCmd::IDLE:
+      // do nothing
+      break;
+    case WorkerCmd::RUN:
       // do nothing
       break;
     default:

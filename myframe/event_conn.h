@@ -12,6 +12,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/event.h"
 #include "myframe/worker.h"
+#include "myframe/mailbox.h"
 
 namespace myframe {
 
@@ -30,13 +31,12 @@ class EventConn final : public Event {
   unsigned int ListenEpollEventType() override;
   void RetEpollEventType(uint32_t ev) override;
 
-  std::shared_ptr<Msg> SendRequest(const std::string& dst,
-                                     std::shared_ptr<Msg> req);
+  const std::shared_ptr<const Msg> SendRequest(
+    const std::string& dst,
+    std::shared_ptr<Msg> req);
 
  private:
-  std::string GetEvConnName();
-  void SetEvConnName(const std::string& name);
-
+  Mailbox* GetMailbox();
   int SendCmdToWorker(const WorkerCmd& cmd);
   int RecvCmdFromWorker(WorkerCmd* cmd);
 
@@ -47,12 +47,7 @@ class EventConn final : public Event {
   void CloseSockPair();
   int sock_pair_[2];
 
-  /// 接收消息队列
-  std::list<std::shared_ptr<Msg>> recv_;
-  /// 发送消息队列
-  std::list<std::shared_ptr<Msg>> send_;
-
-  std::string ev_conn_name_{ "" };
+  Mailbox mailbox_;
 };
 
 }  // namespace myframe

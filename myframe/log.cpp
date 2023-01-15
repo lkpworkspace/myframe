@@ -9,6 +9,8 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <string>
 
+#include <glog/logging.h>
+
 #include "myframe/flags.h"
 #include "myframe/common.h"
 
@@ -19,7 +21,7 @@ static void signal_handler(const char *data, int size) {
 
 namespace myframe {
 
-Log::Log() {
+void InitLog() {
   // output log immediately
   FLAGS_logbufsecs = 0;
   // set the log file to 100MB

@@ -8,7 +8,6 @@ Author: likepeng <likepeng0418@163.com>
 #pragma once
 #include <iostream>
 #include <any>
-#include <cstdint>
 #include <string>
 
 namespace myframe {
@@ -19,10 +18,6 @@ class Msg final {
   Msg(const char* data);
   Msg(const char* data, int len);
   Msg(const std::string& data);
-  template <typename T>
-  Msg(const T& data) {
-    SetAnyData(data);
-  }
 
   /**
    * @brief 获得消息源地址

@@ -19,8 +19,9 @@ class ExampleActorInteractive : public myframe::Actor {
   int Init(const char* param) override { return 0; }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    Send(msg->GetSrc(), std::make_shared<myframe::Msg>(
-                            "this is ExampleActorInteractive resp"));
+    auto mailbox = GetMailbox();
+    mailbox->Send(msg->GetSrc(),
+      std::make_shared<myframe::Msg>("this is ExampleActorInteractive resp"));
   }
 };
 
@@ -32,12 +33,13 @@ class ExampleWorkerInteractive : public myframe::Worker {
 
   /// override Worker virtual method
   void Run() override {
+    auto mailbox = GetMailbox();
     auto send_msg =
         std::make_shared<myframe::Msg>("this is ExampleWorkerInteractive req");
-    SendMsg("actor.example_actor_interactive.#1", send_msg);
+    mailbox->Send("actor.example_actor_interactive.#1", send_msg);
     DispatchAndWaitMsg();
     while (1) {
-      const auto& msg = GetRecvMsg();
+      const auto& msg = mailbox->PopRecv();
       if (msg == nullptr) {
         break;
       }

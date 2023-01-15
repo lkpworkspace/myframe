@@ -13,8 +13,9 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <functional>
 
+#include <glog/logging.h>
+
 #include "myframe/common.h"
-#include "myframe/log.h"
 
 namespace myframe {
 
@@ -30,6 +31,13 @@ Worker::~Worker() {
 const std::string Worker::GetWorkerName() const {
   return "worker." + worker_name_ + "." + inst_name_;
 }
+
+const std::string& Worker::GetModName() const { return mod_name_; }
+const std::string& Worker::GetTypeName() const { return worker_name_; }
+const std::string& Worker::GetInstName() const { return inst_name_; }
+void Worker::SetModName(const std::string& name) { mod_name_ = name; }
+void Worker::SetTypeName(const std::string& name) { worker_name_ = name; }
+void Worker::SetInstName(const std::string& name) { inst_name_ = name; }
 
 void Worker::Start() {
   if (runing_.load() == false) {
@@ -47,13 +55,38 @@ void Worker::Stop() {
   SendCmdToMain(cmd);
 }
 
+void Worker::Initialize() {
+  mailbox_.SetAddr(GetWorkerName());
+  OnInit();
+}
+
 void Worker::ListenThread(std::shared_ptr<Worker> w) {
   thread_local std::shared_ptr<Worker> worker_local = w;
-  w->OnInit();
+  w->Initialize();
   while (w->runing_.load()) {
     w->Run();
   }
   w->OnExit();
+}
+
+int Worker::CacheSize() const {
+  return cache_.size();
+}
+
+std::list<std::shared_ptr<Msg>>* Worker::GetCache() {
+  return &cache_;
+}
+
+void Worker::Cache(std::shared_ptr<Msg> msg) {
+  cache_.emplace_back(msg);
+}
+
+void Worker::Cache(std::list<std::shared_ptr<Msg>>* msg_list) {
+  ListAppend(&cache_, msg_list);
+}
+
+Mailbox* Worker::GetMailbox() {
+  return &mailbox_;
 }
 
 int Worker::SendCmdToMain(const WorkerCmd& cmd) {
@@ -94,21 +127,6 @@ int Worker::RecvCmdFromWorker(WorkerCmd* cmd) {
   return ret;
 }
 
-void Worker::SendMsg(const std::string& dst, std::shared_ptr<Msg> msg) {
-  msg->SetSrc(GetWorkerName());
-  msg->SetDst(dst);
-  send_.emplace_back(msg);
-}
-
-void Worker::SendMsg(const std::string& dst, std::any data) {
-  auto msg = std::make_shared<Msg>(data);
-  SendMsg(dst, msg);
-}
-
-void Worker::PushSendMsgList(std::list<std::shared_ptr<Msg>>* msg_list) {
-  ListAppend(&send_, msg_list);
-}
-
 int Worker::DispatchMsg() {
   WorkerCmd cmd = WorkerCmd::IDLE;
   SendCmdToMain(cmd);
@@ -119,15 +137,6 @@ int Worker::DispatchAndWaitMsg() {
   WorkerCmd cmd = WorkerCmd::WAIT_FOR_MSG;
   SendCmdToMain(cmd);
   return RecvCmdFromMain(&cmd);
-}
-
-const std::shared_ptr<const Msg> Worker::GetRecvMsg() {
-  if (que_.empty()) {
-    return nullptr;
-  }
-  auto msg = que_.front();
-  que_.pop_front();
-  return msg;
 }
 
 bool Worker::CreateSockPair() {

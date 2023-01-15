@@ -47,7 +47,7 @@ class TimerManager {
   int Timeout(const std::string& actor_name, const std::string& timer_name,
               int time);
 
-  std::list<std::shared_ptr<Msg>>& Updatetime();
+  std::list<std::shared_ptr<Msg>>* Updatetime();
 
  private:
   void _AddTimerNode(Timer* node);

@@ -9,8 +9,9 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <dlfcn.h>
 
+#include <glog/logging.h>
+
 #include "myframe/actor.h"
-#include "myframe/log.h"
 #include "myframe/worker.h"
 
 namespace myframe {

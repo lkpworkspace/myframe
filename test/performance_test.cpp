@@ -9,6 +9,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <thread>
 
 #include <gtest/gtest.h>
+#include <glog/logging.h>
 
 #include "myframe/actor.h"
 #include "myframe/app.h"
@@ -27,7 +28,8 @@ class EchoActorTest : public myframe::Actor {
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     LOG(INFO) << "recv " << msg->GetSrc() << ":" << msg->GetData();
     auto re = std::make_shared<myframe::Msg>("resp:" + std::to_string(seq_++));
-    Send(msg->GetSrc(), re);
+    auto mailbox = GetMailbox();
+    mailbox->Send(msg->GetSrc(), re);
   }
 
  private:
@@ -42,7 +44,8 @@ class TransMsgCostTest : public myframe::Actor {
     LOG(INFO) << "begin runing TransMsgCostTest";
     last_ = std::chrono::high_resolution_clock::now();
     begin_ = std::chrono::high_resolution_clock::now();
-    Send(GetActorName(), std::make_shared<myframe::Msg>(msg_));
+    auto mailbox = GetMailbox();
+    mailbox->Send(GetActorName(), std::make_shared<myframe::Msg>(msg_));
     return 0;
   }
 
@@ -57,10 +60,12 @@ class TransMsgCostTest : public myframe::Actor {
     auto sec = std::chrono::duration_cast<std::chrono::seconds>(last_ - begin_)
                    .count();
     if (sec < 60) {
-      Send(GetActorName(), std::make_shared<myframe::Msg>(msg_));
+      auto mailbox = GetMailbox();
+      mailbox->Send(GetActorName(), std::make_shared<myframe::Msg>(msg_));
     } else {
       LOG(INFO) << "runing next test...";
-      Send("actor.Trans10ActorCostTest.0",
+      auto mailbox = GetMailbox();
+      mailbox->Send("actor.Trans10ActorCostTest.0",
            std::make_shared<myframe::Msg>(msg_));
     }
   }
@@ -104,10 +109,13 @@ class Trans10ActorCostTest : public myframe::Actor {
     std::string next_actor_name =
         "actor.Trans10ActorCostTest." + std::to_string((task_num_ + 1) % 10);
     if (sec < 60) {
-      Send(next_actor_name, std::make_shared<myframe::Msg>(msg_));
+      auto mailbox = GetMailbox();
+      mailbox->Send(next_actor_name, std::make_shared<myframe::Msg>(msg_));
     } else {
       LOG(INFO) << "runing next test...";
-      Send("actor.FullSpeedTransTest.0", std::make_shared<myframe::Msg>(msg_));
+      auto mailbox = GetMailbox();
+      mailbox->Send("actor.FullSpeedTransTest.0",
+        std::make_shared<myframe::Msg>(msg_));
     }
   }
 
@@ -150,13 +158,15 @@ class FullSpeedTransTest : public myframe::Actor {
                    std::chrono::high_resolution_clock::now() - begin_)
                    .count();
     if (sec < 60) {
-      Send(GetActorName(), std::make_shared<myframe::Msg>());
+      auto mailbox = GetMailbox();
+      mailbox->Send(GetActorName(), std::make_shared<myframe::Msg>());
     } else {
       LOG(INFO) << "runing next test...";
       for (int i = 0; i < 20; ++i) {
         std::string name =
             "actor.FullSpeed20ActorTransTest." + std::to_string(i);
-        Send(name, std::make_shared<myframe::Msg>(msg_));
+        auto mailbox = GetMailbox();
+        mailbox->Send(name, std::make_shared<myframe::Msg>(msg_));
       }
     }
   }
@@ -197,7 +207,8 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
                    std::chrono::high_resolution_clock::now() - begin_)
                    .count();
     if (sec < 60) {
-      Send(GetActorName(), std::make_shared<myframe::Msg>());
+      auto mailbox = GetMailbox();
+      mailbox->Send(GetActorName(), std::make_shared<myframe::Msg>());
     } else {
       if (!is_send_) {
         is_send_ = true;
@@ -205,7 +216,8 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
         for (int i = 0; i < 100; ++i) {
           std::string name =
               "actor.FullSpeed100ActorTransTest." + std::to_string(i);
-          Send(name, std::make_shared<myframe::Msg>(msg_));
+          auto mailbox = GetMailbox();
+          mailbox->Send(name, std::make_shared<myframe::Msg>(msg_));
         }
       }
     }
@@ -250,7 +262,8 @@ class FullSpeed100ActorTransTest : public myframe::Actor {
                    std::chrono::high_resolution_clock::now() - begin_)
                    .count();
     if (sec < 60) {
-      Send(GetActorName(), std::make_shared<myframe::Msg>());
+      auto mailbox = GetMailbox();
+      mailbox->Send(GetActorName(), std::make_shared<myframe::Msg>());
     }
   }
 
@@ -263,7 +276,7 @@ class FullSpeed100ActorTransTest : public myframe::Actor {
 };
 
 TEST(App, performance_test) {
-  myframe::Log log;
+  myframe::InitLog();
 
   myframe::FLAGS_myframe_worker_count = 4;
 

@@ -24,7 +24,9 @@ int random(int min, int max) {
 class ExampleActorSerial1 : public myframe::Actor {
  public:
   int Init(const char* param) override {
-    Send("actor.example_serial1.#1", std::make_shared<myframe::Msg>(""));
+    auto mailbox = GetMailbox();
+    mailbox->Send("actor.example_serial1.#1",
+      std::make_shared<myframe::Msg>(""));
     return 0;
   }
 
@@ -34,7 +36,9 @@ class ExampleActorSerial1 : public myframe::Actor {
     std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
     LOG(INFO) << "-----> " << GetActorName() << " process end, cost " << cost_ms
               << " ms";
-    Send("actor.example_serial2.#1", std::make_shared<myframe::Msg>(""));
+    auto mailbox = GetMailbox();
+    mailbox->Send("actor.example_serial2.#1",
+      std::make_shared<myframe::Msg>(""));
   }
 };
 
@@ -48,7 +52,9 @@ class ExampleActorSerial2 : public myframe::Actor {
     std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
     LOG(INFO) << "-----> " << GetActorName() << " process end, cost " << cost_ms
               << " ms";
-    Send("actor.example_serial3.#1", std::make_shared<myframe::Msg>(""));
+    auto mailbox = GetMailbox();
+    mailbox->Send("actor.example_serial3.#1",
+      std::make_shared<myframe::Msg>(""));
   }
 };
 

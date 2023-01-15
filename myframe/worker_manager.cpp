@@ -7,9 +7,10 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/worker_manager.h"
 
-#include "myframe/common.h"
+#include <glog/logging.h>
+
 #include "myframe/flags.h"
-#include "myframe/log.h"
+#include "myframe/common.h"
 #include "myframe/worker.h"
 
 namespace myframe {
@@ -140,7 +141,7 @@ void WorkerManager::WeakupWorker() {
       ++it;
       continue;
     }
-    ListAppend(&worker->que_, &worker->recv_);
+    worker->GetMailbox()->Recv(worker->GetCache());
     it = weakup_workers_.erase(it);
     worker->SetCtrlOwnerFlag(WorkerCtrlOwner::WORKER);
     worker->SetWaitMsgQueueFlag(false);
@@ -164,10 +165,10 @@ void WorkerManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
     LOG(WARNING) << worker_name << " unsupport recv msg, drop it";
     return;
   }
-  worker->recv_.emplace_back(msg);
+  worker->Cache(msg);
   LOG_IF(WARNING,
-    worker->recv_.size() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
-      << worker->GetWorkerName() << " has " << worker->recv_.size()
+    worker->CacheSize() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
+      << worker->GetWorkerName() << " has " << worker->CacheSize()
       << " msg not process!!!";
   if (worker->IsInWaitMsgQueue()) {
     DLOG(INFO) << worker->GetWorkerName() << " already in wait queue, return";

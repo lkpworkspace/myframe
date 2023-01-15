@@ -26,7 +26,9 @@ class @template_name@Actor : public myframe::Actor {
     /* 获得文本消息， 打印 源地址 目的地址 消息内容*/
     LOG(INFO) << *msg;
     /* 回复消息 */
-    Send(msg->GetSrc(), std::make_shared<myframe::Msg>("this is actor resp"));
+    auto mailbox = GetMailbox();
+    mailbox->Send(msg->GetSrc(),
+      std::make_shared<myframe::Msg>("this is actor resp"));
   }
 };
 
@@ -38,11 +40,12 @@ class @template_name@Worker : public myframe::Worker {
   /* myframe会循环调用该函数 */
   void Run() override {
     /* 给 actor.@template_name@ 发送消息，并接收回复消息 */
-    SendMsg("actor.@template_name@.@template_name@1",
+    auto mailbox = GetMailbox();
+    mailbox->Send("actor.@template_name@.@template_name@1",
             std::make_shared<myframe::Msg>("this is template worker req"));
     DispatchAndWaitMsg();
     while (1) {
-      const auto& msg = GetRecvMsg();
+      const auto& msg = mailbox->PopRecv();
       if (msg == nullptr) {
         break;
       }

@@ -46,7 +46,7 @@ bool EventConnManager::Init(std::shared_ptr<App> app, int sz) {
 void EventConnManager::AddEventConn() {
   auto conn = std::make_shared<EventConn>();
   std::string name = "event.conn." + std::to_string(conn_sz_);
-  conn->SetEvConnName(name);
+  conn->GetMailbox()->SetAddr(name);
   idle_conn_.emplace_back(conn);
   conn_sz_++;
 }
@@ -80,8 +80,9 @@ std::shared_ptr<EventConn> EventConnManager::Get() {
   auto conn = idle_conn_.front();
   idle_conn_.pop_front();
   // add to run_conn
-  run_conn_[conn->GetEvConnName()] = conn;
-  run_conn_map_[conn->GetFd()] = conn->GetEvConnName();
+  const auto& addr = conn->GetMailbox()->Addr();
+  run_conn_[addr] = conn;
+  run_conn_map_[conn->GetFd()] = addr;
   // add to epoll
   app->AddEvent(conn);
   return conn;
@@ -97,7 +98,7 @@ void EventConnManager::Release(std::shared_ptr<EventConn> ev) {
   // delete from epoll
   app->DelEvent(ev);
   // remove from run_conn
-  auto name = ev->GetEvConnName();
+  const auto& name = ev->GetMailbox()->Addr();
   run_conn_.erase(name);
   run_conn_map_.erase(ev->GetFd());
   // add to idle_conn
@@ -105,8 +106,9 @@ void EventConnManager::Release(std::shared_ptr<EventConn> ev) {
 }
 
 // call by main frame
-void EventConnManager::Notify(const std::string& name,
-                                std::shared_ptr<Msg> msg) {
+void EventConnManager::Notify(
+  const std::string& name,
+  std::shared_ptr<Msg> msg) {
   std::shared_ptr<EventConn> ev = nullptr;
   {
     std::lock_guard<std::mutex> g(mtx_);
@@ -117,7 +119,7 @@ void EventConnManager::Notify(const std::string& name,
     ev = run_conn_[name];
   }
   // push msg to event_conn
-  ev->recv_.emplace_back(msg);
+  ev->GetMailbox()->Recv(msg);
   // send cmd to event_conn
   ev->SendCmdToWorker(WorkerCmd::RUN);
 }

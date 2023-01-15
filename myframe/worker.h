@@ -18,6 +18,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/event.h"
 #include "myframe/msg.h"
+#include "myframe/mailbox.h"
 
 namespace myframe {
 
@@ -50,6 +51,8 @@ class Worker : public Event {
   Worker();
   virtual ~Worker();
 
+  Mailbox* GetMailbox();
+
   ////////////////////////////// thread 相关函数
   virtual void OnInit() {}
   virtual void Run() = 0;
@@ -64,16 +67,6 @@ class Worker : public Event {
   unsigned int ListenEpollEventType() override { return EPOLLIN; }
   void RetEpollEventType(uint32_t ev) override { ev = ev; }
 
-  ////////////////////////////// 接收worker/actor消息
-  int RecvMsgListSize() { return que_.size(); }
-  const std::shared_ptr<const Msg> GetRecvMsg();
-
-  ////////////////////////////// 发送消息相关函数
-  int SendMsgListSize() { return send_.size(); }
-  void SendMsg(const std::string& dst, std::shared_ptr<Msg> msg);
-  void SendMsg(const std::string& dst, std::any data);
-  void PushSendMsgList(std::list<std::shared_ptr<Msg>>* msg_list);
-
   ////////////////////////////// 接收/发送主线程控制消息
   /// 不建议使用,除非你知道你在做什么
   int RecvCmdFromMain(WorkerCmd* cmd, int timeout_ms = -1);
@@ -86,15 +79,24 @@ class Worker : public Event {
   /// worker fd
   int GetWorkerFd() { return sock_pair_[0]; }
 
-  const std::string& GetModName() const { return mod_name_; }
-  const std::string& GetTypeName() const { return worker_name_; }
-  const std::string& GetInstName() const { return inst_name_; }
   const std::string GetWorkerName() const;
+  const std::string& GetModName() const;
+  const std::string& GetTypeName() const;
+  const std::string& GetInstName() const;
 
  private:
   static void ListenThread(std::shared_ptr<Worker> w);
+  void Initialize();
+
+  /// recv cache list method
+  int CacheSize() const;
+  std::list<std::shared_ptr<Msg>>* GetCache();
+  void Cache(std::shared_ptr<Msg> msg);
+  void Cache(std::list<std::shared_ptr<Msg>>* msg_list);
 
   ////////////////////////////// 线程间通信相关函数
+  bool CreateSockPair();
+  void CloseSockPair();
   int SendCmdToWorker(const WorkerCmd& cmd);
   int RecvCmdFromWorker(WorkerCmd* cmd);
 
@@ -107,12 +109,9 @@ class Worker : public Event {
   bool IsInWaitMsgQueue() { return in_msg_wait_queue_; }
 
   ////////////////////////////// worker name
-  void SetModName(const std::string& name) { mod_name_ = name; }
-  void SetTypeName(const std::string& name) { worker_name_ = name; }
-  void SetInstName(const std::string& name) { inst_name_ = name; }
-
-  bool CreateSockPair();
-  void CloseSockPair();
+  void SetModName(const std::string& name);
+  void SetTypeName(const std::string& name);
+  void SetInstName(const std::string& name);
 
   /// worker name
   std::string mod_name_;
@@ -120,16 +119,14 @@ class Worker : public Event {
   std::string inst_name_;
   /// idx: 0 used by WorkerCommon, 1 used by app
   int sock_pair_[2];
-  /// state
+  /// state flag
   std::atomic_bool runing_;
   WorkerCtrlOwner ctrl_owner_{ WorkerCtrlOwner::WORKER };
-  bool in_msg_wait_queue_{false};
-  /// 接收消息队列
-  std::list<std::shared_ptr<Msg>> recv_;
-  /// 运行时消息队列
-  std::list<std::shared_ptr<Msg>> que_;
-  /// 发送消息队列
-  std::list<std::shared_ptr<Msg>> send_;
+  bool in_msg_wait_queue_{ false };
+  /// recv cache list
+  std::list<std::shared_ptr<Msg>> cache_;
+  /// mailbox
+  Mailbox mailbox_;
   /// thread
   std::thread th_;
 };
