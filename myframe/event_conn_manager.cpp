@@ -118,13 +118,14 @@ void EventConnManager::Notify(
     }
     ev = run_conn_[name];
   }
-  if (ev->GetConnType() == EventConnType::SEND) {
+  if (ev->GetConnType() == EventConnType::kSend) {
     return;
   }
   // push msg to event_conn
   ev->GetMailbox()->Recv(msg);
   // send cmd to event_conn
-  ev->SendCmdToWorker(WorkerCmd::RUN);
+  auto cmd_channel = ev->GetCmdChannel();
+  cmd_channel->SendToOwner(Cmd::kIdle);
 }
 
 }  // namespace myframe

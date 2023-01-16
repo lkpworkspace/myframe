@@ -9,11 +9,17 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+enum class EventIOType : int {
+  kNone,
+  kIn,
+  kOut,
+};
+
 enum class EventType : int {
-  WORKER_COMMON,
-  WORKER_TIMER,
-  WORKER_USER,
-  EVENT_CONN,
+  kWorkerCommon,
+  kWorkerTimer,
+  kWorkerUser,
+  kEventConn,
 };
 
 class Event : public std::enable_shared_from_this<Event> {
@@ -22,19 +28,18 @@ class Event : public std::enable_shared_from_this<Event> {
   virtual ~Event() {}
 
   /* 事件类型 */
-  virtual EventType GetType() { return EventType::WORKER_USER; }
+  virtual EventType GetType() { return EventType::kWorkerUser; }
 
   /* 获得当前事件的文件描述符 */
-  virtual int GetFd() = 0;
+  virtual int GetFd() const = 0;
 
   /**
    * 监听的是文件描述符的写事件还是读事件
-   * 一般是读或写事件(EPOLLIN/EPOLLOUT)
    */
-  virtual unsigned int ListenEpollEventType() = 0;
+  virtual EventIOType ListenIOType() { return EventIOType::kIn; }
 
-  /* 获得的epoll事件类型(call by App) */
-  virtual void RetEpollEventType(uint32_t ev) = 0;
+  /* 返回的监听事件类型 */
+  virtual void RetListenIOType(const EventIOType&) {}
 };
 
 }  // namespace myframe

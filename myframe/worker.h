@@ -6,10 +6,6 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <pthread.h>
-#include <sys/epoll.h>
-#include <unistd.h>
-
 #include <atomic>
 #include <list>
 #include <memory>
@@ -19,28 +15,14 @@ Author: likepeng <likepeng0418@163.com>
 #include <jsoncpp/json/json.h>
 
 #include "myframe/event.h"
-#include "myframe/msg.h"
 #include "myframe/mailbox.h"
+#include "myframe/cmd_channel.h"
 
 namespace myframe {
 
-/**
- * @brief worker与main交互命令
- *  QUIT main主动发起的退出命令
- *  IDLE与RUN为一对请求回复命令
- *  WAIT_FOR_MSG与RUN_WITH_MSG为一对请求回复命令
- */
-enum class WorkerCmd : char {
-  QUIT = 'q',          ///< worker退出(worker发送的指令)
-  IDLE = 'i',          ///< worker空闲(worker发送的指令)
-  WAIT_FOR_MSG = 'w',  ///< worker等待消息(worker发送的指令)
-  RUN = 'r',           ///< worker运行(main回复的指令)
-  RUN_WITH_MSG = 'm',  ///< worker运行(main回复的指令)
-};
-
 enum class WorkerCtrlOwner : int {
-  MAIN,
-  WORKER,
+  kMain,
+  kWorker,
 };
 
 class Worker : public Event {
@@ -55,31 +37,24 @@ class Worker : public Event {
 
   Mailbox* GetMailbox();
 
+  CmdChannel* GetCmdChannel();
+
   ////////////////////////////// thread 相关函数
   virtual void OnInit() {}
   virtual void Run() = 0;
   virtual void OnExit() {}
   void Start();
   void Stop();
-  bool IsRuning() { return runing_; }
+  bool IsRuning() { return runing_.load(); }
   pthread_t GetPosixThreadId() { return th_.native_handle(); }
 
   ////////////////////////////// event 相关函数
-  int GetFd() override { return sock_pair_[1]; }
-  unsigned int ListenEpollEventType() override { return EPOLLIN; }
-  void RetEpollEventType(uint32_t ev) override { ev = ev; }
+  int GetFd() const override;
 
-  ////////////////////////////// 接收/发送主线程控制消息
-  /// 不建议使用,除非你知道你在做什么
-  int RecvCmdFromMain(WorkerCmd* cmd, int timeout_ms = -1);
-  int SendCmdToMain(const WorkerCmd& cmd);
   /// 分发消息并立即返回
   int DispatchMsg();
   /// 分发消息并等待回复消息
   int DispatchAndWaitMsg();
-
-  /// worker fd
-  int GetWorkerFd() { return sock_pair_[0]; }
 
   const std::string GetWorkerName() const;
   const std::string& GetModName() const;
@@ -91,17 +66,11 @@ class Worker : public Event {
   static void ListenThread(std::shared_ptr<Worker> w);
   void Initialize();
 
-  /// recv cache list method
+  ////////////////////////////// recv cache list method
   int CacheSize() const;
   std::list<std::shared_ptr<Msg>>* GetCache();
   void Cache(std::shared_ptr<Msg> msg);
   void Cache(std::list<std::shared_ptr<Msg>>* msg_list);
-
-  ////////////////////////////// 线程间通信相关函数
-  bool CreateSockPair();
-  void CloseSockPair();
-  int SendCmdToWorker(const WorkerCmd& cmd);
-  int RecvCmdFromWorker(WorkerCmd* cmd);
 
   ////////////////////////////// 线程交互控制flag函数
   void SetCtrlOwnerFlag(WorkerCtrlOwner owner) { ctrl_owner_ = owner; }
@@ -122,16 +91,16 @@ class Worker : public Event {
   std::string worker_name_;
   std::string inst_name_;
   Json::Value config_{ Json::Value::null };
-  /// idx: 0 used by WorkerCommon, 1 used by app
-  int sock_pair_[2];
   /// state flag
   std::atomic_bool runing_;
-  WorkerCtrlOwner ctrl_owner_{ WorkerCtrlOwner::WORKER };
+  WorkerCtrlOwner ctrl_owner_{ WorkerCtrlOwner::kWorker };
   bool in_msg_wait_queue_{ false };
   /// recv cache list
   std::list<std::shared_ptr<Msg>> cache_;
   /// mailbox
   Mailbox mailbox_;
+  /// cmd channel
+  CmdChannel cmd_channel_;
   /// thread
   std::thread th_;
 };

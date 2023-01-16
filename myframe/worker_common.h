@@ -28,7 +28,7 @@ class WorkerCommon final : public Worker {
   void OnExit() override;
 
   /// override Event virtual method
-  EventType GetType() { return EventType::WORKER_COMMON; }
+  EventType GetType() { return EventType::kWorkerCommon; }
 
   void SetContext(std::shared_ptr<Context> context) { context_ = context; }
   std::shared_ptr<Context> GetContext() {

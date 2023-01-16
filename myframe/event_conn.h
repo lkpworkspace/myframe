@@ -6,19 +6,18 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <list>
 #include <memory>
 #include <string>
 
 #include "myframe/event.h"
-#include "myframe/worker.h"
 #include "myframe/mailbox.h"
+#include "myframe/cmd_channel.h"
 
 namespace myframe {
 
 enum class EventConnType : char {
-  SEND_REQUEST,
-  SEND,
+  kSendReq,
+  kSend,
 };
 
 class Msg;
@@ -28,13 +27,8 @@ class EventConn final : public Event {
   friend class EventConnManager;
 
  public:
-  EventConn();
-  virtual ~EventConn();
-
-  int GetFd() override;
+  int GetFd() const override;
   EventType GetType() override;
-  unsigned int ListenEpollEventType() override;
-  void RetEpollEventType(uint32_t ev) override;
 
   EventConnType GetConnType() { return conn_type_; }
 
@@ -48,18 +42,11 @@ class EventConn final : public Event {
 
  private:
   Mailbox* GetMailbox();
-  int SendCmdToWorker(const WorkerCmd& cmd);
-  int RecvCmdFromWorker(WorkerCmd* cmd);
+  CmdChannel* GetCmdChannel();
 
-  int RecvCmdFromMain(WorkerCmd* cmd, int timeout_ms = -1);
-  int SendCmdToMain(const WorkerCmd& cmd);
-
-  bool CreateSockPair();
-  void CloseSockPair();
-  int sock_pair_[2];
-
+  CmdChannel cmd_channel_;
   Mailbox mailbox_;
-  EventConnType conn_type_{ EventConnType::SEND_REQUEST };
+  EventConnType conn_type_{ EventConnType::kSendReq };
 };
 
 }  // namespace myframe

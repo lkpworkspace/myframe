@@ -11,6 +11,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/flags.h"
 #include "myframe/common.h"
+#include "myframe/msg.h"
 #include "myframe/worker.h"
 
 namespace myframe {
@@ -64,8 +65,8 @@ bool WorkerManager::Add(std::shared_ptr<Worker> worker) {
   workers_[handle] = worker;
   name_handle_map_[worker->GetWorkerName()] = handle;
   auto ev_type = worker->GetType();
-  if (ev_type == EventType::WORKER_COMMON ||
-      ev_type == EventType::WORKER_USER) {
+  if (ev_type == EventType::kWorkerCommon ||
+      ev_type == EventType::kWorkerUser) {
     ++cur_worker_count_;
   }
   pthread_rwlock_unlock(&rw_);
@@ -82,8 +83,8 @@ void WorkerManager::Del(std::shared_ptr<Worker> worker) {
   workers_.erase(workers_.find(handle));
   name_handle_map_.erase(worker->GetWorkerName());
   auto ev_type = worker->GetType();
-  if (ev_type == EventType::WORKER_COMMON ||
-      ev_type == EventType::WORKER_USER) {
+  if (ev_type == EventType::kWorkerCommon ||
+      ev_type == EventType::kWorkerUser) {
     --cur_worker_count_;
   }
   pthread_rwlock_unlock(&rw_);
@@ -126,7 +127,7 @@ void WorkerManager::PushBackIdleWorker(std::shared_ptr<Worker> worker) {
 }
 
 void WorkerManager::PushWaitWorker(std::shared_ptr<Worker> worker) {
-  worker->SetCtrlOwnerFlag(WorkerCtrlOwner::MAIN);
+  worker->SetCtrlOwnerFlag(WorkerCtrlOwner::kMain);
 }
 
 void WorkerManager::WeakupWorker() {
@@ -137,16 +138,16 @@ void WorkerManager::WeakupWorker() {
       continue;
     }
     auto worker = it->lock();
-    if (worker->GetOwner() == WorkerCtrlOwner::WORKER) {
+    if (worker->GetOwner() == WorkerCtrlOwner::kWorker) {
       ++it;
       continue;
     }
     worker->GetMailbox()->Recv(worker->GetCache());
     it = weakup_workers_.erase(it);
-    worker->SetCtrlOwnerFlag(WorkerCtrlOwner::WORKER);
+    worker->SetCtrlOwnerFlag(WorkerCtrlOwner::kWorker);
     worker->SetWaitMsgQueueFlag(false);
     DLOG(INFO) << "notify " << worker->GetWorkerName() << " process msg";
-    worker->SendCmdToWorker(WorkerCmd::RUN_WITH_MSG);
+    worker->GetCmdChannel()->SendToOwner(Cmd::kRunWithMsg);
   }
   pthread_rwlock_unlock(&rw_);
 }
@@ -160,8 +161,8 @@ void WorkerManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
   }
   auto worker = Get(worker_name);
   auto worker_type = worker->GetType();
-  if (worker_type == EventType::WORKER_TIMER ||
-      worker_type == EventType::WORKER_COMMON) {
+  if (worker_type == EventType::kWorkerTimer ||
+      worker_type == EventType::kWorkerCommon) {
     LOG(WARNING) << worker_name << " unsupport recv msg, drop it";
     return;
   }

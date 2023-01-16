@@ -16,6 +16,8 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/event.h"
+
 struct epoll_event;
 
 namespace myframe {
@@ -105,6 +107,8 @@ class App final : public std::enable_shared_from_this<App> {
   void CheckStopWorkers();
 
   /// 分发事件
+  EventIOType ToEventIOType(int ev);
+  int ToEpollType(const EventIOType& type);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<Context> context);
   void ProcessEvent(struct epoll_event* evs, int ev_count);

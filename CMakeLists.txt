@@ -5,9 +5,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-# -DNDEBUG -DDCHECK_ALWAYS_ON=0
-set(CMAKE_C_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr -DNDEBUG -DDCHECK_ALWAYS_ON=0")
-set(CMAKE_CXX_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr -DNDEBUG -DDCHECK_ALWAYS_ON=0")
+# -DNDEBUG -DDCHECK_ALWAYS_ON
+set(CMAKE_C_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr -DNDEBUG")
+set(CMAKE_CXX_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr -DNDEBUG")
 
 option(GENERATE_EXAMPLE "generate example library" ON)
 option(GENERATE_TEST "generate test exec" ON)

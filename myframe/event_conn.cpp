@@ -4,12 +4,7 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #include "myframe/event_conn.h"
-
-#include <assert.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 #include <glog/logging.h>
 
@@ -18,117 +13,44 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-EventConn::EventConn() { CreateSockPair(); }
+int EventConn::GetFd() const { return cmd_channel_.GetMainFd(); }
 
-EventConn::~EventConn() { CloseSockPair(); }
-
-int EventConn::GetFd() { return sock_pair_[1]; }
-
-EventType EventConn::GetType() { return EventType::EVENT_CONN; }
-
-unsigned int EventConn::ListenEpollEventType() { return EPOLLIN; }
-
-void EventConn::RetEpollEventType(uint32_t ev) { ev = ev; }
+EventType EventConn::GetType() { return EventType::kEventConn; }
 
 Mailbox* EventConn::GetMailbox() {
   return &mailbox_;
 }
 
+CmdChannel* EventConn::GetCmdChannel() {
+  return &cmd_channel_;
+}
+
 int EventConn::Send(
   const std::string& dst,
   std::shared_ptr<Msg> msg) {
-  conn_type_ = EventConnType::SEND;
+  conn_type_ = EventConnType::kSend;
   mailbox_.SendClear();
   mailbox_.Send(dst, msg);
-  SendCmdToMain(WorkerCmd::IDLE);
-  WorkerCmd cmd;
-  return RecvCmdFromMain(&cmd);
+  cmd_channel_.SendToMain(Cmd::kRun);
+  Cmd cmd;
+  return cmd_channel_.RecvFromMain(&cmd);
 }
 
 const std::shared_ptr<const Msg> EventConn::SendRequest(
   const std::string& dst,
   std::shared_ptr<Msg> req) {
-  conn_type_ = EventConnType::SEND_REQUEST;
+  conn_type_ = EventConnType::kSendReq;
   mailbox_.SendClear();
   mailbox_.Send(dst, req);
-  SendCmdToMain(WorkerCmd::RUN);
-  WorkerCmd cmd;
-  RecvCmdFromMain(&cmd);
+  cmd_channel_.SendToMain(Cmd::kRunWithMsg);
+  Cmd cmd;
+  cmd_channel_.RecvFromMain(&cmd);
   if (mailbox_.RecvEmpty()) {
     return nullptr;
   }
   auto msg = mailbox_.PopRecv();
   mailbox_.RecvClear();
   return msg;
-}
-
-int EventConn::SendCmdToWorker(const WorkerCmd& cmd) {
-  char cmd_char = static_cast<char>(cmd);
-  return write(sock_pair_[1], &cmd_char, 1);
-}
-
-int EventConn::RecvCmdFromWorker(WorkerCmd* cmd) {
-  char cmd_char;
-  int ret = read(sock_pair_[1], &cmd_char, 1);
-  *cmd = (WorkerCmd)cmd_char;
-  return ret;
-}
-
-int EventConn::RecvCmdFromMain(WorkerCmd* cmd, int timeout_ms) {
-  if (timeout_ms < 0) {
-    // block
-    if (!Common::IsBlockFd(sock_pair_[0])) {
-      Common::SetNonblockFd(sock_pair_[0], false);
-    }
-  } else if (timeout_ms == 0) {
-    // nonblock
-    if (Common::IsBlockFd(sock_pair_[0])) {
-      Common::SetNonblockFd(sock_pair_[0], true);
-    }
-  } else {
-    // timeout
-    Common::SetSockRecvTimeout(sock_pair_[0], timeout_ms);
-  }
-  char cmd_char;
-  int ret = read(sock_pair_[0], &cmd_char, 1);
-  *cmd = (WorkerCmd)cmd_char;
-  return ret;
-}
-
-int EventConn::SendCmdToMain(const WorkerCmd& cmd) {
-  char cmd_char = static_cast<char>(cmd);
-  return write(sock_pair_[0], &cmd_char, 1);
-}
-
-bool EventConn::CreateSockPair() {
-  int res = -1;
-  bool ret = true;
-
-  res = socketpair(AF_UNIX, SOCK_DGRAM, 0, sock_pair_);
-  if (res == -1) {
-    LOG(ERROR) << "Worker create sockpair failed";
-    return false;
-  }
-  ret = Common::SetNonblockFd(sock_pair_[0], false);
-  if (!ret) {
-    LOG(ERROR) << "Worker set sockpair[0] block failed";
-    return ret;
-  }
-  ret = Common::SetNonblockFd(sock_pair_[1], false);
-  if (!ret) {
-    LOG(ERROR) << "Worker set sockpair[1] block failed";
-    return ret;
-  }
-  return ret;
-}
-
-void EventConn::CloseSockPair() {
-  if (-1 == close(sock_pair_[0])) {
-    LOG(ERROR) << "Worker close sockpair[0]: " << strerror(errno);
-  }
-  if (-1 == close(sock_pair_[1])) {
-    LOG(ERROR) << "Worker close sockpair[1]: " << strerror(errno);
-  }
 }
 
 }  // namespace myframe

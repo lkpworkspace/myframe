@@ -91,7 +91,7 @@ class WorkerTimer : public Worker {
   /**
    * override Event virtual method
    */
-  EventType GetType() override { return EventType::WORKER_TIMER; }
+  EventType GetType() override { return EventType::kWorkerTimer; }
 
  private:
   int Work();

@@ -297,7 +297,7 @@ bool App::CreateContext(
 bool App::AddEvent(std::shared_ptr<Event> ev) {
   struct epoll_event event;
   event.data.fd = ev->GetFd();
-  event.events = ev->ListenEpollEventType();
+  event.events = ToEpollType(ev->ListenIOType());
   int res = 0;
   // 如果该事件已经注册，就修改事件类型
   if (-1 == (res = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ev->GetFd(), &event))) {
@@ -349,6 +349,28 @@ bool App::StartTimerWorker() {
   }
   LOG(INFO) << "start timer worker " << worker->GetWorkerName();
   return true;
+}
+
+EventIOType App::ToEventIOType(int ev) {
+  switch (ev) {
+  case EPOLLIN:
+    return EventIOType::kIn;
+  case EPOLLOUT:
+    return EventIOType::kOut;
+  default:
+    return EventIOType::kNone;
+  }
+}
+
+int App::ToEpollType(const EventIOType& type) {
+  switch (type) {
+  case EventIOType::kIn:
+    return EPOLLIN;
+  case EventIOType::kOut:
+    return EPOLLOUT;
+  default:
+    return EPOLLERR;
+  }
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
@@ -424,30 +446,31 @@ void App::CheckStopWorkers() {
       auto common_idle_worker =
           std::dynamic_pointer_cast<WorkerCommon>(worker);
       common_idle_worker->SetContext(context);
-      worker->SendCmdToWorker(WorkerCmd::RUN);
+      worker->GetCmdChannel()->SendToOwner(Cmd::kRun);
     } else {
       LOG(ERROR) << context->GetActor()->GetActorName() << " has no msg";
     }
   }
 }
 
-void App::ProcessTimerEvent(std::shared_ptr<WorkerTimer> timer_worker) {
+void App::ProcessTimerEvent(std::shared_ptr<WorkerTimer> worker) {
   // 将定时器线程的发送队列分发完毕
-  DLOG(INFO) << timer_worker->GetWorkerName() << " dispatch msg...";
-  DispatchMsg(timer_worker->GetMailbox()->GetSendList());
+  DLOG(INFO) << worker->GetWorkerName() << " dispatch msg...";
+  DispatchMsg(worker->GetMailbox()->GetSendList());
 
-  WorkerCmd cmd;
-  timer_worker->RecvCmdFromWorker(&cmd);
+  Cmd cmd;
+  auto cmd_channel = worker->GetCmdChannel();
+  cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case WorkerCmd::IDLE:  // idle
-      DLOG(INFO) << timer_worker->GetWorkerName() << " run again";
-      timer_worker->SendCmdToWorker(WorkerCmd::RUN);
+    case Cmd::kIdle:  // idle
+      DLOG(INFO) << worker->GetWorkerName() << " run again";
+      cmd_channel->SendToOwner(Cmd::kRun);
       break;
-    case WorkerCmd::QUIT:  // quit
-      LOG(INFO) << timer_worker->GetWorkerName()
+    case Cmd::kQuit:  // quit
+      LOG(INFO) << worker->GetWorkerName()
                 << " quit, delete from myframe";
-      DelEvent(timer_worker);
-      worker_mgr_->Del(timer_worker);
+      DelEvent(worker);
+      worker_mgr_->Del(worker);
       break;
     default:
       LOG(WARNING) << "Unknown timer worker cmd: " << static_cast<char>(cmd);
@@ -460,18 +483,19 @@ void App::ProcessUserEvent(std::shared_ptr<Worker> worker) {
   DLOG(INFO) << worker->GetWorkerName() << " dispatch msg...";
   DispatchMsg(worker->GetMailbox()->GetSendList());
 
-  WorkerCmd cmd;
-  worker->RecvCmdFromWorker(&cmd);
+  Cmd cmd;
+  auto cmd_channel = worker->GetCmdChannel();
+  cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case WorkerCmd::IDLE:  // idle
+    case Cmd::kIdle:  // idle
       DLOG(INFO) << worker->GetWorkerName() << " run again";
-      worker->SendCmdToWorker(WorkerCmd::RUN);
+      cmd_channel->SendToOwner(Cmd::kRun);
       break;
-    case WorkerCmd::WAIT_FOR_MSG:
+    case Cmd::kWaitForMsg:
       DLOG(INFO) << worker->GetWorkerName() << " wait for msg...";
       worker_mgr_->PushWaitWorker(worker);
       break;
-    case WorkerCmd::QUIT:  // quit
+    case Cmd::kQuit:  // quit
       LOG(INFO) << worker->GetWorkerName() << " quit, delete from myframe";
       DelEvent(worker);
       worker_mgr_->Del(worker);
@@ -494,10 +518,11 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerCommon> worker) {
       << worker->GetPosixThreadId() << " no context";
   DispatchMsg(worker->GetContext());
 
-  WorkerCmd cmd;
-  worker->RecvCmdFromWorker(&cmd);
+  Cmd cmd;
+  auto cmd_channel = worker->GetCmdChannel();
+  cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case WorkerCmd::IDLE:  // idle
+    case Cmd::kIdle:  // idle
       // 将工作线程中的actor状态设置为全局状态
       // 将线程加入空闲队列
       DLOG(INFO) << worker->GetWorkerName() << "."
@@ -506,7 +531,7 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerCommon> worker) {
       worker->Idle();
       worker_mgr_->PushBackIdleWorker(worker);
       break;
-    case WorkerCmd::QUIT:  // quit
+    case Cmd::kQuit:  // quit
       LOG(INFO) << worker->GetWorkerName() << "."
                 << worker->GetPosixThreadId()
                 << " quit, delete from myframe";
@@ -524,17 +549,17 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerCommon> worker) {
 void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
   // 将event_conn的发送队列分发完毕
   DispatchMsg(ev->GetMailbox()->GetSendList());
-
-  WorkerCmd cmd;
-  ev->RecvCmdFromWorker(&cmd);
+  auto cmd_channel = ev->GetCmdChannel();
+  Cmd cmd;
+  cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case WorkerCmd::IDLE:
-      ev->SendCmdToWorker(WorkerCmd::IDLE);
+    case Cmd::kRun:
+      cmd_channel->SendToOwner(Cmd::kIdle);
       break;
-    case WorkerCmd::RUN:
+    case Cmd::kRunWithMsg:
       break;
     default:
-      LOG(WARNING) << "unknown common worker cmd: " << static_cast<char>(cmd);
+      LOG(WARNING) << "unknown cmd: " << static_cast<char>(cmd);
       break;
   }
 }
@@ -551,18 +576,18 @@ void App::ProcessEvent(struct epoll_event* evs, int ev_count) {
         continue;
       }
     }
-    ev_obj->RetEpollEventType(evs[i].events);
+    ev_obj->RetListenIOType(ToEventIOType(evs[i].events));
     switch (ev_obj->GetType()) {
-      case EventType::WORKER_COMMON:
+      case EventType::kWorkerCommon:
         ProcessWorkerEvent(std::dynamic_pointer_cast<WorkerCommon>(ev_obj));
         break;
-      case EventType::WORKER_TIMER:
+      case EventType::kWorkerTimer:
         ProcessTimerEvent(std::dynamic_pointer_cast<WorkerTimer>(ev_obj));
         break;
-      case EventType::WORKER_USER:
+      case EventType::kWorkerUser:
         ProcessUserEvent(std::dynamic_pointer_cast<Worker>(ev_obj));
         break;
-      case EventType::EVENT_CONN:
+      case EventType::kEventConn:
         ProcessEventConn(std::dynamic_pointer_cast<EventConn>(ev_obj));
         break;
       default:

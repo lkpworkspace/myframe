@@ -98,12 +98,13 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     _th.detach();
 
     // 通知myframe该worker可以接收来自myframe的消息
-    SendCmdToMain(myframe::WorkerCmd::WAIT_FOR_MSG);
+    GetCmdChannel()->SendToMain(myframe::Cmd::kWaitForMsg);
   }
 
   void Run() override {
     bool has_main_msg = false;
-    struct pollfd fds[] = {{GetWorkerFd(), POLLIN, 0},
+    auto cmd_channel = GetCmdChannel();
+    struct pollfd fds[] = {{cmd_channel->GetOwnerFd(), POLLIN, 0},
                            {_queue.GetFd1(), POLLIN, 0}};
     // 等待来自queue或者myframe的消息
     poll(fds, 2, -1);
@@ -122,17 +123,17 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
   // 分发消息、处理来自myframe的消息
   void OnMainMsg(bool has_main_msg) {
     if (!has_main_msg) {
-      SendCmdToMain(myframe::WorkerCmd::IDLE);
+      GetCmdChannel()->SendToMain(myframe::Cmd::kIdle);
     }
     while (1) {
-      myframe::WorkerCmd cmd;
-      RecvCmdFromMain(&cmd);
-      if (myframe::WorkerCmd::RUN == cmd) {
+      myframe::Cmd cmd;
+      GetCmdChannel()->RecvFromMain(&cmd);
+      if (myframe::Cmd::kRun == cmd) {
         return;
       }
-      if (myframe::WorkerCmd::RUN_WITH_MSG == cmd) {
+      if (myframe::Cmd::kRunWithMsg == cmd) {
         ProcessMainMsg();
-        SendCmdToMain(myframe::WorkerCmd::WAIT_FOR_MSG);
+        GetCmdChannel()->SendToMain(myframe::Cmd::kWaitForMsg);
         if (has_main_msg) {
           return;
         }

@@ -20,6 +20,7 @@ file(GLOB header_files
     log.h
     msg.h
     mailbox.h
+    cmd_channel.h
     actor.h
     event.h
     worker.h
