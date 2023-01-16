@@ -236,6 +236,15 @@ bool App::AddWorker(
   return true;
 }
 
+int App::Send(
+  const std::string& dst,
+  std::shared_ptr<Msg> msg) {
+  auto conn = ev_conn_mgr_->Get();
+  auto ret = conn->Send(dst, msg);
+  ev_conn_mgr_->Release(conn);
+  return ret;
+}
+
 const std::shared_ptr<const Msg> App::SendRequest(
   const std::string& name,
   std::shared_ptr<Msg> msg) {
@@ -520,10 +529,9 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
   ev->RecvCmdFromWorker(&cmd);
   switch (cmd) {
     case WorkerCmd::IDLE:
-      // do nothing
+      ev->SendCmdToWorker(WorkerCmd::IDLE);
       break;
     case WorkerCmd::RUN:
-      // do nothing
       break;
     default:
       LOG(WARNING) << "unknown common worker cmd: " << static_cast<char>(cmd);

@@ -34,9 +34,21 @@ Mailbox* EventConn::GetMailbox() {
   return &mailbox_;
 }
 
+int EventConn::Send(
+  const std::string& dst,
+  std::shared_ptr<Msg> msg) {
+  conn_type_ = EventConnType::SEND;
+  mailbox_.SendClear();
+  mailbox_.Send(dst, msg);
+  SendCmdToMain(WorkerCmd::IDLE);
+  WorkerCmd cmd;
+  return RecvCmdFromMain(&cmd);
+}
+
 const std::shared_ptr<const Msg> EventConn::SendRequest(
   const std::string& dst,
   std::shared_ptr<Msg> req) {
+  conn_type_ = EventConnType::SEND_REQUEST;
   mailbox_.SendClear();
   mailbox_.Send(dst, req);
   SendCmdToMain(WorkerCmd::RUN);

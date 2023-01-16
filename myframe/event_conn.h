@@ -16,6 +16,11 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+enum class EventConnType : char {
+  SEND_REQUEST,
+  SEND,
+};
+
 class Msg;
 class EventConnManager;
 class EventConn final : public Event {
@@ -30,6 +35,12 @@ class EventConn final : public Event {
   EventType GetType() override;
   unsigned int ListenEpollEventType() override;
   void RetEpollEventType(uint32_t ev) override;
+
+  EventConnType GetConnType() { return conn_type_; }
+
+  int Send(
+    const std::string& dst,
+    std::shared_ptr<Msg> msg);
 
   const std::shared_ptr<const Msg> SendRequest(
     const std::string& dst,
@@ -48,6 +59,7 @@ class EventConn final : public Event {
   int sock_pair_[2];
 
   Mailbox mailbox_;
+  EventConnType conn_type_{ EventConnType::SEND_REQUEST };
 };
 
 }  // namespace myframe

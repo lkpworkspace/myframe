@@ -365,9 +365,13 @@ TEST(App, performance_test) {
   std::thread th([&]() {
     int cnt = 100;
     while (cnt--) {
-      auto resp = app->SendRequest("actor.EchoActorTest.1",
-                                   std::make_shared<myframe::Msg>("hello"));
+      auto resp = app->SendRequest(
+        "actor.EchoActorTest.1",
+        std::make_shared<myframe::Msg>("hello"));
       LOG(INFO) << "get resp: " << resp->GetData();
+      app->Send(
+        "actor.EchoActorTest.1",
+        std::make_shared<myframe::Msg>("world"));
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   });

@@ -118,6 +118,9 @@ void EventConnManager::Notify(
     }
     ev = run_conn_[name];
   }
+  if (ev->GetConnType() == EventConnType::SEND) {
+    return;
+  }
   // push msg to event_conn
   ev->GetMailbox()->Recv(msg);
   // send cmd to event_conn

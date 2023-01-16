@@ -55,6 +55,10 @@ class App final : public std::enable_shared_from_this<App> {
     std::shared_ptr<Worker> worker,
     const Json::Value& config = Json::Value::null);
 
+  int Send(
+    const std::string& dst,
+    std::shared_ptr<Msg> msg);
+
   const std::shared_ptr<const Msg> SendRequest(
     const std::string& name,
     std::shared_ptr<Msg> msg);
