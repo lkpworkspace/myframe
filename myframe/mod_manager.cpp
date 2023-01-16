@@ -64,13 +64,13 @@ bool ModManager::RegWorker(
 std::shared_ptr<Actor> ModManager::CreateActorInst(
     const std::string& mod_or_class_name, const std::string& actor_name) {
   if (lib_mods_.IsLoad(mod_or_class_name)) {
-    LOG(INFO) << "instance actor from lib";
+    DLOG(INFO) << actor_name << " actor from lib";
     return lib_mods_.CreateActorInst(mod_or_class_name, actor_name);
   }
   pthread_rwlock_rdlock(&class_actor_rw_);
   if (mod_or_class_name == "class" &&
       class_actors_.find(actor_name) != class_actors_.end()) {
-    LOG(INFO) << "instance actor from reg class";
+    DLOG(INFO) << actor_name << " actor from reg class";
     auto actor = class_actors_[actor_name](actor_name);
     actor->SetModName(mod_or_class_name);
     actor->SetTypeName(actor_name);

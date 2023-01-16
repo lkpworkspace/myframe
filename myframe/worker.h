@@ -16,6 +16,8 @@ Author: likepeng <likepeng0418@163.com>
 #include <string>
 #include <thread>
 
+#include <jsoncpp/json/json.h>
+
 #include "myframe/event.h"
 #include "myframe/msg.h"
 #include "myframe/mailbox.h"
@@ -83,6 +85,7 @@ class Worker : public Event {
   const std::string& GetModName() const;
   const std::string& GetTypeName() const;
   const std::string& GetInstName() const;
+  const Json::Value* GetConfig() { return &config_; }
 
  private:
   static void ListenThread(std::shared_ptr<Worker> w);
@@ -112,11 +115,13 @@ class Worker : public Event {
   void SetModName(const std::string& name);
   void SetTypeName(const std::string& name);
   void SetInstName(const std::string& name);
+  void SetConfig(const Json::Value& conf) { config_ = conf; }
 
   /// worker name
   std::string mod_name_;
   std::string worker_name_;
   std::string inst_name_;
+  Json::Value config_{ Json::Value::null };
   /// idx: 0 used by WorkerCommon, 1 used by app
   int sock_pair_[2];
   /// state flag

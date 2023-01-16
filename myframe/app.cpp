@@ -96,6 +96,20 @@ bool App::LoadModsFromConf(const std::string& path) {
       continue;
     }
     const auto& type = root["type"].asString();
+    std::string lib_name;
+    // load library
+    if (type == "library") {
+      if (!root.isMember("lib") || !root["lib"].isString()) {
+        LOG(ERROR) << " key \"lib\": no key or not string, skip";
+        continue;
+      }
+      lib_name = root["lib"].asString();
+      auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
+      if (!mods_->LoadMod(lib_dir + lib_name)) {
+        LOG(ERROR) << "load lib " << (lib_dir + lib_name) << " failed, skip";
+        continue;
+      }
+    }
     // load actor
     if (root.isMember("actor") && root["actor"].isObject()) {
       const auto& actor_list = root["actor"];
@@ -104,15 +118,15 @@ bool App::LoadModsFromConf(const std::string& path) {
            inst_name_it != actor_name_list.end(); ++inst_name_it) {
         LOG(INFO) << "search actor " << *inst_name_it << " ...";
         if (type == "library") {
-          res |= LoadActorFromLib(root, actor_list, *inst_name_it);
+          res |= LoadActors(lib_name, *inst_name_it, actor_list);
         } else if (type == "class") {
-          res |= LoadActorFromClass(root, actor_list, *inst_name_it);
+          res |= LoadActors("class", *inst_name_it, actor_list);
         } else {
           LOG(ERROR) << "Unknown type " << type;
         }
       }
     }
-    // worker
+    // load worker
     if (root.isMember("worker") && root["worker"].isObject()) {
       const auto& worker_list = root["worker"];
       Json::Value::Members worker_name_list = worker_list.getMemberNames();
@@ -120,9 +134,9 @@ bool App::LoadModsFromConf(const std::string& path) {
            inst_name_it != worker_name_list.end(); ++inst_name_it) {
         LOG(INFO) << "search worker " << *inst_name_it << " ...";
         if (type == "library") {
-          res |= LoadWorkerFromLib(root, worker_list, *inst_name_it);
+          res |= LoadWorkers(lib_name, *inst_name_it, worker_list);
         } else if (type == "class") {
-          res |= LoadWorkerFromClass(root, worker_list, *inst_name_it);
+          res |= LoadWorkers("class", *inst_name_it, worker_list);
         } else {
           LOG(ERROR) << "Unknown type " << type;
         }
@@ -132,25 +146,16 @@ bool App::LoadModsFromConf(const std::string& path) {
   return res;
 }
 
-bool App::LoadActorFromLib(
-  const Json::Value& root,
-  const Json::Value& actor_list,
-  const std::string& actor_name) {
-  if (!root.isMember("lib") || !root["lib"].isString()) {
-    LOG(ERROR) << "actor " << actor_name
-               << " key \"lib\": no key or not string, skip";
-    return false;
-  }
-  auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
-  const auto& lib_name = root["lib"].asString();
-  if (!mods_->LoadMod(lib_dir + lib_name)) {
-    LOG(ERROR) << "load lib " << lib_name << " failed, skip";
-    return false;
-  }
-
+bool App::LoadActors(
+  const std::string& mod_name,
+  const std::string& actor_name,
+  const Json::Value& actor_list) {
   const auto& insts = actor_list[actor_name];
   bool res = false;
   for (const auto& inst : insts) {
+    std::string inst_name;
+    std::string inst_param;
+    Json::Value cfg;
     LOG(INFO) << "create actor instance \"" << actor_name
               << "\": " << inst.toStyledString();
     if (!inst.isMember("instance_name")) {
@@ -158,61 +163,32 @@ bool App::LoadActorFromLib(
                  << " key \"instance_name\": no key, skip";
       continue;
     }
-    if (!inst.isMember("instance_params")) {
-      LOG(ERROR) << "actor " << actor_name
-                 << " key \"instance_params\": no key, skip";
-      continue;
+    inst_name = inst["instance_name"].asString();
+    if (inst.isMember("instance_params")) {
+      inst_param = inst["instance_params"].asString();
     }
-    res |= CreateContext(lib_name, actor_name, inst["instance_name"].asString(),
-                         inst["instance_params"].asString());
+    if (inst.isMember("instance_config")) {
+      cfg = inst["instance_config"];
+    }
+    res |= CreateContext(
+      mod_name,
+      actor_name,
+      inst_name,
+      inst_param,
+      cfg);
   }
   return res;
 }
 
-bool App::LoadActorFromClass(
-  const Json::Value& root,
-  const Json::Value& actor_list,
-  const std::string& actor_name) {
-  const auto& insts = actor_list[actor_name];
-  bool res = false;
-  for (const auto& inst : insts) {
-    LOG(INFO) << "create instance \"class\""
-              << ": " << inst.toStyledString();
-    if (!inst.isMember("instance_name")) {
-      LOG(ERROR) << "actor " << actor_name
-                 << " key \"instance_name\": no key, skip";
-      continue;
-    }
-    if (!inst.isMember("instance_params")) {
-      LOG(ERROR) << "actor " << actor_name
-                 << " key \"instance_params\": no key, skip";
-      continue;
-    }
-    res |= CreateContext("class", actor_name, inst["instance_name"].asString(),
-                         inst["instance_params"].asString());
-  }
-  return res;
-}
-
-bool App::LoadWorkerFromLib(
-  const Json::Value& root,
-  const Json::Value& worker_list,
-  const std::string& worker_name) {
-  if (!root.isMember("lib") || !root["lib"].isString()) {
-    LOG(ERROR) << "worker \"" << worker_name
-               << "\" key \"lib\": no key or not string, skip";
-    return false;
-  }
-  auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
-  const auto& lib_name = root["lib"].asString();
-  if (!mods_->LoadMod(lib_dir + lib_name)) {
-    LOG(ERROR) << "load lib " << lib_name << " failed, skip";
-    return false;
-  }
-
+bool App::LoadWorkers(
+  const std::string& mod_name,
+  const std::string& worker_name,
+  const Json::Value& worker_list) {
   const auto& insts = worker_list[worker_name];
   bool res = false;
   for (const auto& inst : insts) {
+    std::string inst_name;
+    Json::Value cfg;
     LOG(INFO) << "create worker instance \"" << worker_name
               << "\": " << inst.toStyledString();
     if (!inst.isMember("instance_name")) {
@@ -220,41 +196,17 @@ bool App::LoadWorkerFromLib(
                  << " key \"instance_name\": no key, skip";
       continue;
     }
-    res = true;
-    auto worker = mods_->CreateWorkerInst(lib_name, worker_name);
+    inst_name = inst["instance_name"].asString();
+    if (inst.isMember("instance_config")) {
+      cfg = inst["instance_config"];
+    }
+    auto worker = mods_->CreateWorkerInst(mod_name, worker_name);
     if (worker == nullptr) {
-      LOG(ERROR) << "create worker " << lib_name << "." << worker_name << "."
-                 << inst["instance_name"].asString() << " failed, continue";
+      LOG(ERROR) << "create worker " << mod_name << "." << worker_name << "."
+                 << inst_name << " failed, continue";
       continue;
     }
-    AddWorker(inst["instance_name"].asString(), worker);
-  }
-  return res;
-}
-
-bool App::LoadWorkerFromClass(
-  const Json::Value& root,
-  const Json::Value& worker_list,
-  const std::string& worker_name) {
-  const auto& insts = worker_list[worker_name];
-  bool res = false;
-  for (const auto& inst : insts) {
-    LOG(INFO) << "create instance \"class\""
-              << ": " << inst.toStyledString();
-    if (!inst.isMember("instance_name")) {
-      LOG(ERROR) << "worker \"" << worker_name
-                 << "\" key \"instance_name\": no key, skip";
-      continue;
-    }
-    res = true;
-    auto worker = mods_->CreateWorkerInst("class", worker_name);
-    if (worker == nullptr) {
-      LOG(ERROR) << "create worker "
-                 << "class." << worker_name << "."
-                 << inst["instance_name"].asString() << " failed, continue";
-      continue;
-    }
-    AddWorker(inst["instance_name"].asString(), worker);
+    res |= AddWorker(inst_name, worker, cfg);
   }
   return res;
 }
@@ -262,15 +214,18 @@ bool App::LoadWorkerFromClass(
 bool App::AddActor(
   const std::string& inst_name,
   const std::string& params,
-  std::shared_ptr<Actor> actor) {
+  std::shared_ptr<Actor> actor,
+  const Json::Value& config) {
   actor->SetInstName(inst_name);
-  return CreateContext(actor, params);
+  return CreateContext(actor, params, config);
 }
 
 bool App::AddWorker(
   const std::string& inst_name,
-  std::shared_ptr<Worker> worker) {
+  std::shared_ptr<Worker> worker,
+  const Json::Value& config) {
   worker->SetInstName(inst_name);
+  worker->SetConfig(config);
   if (!worker_mgr_->Add(worker)) {
     return false;
   }
@@ -303,20 +258,23 @@ bool App::CreateContext(
   const std::string& mod_name,
   const std::string& actor_name,
   const std::string& instance_name,
-  const std::string& params) {
+  const std::string& params,
+  const Json::Value& config) {
   auto mod_inst = mods_->CreateActorInst(mod_name, actor_name);
   if (mod_inst == nullptr) {
     LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
     return false;
   }
   mod_inst->SetInstName(instance_name);
-  return CreateContext(mod_inst, params);
+  return CreateContext(mod_inst, params, config);
 }
 
 bool App::CreateContext(
   std::shared_ptr<Actor> mod_inst,
-  const std::string& params) {
+  const std::string& params,
+  const Json::Value& config) {
   auto ctx = std::make_shared<Context>(shared_from_this(), mod_inst);
+  ctx->SetConfig(config);
   if (ctx->Init(params.c_str())) {
     LOG(ERROR) << "init " << mod_inst->GetActorName() << " fail";
     return false;

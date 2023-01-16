@@ -10,6 +10,8 @@ Author: likepeng <likepeng0418@163.com>
 #include <memory>
 #include <string>
 
+#include <jsoncpp/json/json.h>
+
 #include "myframe/mailbox.h"
 
 namespace myframe {
@@ -73,6 +75,12 @@ class Actor {
    * @return:         成功返回: 0, 失败返回: -1
    */
   int Timeout(const std::string& timer_name, int expired);
+
+   /**
+   * GetConfig() - 获得配置参数
+   * @return: 返回json对象
+   */
+  const Json::Value* GetConfig() const;
 
  private:
   bool IsFromLib() const;

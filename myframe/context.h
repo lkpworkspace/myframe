@@ -10,6 +10,8 @@ Author: likepeng <likepeng0418@163.com>
 #include <memory>
 #include <string>
 
+#include <jsoncpp/json/json.h>
+
 #include "myframe/mailbox.h"
 
 namespace myframe {
@@ -44,6 +46,9 @@ class Context final : public std::enable_shared_from_this<Context> {
   std::shared_ptr<Actor> GetActor() { return actor_; }
   std::shared_ptr<App> GetApp();
 
+  const Json::Value* GetConfig() const { return &config_; }
+  void SetConfig(const Json::Value& conf) { config_ = conf; }
+
  private:
   Mailbox mailbox_;
   /* 该actor的是否在工作线程的标志 */
@@ -52,6 +57,7 @@ class Context final : public std::enable_shared_from_this<Context> {
   bool in_wait_que_;
   std::shared_ptr<Actor> actor_;
   std::weak_ptr<App> app_;
+  Json::Value config_{ Json::Value::null };
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& ctx);

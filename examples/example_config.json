@@ -1,0 +1,26 @@
+{
+    "type":"library",
+    "lib":"libexample_config.so",
+    "actor":{
+        "example_actor_config":[
+            {
+                "instance_name":"#1",
+                "instance_config":{
+                    "key1":"hello",
+                    "key2":"world"
+                }
+            }
+        ]
+    },
+    "worker":{
+        "example_worker_config":[
+            {
+                "instance_name":"#1",
+                "instance_config":{
+                    "key1":100,
+                    "key2":200
+                }
+            }
+        ]
+    }
+}

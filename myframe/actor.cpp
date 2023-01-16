@@ -70,4 +70,12 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
 
 void Actor::SetContext(std::shared_ptr<Context> c) { ctx_ = c; }
 
+const Json::Value* Actor::GetConfig() const {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
+    return &Json::Value::null;
+  }
+  return ctx->GetConfig();
+}
+
 }  // namespace myframe
