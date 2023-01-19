@@ -13,8 +13,6 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-Actor::Actor() {}
-
 Actor::~Actor() {}
 
 void Actor::SetModName(const std::string& name) {
@@ -76,6 +74,14 @@ const Json::Value* Actor::GetConfig() const {
     return &Json::Value::null;
   }
   return ctx->GetConfig();
+}
+
+std::shared_ptr<App> Actor::GetApp() {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
+    return nullptr;
+  }
+  return ctx->GetApp();
 }
 
 }  // namespace myframe

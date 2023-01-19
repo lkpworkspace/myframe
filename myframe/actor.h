@@ -18,6 +18,7 @@ namespace myframe {
 
 class Msg;
 class Context;
+class App;
 class Actor {
   friend class App;
   friend class Context;
@@ -25,7 +26,7 @@ class Actor {
   friend class ModManager;
 
  public:
-  Actor();
+  Actor() = default;
   virtual ~Actor();
 
   /**
@@ -77,10 +78,15 @@ class Actor {
   int Timeout(const std::string& timer_name, int expired);
 
    /**
-   * GetConfig() - 获得配置参数
-   * @return: 返回json对象
-   */
+    * GetConfig() - 获得配置参数
+    * @return: 返回json对象
+    */
   const Json::Value* GetConfig() const;
+
+  /**
+   * GetConfig() - 获得应用实例
+   */
+  std::shared_ptr<App> GetApp();
 
  private:
   bool IsFromLib() const;
