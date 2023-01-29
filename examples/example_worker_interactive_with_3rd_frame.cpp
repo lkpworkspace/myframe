@@ -87,7 +87,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
   ExampleWorkerInteractiveWith3rdFrame() {}
   virtual ~ExampleWorkerInteractiveWith3rdFrame() {}
 
-  void OnInit() override {
+  void Init() override {
     // 线程_th通过MyQueue与myframe交互
     _th = std::thread([this]() {
       while (1) {

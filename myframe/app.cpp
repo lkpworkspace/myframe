@@ -15,19 +15,19 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/actor.h"
 #include "myframe/common.h"
-#include "myframe/context.h"
-#include "myframe/context_manager.h"
+#include "myframe/flags.h"
+#include "myframe/msg.h"
+#include "myframe/mailbox.h"
+#include "myframe/actor.h"
+#include "myframe/actor_context.h"
+#include "myframe/actor_context_manager.h"
 #include "myframe/event_conn.h"
 #include "myframe/event_conn_manager.h"
-#include "myframe/flags.h"
-#include "myframe/mod_manager.h"
-#include "myframe/msg.h"
 #include "myframe/worker_common.h"
-#include "myframe/worker_manager.h"
 #include "myframe/worker_timer.h"
-#include "myframe/mailbox.h"
+#include "myframe/worker_manager.h"
+#include "myframe/mod_manager.h"
 
 namespace myframe {
 
@@ -41,7 +41,7 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 
 App::App()
   : epoll_fd_(-1),
-    context_mgr_(new ContextManager()),
+    actor_ctx_mgr_(new ActorContextManager()),
     mods_(new ModManager()),
     worker_mgr_(new WorkerManager()),
     ev_conn_mgr_(new EventConnManager()) {}
@@ -170,7 +170,7 @@ bool App::LoadActors(
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    res |= CreateContext(
+    res |= CreateActorContext(
       mod_name,
       actor_name,
       inst_name,
@@ -217,7 +217,7 @@ bool App::AddActor(
   std::shared_ptr<Actor> actor,
   const Json::Value& config) {
   actor->SetInstName(inst_name);
-  return CreateContext(actor, params, config);
+  return CreateActorContext(actor, params, config);
 }
 
 bool App::AddWorker(
@@ -263,7 +263,7 @@ const std::shared_ptr<const Msg> App::SendRequest(
  *      3. 注册句柄
  *      4. 初始化actor
  */
-bool App::CreateContext(
+bool App::CreateActorContext(
   const std::string& mod_name,
   const std::string& actor_name,
   const std::string& instance_name,
@@ -275,20 +275,20 @@ bool App::CreateContext(
     return false;
   }
   mod_inst->SetInstName(instance_name);
-  return CreateContext(mod_inst, params, config);
+  return CreateActorContext(mod_inst, params, config);
 }
 
-bool App::CreateContext(
+bool App::CreateActorContext(
   std::shared_ptr<Actor> mod_inst,
   const std::string& params,
   const Json::Value& config) {
-  auto ctx = std::make_shared<Context>(shared_from_this(), mod_inst);
+  auto ctx = std::make_shared<ActorContext>(shared_from_this(), mod_inst);
   ctx->SetConfig(config);
   if (ctx->Init(params.c_str())) {
     LOG(ERROR) << "init " << mod_inst->GetActorName() << " fail";
     return false;
   }
-  context_mgr_->RegContext(ctx);
+  actor_ctx_mgr_->RegContext(ctx);
   // 初始化之后, 手动将actor中发送消息队列分发出去
   DispatchMsg(ctx);
   return true;
@@ -380,7 +380,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
   std::lock_guard<std::mutex> lock(dispatch_mtx_);
   for (auto& msg : (*msg_list)) {
     DLOG(INFO) << *msg;
-    auto name_list = SplitMsgName(msg->GetDst());
+    auto name_list = Common::SplitMsgName(msg->GetDst());
     if (name_list.size() < 2) {
       LOG(ERROR) << "Unknown msg " << *msg;
       continue;
@@ -391,7 +391,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
       worker_mgr_->DispatchWorkerMsg(msg);
     } else if (name_list[0] == "actor") {
       // dispatch to actor
-      context_mgr_->DispatchMsg(msg);
+      actor_ctx_mgr_->DispatchMsg(msg);
     } else if (name_list[0] == "event") {
       if (name_list[1] == "conn") {
         ev_conn_mgr_->Notify(msg->GetDst(), msg);
@@ -406,7 +406,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
 }
 
 // 将获得的消息分发给其他actor
-void App::DispatchMsg(std::shared_ptr<Context> context) {
+void App::DispatchMsg(std::shared_ptr<ActorContext> context) {
   if (nullptr == context) {
     return;
   }
@@ -422,10 +422,10 @@ void App::CheckStopWorkers() {
 
   LOG_IF(INFO, worker_mgr_->IdleWorkerSize() == 0)
       << "worker busy, wait for idle worker...";
-  std::shared_ptr<Context> context = nullptr;
+  std::shared_ptr<ActorContext> context = nullptr;
   std::shared_ptr<Worker> worker = nullptr;
   while ((worker = worker_mgr_->FrontIdleWorker()) != nullptr) {
-    if (nullptr == (context = context_mgr_->GetContextWithMsg())) {
+    if (nullptr == (context = actor_ctx_mgr_->GetContextWithMsg())) {
       DLOG(INFO) << "no actor need process, waiting...";
       break;
     }

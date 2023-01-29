@@ -4,13 +4,14 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
 #include <list>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <string>
+
+#include "myframe/macros.h"
 
 namespace myframe {
 
@@ -19,7 +20,7 @@ class Msg;
 class EventConn;
 class EventConnManager final {
   friend class App;
-
+  DISALLOW_COPY_AND_ASSIGN(EventConnManager)
  public:
   EventConnManager();
   virtual ~EventConnManager();

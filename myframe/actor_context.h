@@ -12,6 +12,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/macros.h"
 #include "myframe/mailbox.h"
 
 namespace myframe {
@@ -20,15 +21,15 @@ class App;
 class Msg;
 class Actor;
 class WorkerCommon;
-class Context final : public std::enable_shared_from_this<Context> {
-  friend std::ostream& operator<<(std::ostream& out, const Context& ctx);
-  friend class ContextManager;
+class ActorContext final : public std::enable_shared_from_this<ActorContext> {
+  friend std::ostream& operator<<(std::ostream& out, const ActorContext& ctx);
+  friend class ActorContextManager;
   friend class WorkerCommon;
   friend class App;
-
+  DISALLOW_COPY_AND_ASSIGN(ActorContext)
  public:
-  Context(std::shared_ptr<App> app, std::shared_ptr<Actor> actor);
-  virtual ~Context();
+  ActorContext(std::shared_ptr<App> app, std::shared_ptr<Actor> actor);
+  virtual ~ActorContext();
 
   int Init(const char* param);
 
@@ -60,6 +61,6 @@ class Context final : public std::enable_shared_from_this<Context> {
   Json::Value config_{ Json::Value::null };
 };
 
-std::ostream& operator<<(std::ostream& out, const Context& ctx);
+std::ostream& operator<<(std::ostream& out, const ActorContext& ctx);
 
 }  // namespace myframe

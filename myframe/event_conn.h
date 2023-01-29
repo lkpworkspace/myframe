@@ -4,11 +4,11 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
 #include <memory>
 #include <string>
 
+#include "myframe/macros.h"
 #include "myframe/event.h"
 #include "myframe/mailbox.h"
 #include "myframe/cmd_channel.h"
@@ -25,8 +25,10 @@ class EventConnManager;
 class EventConn final : public Event {
   friend class App;
   friend class EventConnManager;
-
+  DISALLOW_COPY_AND_ASSIGN(EventConn)
  public:
+  EventConn() = default;
+
   int GetFd() const override;
   EventType GetType() override;
 

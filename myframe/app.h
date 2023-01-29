@@ -4,7 +4,6 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
 #include <atomic>
 #include <list>
@@ -16,28 +15,29 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/macros.h"
 #include "myframe/event.h"
 
 struct epoll_event;
 
 namespace myframe {
 
-class Context;
 class Msg;
 class Actor;
+class ActorContext;
+class ActorContextManager;
 class Event;
+class EventConn;
+class EventConnManager;
 class Worker;
 class WorkerCommon;
 class WorkerTimer;
-class ModManager;
-class ContextManager;
 class WorkerManager;
-class EventConn;
-class EventConnManager;
+class ModManager;
 class App final : public std::enable_shared_from_this<App> {
   friend class Actor;
-  friend class Context;
-
+  friend class ActorContext;
+  DISALLOW_COPY_AND_ASSIGN(App)
  public:
   App();
   virtual ~App();
@@ -65,8 +65,8 @@ class App final : public std::enable_shared_from_this<App> {
     const std::string& name,
     std::shared_ptr<Msg> msg);
 
-  std::unique_ptr<ContextManager>& GetContextManager() {
-    return context_mgr_;
+  std::unique_ptr<ActorContextManager>& GetActorContextManager() {
+    return actor_ctx_mgr_;
   }
 
   std::unique_ptr<ModManager>& GetModManager() { return mods_; }
@@ -77,13 +77,13 @@ class App final : public std::enable_shared_from_this<App> {
   int Exec();
 
  private:
-  bool CreateContext(
+  bool CreateActorContext(
     const std::string& mod_name,
     const std::string& actor_name,
     const std::string& inst_name,
     const std::string& params,
     const Json::Value& config = Json::Value::null);
-  bool CreateContext(
+  bool CreateActorContext(
     std::shared_ptr<Actor> inst,
     const std::string& params,
     const Json::Value& config = Json::Value::null);
@@ -110,7 +110,7 @@ class App final : public std::enable_shared_from_this<App> {
   EventIOType ToEventIOType(int ev);
   int ToEpollType(const EventIOType& type);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
-  void DispatchMsg(std::shared_ptr<Context> context);
+  void DispatchMsg(std::shared_ptr<ActorContext> context);
   void ProcessEvent(struct epoll_event* evs, int ev_count);
   void ProcessWorkerEvent(std::shared_ptr<WorkerCommon>);
   void ProcessTimerEvent(std::shared_ptr<WorkerTimer>);
@@ -124,7 +124,7 @@ class App final : public std::enable_shared_from_this<App> {
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// 句柄管理对象
-  std::unique_ptr<ContextManager> context_mgr_;
+  std::unique_ptr<ActorContextManager> actor_ctx_mgr_;
   /// 与框架通信管理对象
   std::unique_ptr<EventConnManager> ev_conn_mgr_;
   /// 线程管理对象

@@ -12,19 +12,20 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/macros.h"
 #include "myframe/mailbox.h"
 
 namespace myframe {
 
 class Msg;
-class Context;
+class ActorContext;
 class App;
 class Actor {
   friend class App;
-  friend class Context;
+  friend class ActorContext;
   friend class ModLib;
   friend class ModManager;
-
+  DISALLOW_COPY_AND_ASSIGN(Actor)
  public:
   Actor() = default;
   virtual ~Actor();
@@ -93,13 +94,13 @@ class Actor {
   void SetModName(const std::string& name);
   void SetTypeName(const std::string& name);
   void SetInstName(const std::string& name);
-  void SetContext(std::shared_ptr<Context>);
+  void SetContext(std::shared_ptr<ActorContext>);
 
   bool is_from_lib_ = false;
   std::string mod_name_;
   std::string actor_name_;
   std::string instance_name_;
-  std::weak_ptr<Context> ctx_;
+  std::weak_ptr<ActorContext> ctx_;
 };
 
 }  // namespace myframe

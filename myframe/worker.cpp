@@ -66,7 +66,7 @@ int Worker::DispatchAndWaitMsg() {
 
 void Worker::Initialize() {
   mailbox_.SetAddr(GetWorkerName());
-  OnInit();
+  Init();
 }
 
 void Worker::ListenThread(std::shared_ptr<Worker> w) {
@@ -75,7 +75,7 @@ void Worker::ListenThread(std::shared_ptr<Worker> w) {
   while (w->runing_.load()) {
     w->Run();
   }
-  w->OnExit();
+  w->Exit();
 }
 
 int Worker::CacheSize() const {
@@ -91,7 +91,7 @@ void Worker::Cache(std::shared_ptr<Msg> msg) {
 }
 
 void Worker::Cache(std::list<std::shared_ptr<Msg>>* msg_list) {
-  ListAppend(&cache_, msg_list);
+  Common::ListAppend(&cache_, msg_list);
 }
 
 Mailbox* Worker::GetMailbox() {

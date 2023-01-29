@@ -24,7 +24,7 @@ enum class EventType : int {
 
 class Event : public std::enable_shared_from_this<Event> {
  public:
-  Event() {}
+  Event() = default;
   virtual ~Event() {}
 
   /* 事件类型 */

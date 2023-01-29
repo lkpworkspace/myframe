@@ -8,7 +8,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/actor.h"
 
 #include "myframe/app.h"
-#include "myframe/context.h"
+#include "myframe/actor_context.h"
 #include "myframe/worker_timer.h"
 
 namespace myframe {
@@ -66,7 +66,7 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
   return timer_worker->SetTimeout(GetActorName(), timer_name, expired);
 }
 
-void Actor::SetContext(std::shared_ptr<Context> c) { ctx_ = c; }
+void Actor::SetContext(std::shared_ptr<ActorContext> c) { ctx_ = c; }
 
 const Json::Value* Actor::GetConfig() const {
   auto ctx = ctx_.lock();

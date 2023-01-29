@@ -9,8 +9,8 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/context.h"
 #include "myframe/msg.h"
+#include "myframe/actor_context.h"
 
 namespace myframe {
 
@@ -29,13 +29,13 @@ void WorkerCommon::Run() {
   Work();
 }
 
-void WorkerCommon::OnInit() {
-  Worker::OnInit();
+void WorkerCommon::Init() {
+  Worker::Init();
   LOG(INFO) << "Worker " << GetWorkerName() << " init";
 }
 
-void WorkerCommon::OnExit() {
-  Worker::OnExit();
+void WorkerCommon::Exit() {
+  Worker::Exit();
   LOG(INFO) << "Worker " << GetWorkerName() << " exit";
 }
 

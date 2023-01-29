@@ -168,14 +168,14 @@ void WorkerTimer::Run() {
   usleep(2500);
 }
 
-void WorkerTimer::OnInit() {
-  Worker::OnInit();
+void WorkerTimer::Init() {
+  Worker::Init();
   LOG(INFO) << "timer worker " << GetWorkerName() << " init";
 }
 
-void WorkerTimer::OnExit() {
+void WorkerTimer::Exit() {
   LOG(INFO) << "timer worker " << GetWorkerName() << " exit";
-  Worker::OnExit();
+  Worker::Exit();
 }
 
 int WorkerTimer::SetTimeout(const std::string& actor_name,

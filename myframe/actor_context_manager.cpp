@@ -5,7 +5,7 @@ All rights reserved.
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
-#include "myframe/context_manager.h"
+#include "myframe/actor_context_manager.h"
 
 #include <assert.h>
 #include <string.h>
@@ -14,23 +14,23 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/actor.h"
-#include "myframe/context.h"
 #include "myframe/msg.h"
+#include "myframe/actor.h"
+#include "myframe/actor_context.h"
 
 namespace myframe {
 
-ContextManager::ContextManager() : ctx_count_(0) {
-  LOG(INFO) << "ContextManager create";
+ActorContextManager::ActorContextManager() : ctx_count_(0) {
+  LOG(INFO) << "ActorContextManager create";
   pthread_rwlock_init(&rw_, NULL);
 }
 
-ContextManager::~ContextManager() {
-  LOG(INFO) << "ContextManager deconstruct";
+ActorContextManager::~ActorContextManager() {
+  LOG(INFO) << "ActorContextManager deconstruct";
   pthread_rwlock_destroy(&rw_);
 }
 
-void ContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
+void ActorContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
   auto ctx = GetContext(msg->GetDst());
   if (nullptr == ctx) {
     LOG(ERROR) << "Unknown msg " << *msg;
@@ -41,7 +41,7 @@ void ContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
   PushContext(ctx);
 }
 
-bool ContextManager::RegContext(std::shared_ptr<Context> ctx) {
+bool ActorContextManager::RegContext(std::shared_ptr<ActorContext> ctx) {
   pthread_rwlock_wrlock(&rw_);
   if (ctxs_.find(ctx->GetActor()->GetActorName()) != ctxs_.end()) {
     LOG(WARNING) << "reg the same actor name: "
@@ -55,7 +55,7 @@ bool ContextManager::RegContext(std::shared_ptr<Context> ctx) {
   return true;
 }
 
-std::shared_ptr<Context> ContextManager::GetContext(
+std::shared_ptr<ActorContext> ActorContextManager::GetContext(
     const std::string& actor_name) {
   pthread_rwlock_rdlock(&rw_);
   if (ctxs_.find(actor_name) == ctxs_.end()) {
@@ -68,7 +68,7 @@ std::shared_ptr<Context> ContextManager::GetContext(
   return ctx;
 }
 
-void ContextManager::PrintWaitQueue() {
+void ActorContextManager::PrintWaitQueue() {
   DLOG(INFO) << "cur wait queue actor:";
   auto it = wait_queue_.begin();
   while (it != wait_queue_.end()) {
@@ -82,13 +82,13 @@ void ContextManager::PrintWaitQueue() {
   }
 }
 
-std::shared_ptr<Context> ContextManager::GetContextWithMsg() {
+std::shared_ptr<ActorContext> ActorContextManager::GetContextWithMsg() {
   if (wait_queue_.empty()) {
     return nullptr;
   }
 
-  std::vector<std::shared_ptr<Context>> in_runing_context;
-  std::shared_ptr<Context> ret = nullptr;
+  std::vector<std::shared_ptr<ActorContext>> in_runing_context;
+  std::shared_ptr<ActorContext> ret = nullptr;
   while (!wait_queue_.empty()) {
     if (wait_queue_.front().expired()) {
       wait_queue_.pop_front();
@@ -115,7 +115,7 @@ std::shared_ptr<Context> ContextManager::GetContextWithMsg() {
   return ret;
 }
 
-void ContextManager::PushContext(std::shared_ptr<Context> ctx) {
+void ActorContextManager::PushContext(std::shared_ptr<ActorContext> ctx) {
   if (ctx->IsInWaitQueue()) {
     DLOG(INFO) << *ctx << " already in wait queue, return";
     PrintWaitQueue();

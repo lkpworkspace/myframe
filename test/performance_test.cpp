@@ -376,5 +376,6 @@ TEST(App, performance_test) {
     }
   });
 
+  LOG(INFO) << "begin testing...";
   app->Exec();
 }

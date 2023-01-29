@@ -4,8 +4,8 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
+
 #include <list>
 #include <memory>
 #include <mutex>
@@ -26,7 +26,7 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-class Timer : public ListNode {
+class Timer final : public ListNode {
   friend class TimerManager;
 
  public:
@@ -39,13 +39,15 @@ class Timer : public ListNode {
   bool run_;
 };
 
-class TimerManager {
+class TimerManager final {
  public:
   TimerManager();
   virtual ~TimerManager();
 
-  int Timeout(const std::string& actor_name, const std::string& timer_name,
-              int time);
+  int Timeout(
+    const std::string& actor_name,
+    const std::string& timer_name,
+    int time);
 
   std::list<std::shared_ptr<Msg>>* Updatetime();
 
@@ -71,22 +73,24 @@ class TimerManager {
   std::mutex mtx_;
 };
 
-class WorkerTimer : public Worker {
+class WorkerTimer final : public Worker {
   friend class App;
 
  public:
   WorkerTimer();
   virtual ~WorkerTimer();
 
-  int SetTimeout(const std::string& actor_name, const std::string& timer_name,
-                 int time);
+  int SetTimeout(
+    const std::string& actor_name,
+    const std::string& timer_name,
+    int time);
 
   /**
    * override Worker virtual method
    */
+  void Init() override;
   void Run() override;
-  void OnInit() override;
-  void OnExit() override;
+  void Exit() override;
 
   /**
    * override Event virtual method

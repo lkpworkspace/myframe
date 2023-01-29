@@ -14,7 +14,7 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 class Msg;
-class Context;
+class ActorContext;
 class WorkerCommon final : public Worker {
   friend class App;
 
@@ -24,14 +24,14 @@ class WorkerCommon final : public Worker {
 
   /// override MyWorker virtual method
   void Run() override;
-  void OnInit() override;
-  void OnExit() override;
+  void Init() override;
+  void Exit() override;
 
   /// override Event virtual method
   EventType GetType() { return EventType::kWorkerCommon; }
 
-  void SetContext(std::shared_ptr<Context> context) { context_ = context; }
-  std::shared_ptr<Context> GetContext() {
+  void SetContext(std::shared_ptr<ActorContext> context) { context_ = context; }
+  std::shared_ptr<ActorContext> GetContext() {
     return (context_.expired() ? nullptr : context_.lock());
   }
 
@@ -42,7 +42,7 @@ class WorkerCommon final : public Worker {
   void Idle();
 
   /// 当前执行actor的指针
-  std::weak_ptr<Context> context_;
+  std::weak_ptr<ActorContext> context_;
 };
 
 }  // namespace myframe

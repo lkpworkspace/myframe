@@ -13,11 +13,14 @@ Author: likepeng <likepeng0418@163.com>
 #include <unordered_map>
 #include <vector>
 
+#include "myframe/macros.h"
+
 namespace myframe {
 
 class Actor;
 class Worker;
 class ModLib final {
+  DISALLOW_COPY_AND_ASSIGN(ModLib)
  public:
   ModLib();
   virtual ~ModLib();

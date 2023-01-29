@@ -19,7 +19,7 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-std::vector<std::string> SplitMsgName(const std::string& name) {
+std::vector<std::string> Common::SplitMsgName(const std::string& name) {
   std::vector<std::string> name_list;
   std::string item;
   std::stringstream ss(name);

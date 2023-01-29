@@ -51,7 +51,7 @@ void Mailbox::Send(
 }
 
 void Mailbox::Send(std::list<std::shared_ptr<Msg>>* msg_list) {
-  ListAppend(&send_, msg_list);
+  Common::ListAppend(&send_, msg_list);
 }
 
 std::list<std::shared_ptr<Msg>>* Mailbox::GetSendList() {
@@ -75,7 +75,7 @@ void Mailbox::Recv(std::shared_ptr<Msg> msg) {
 }
 
 void Mailbox::Recv(std::list<std::shared_ptr<Msg>>* msg_list) {
-  ListAppend(&recv_, msg_list);
+  Common::ListAppend(&recv_, msg_list);
 }
 
 const std::shared_ptr<const Msg> Mailbox::PopRecv() {

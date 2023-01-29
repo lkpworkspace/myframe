@@ -11,11 +11,13 @@ Author: likepeng <likepeng0418@163.com>
 #include <unordered_map>
 #include <string>
 
+#include "myframe/macros.h"
 #include "myframe/mod_lib.h"
 
 namespace myframe {
 
 class ModManager final {
+  DISALLOW_COPY_AND_ASSIGN(ModManager)
  public:
   ModManager();
   virtual ~ModManager();

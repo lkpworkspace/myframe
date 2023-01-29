@@ -14,11 +14,14 @@ Author: likepeng <likepeng0418@163.com>
 #include <string>
 #include <unordered_map>
 
+#include "myframe/macros.h"
+
 namespace myframe {
 
 class Msg;
 class Worker;
 class WorkerManager final {
+  DISALLOW_COPY_AND_ASSIGN(WorkerManager)
  public:
   WorkerManager();
   virtual ~WorkerManager();

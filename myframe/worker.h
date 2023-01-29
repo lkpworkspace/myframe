@@ -14,6 +14,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/macros.h"
 #include "myframe/event.h"
 #include "myframe/mailbox.h"
 #include "myframe/cmd_channel.h"
@@ -30,7 +31,7 @@ class Worker : public Event {
   friend class ModLib;
   friend class ModManager;
   friend class WorkerManager;
-
+  DISALLOW_COPY_AND_ASSIGN(Worker)
  public:
   Worker();
   virtual ~Worker();
@@ -40,9 +41,9 @@ class Worker : public Event {
   CmdChannel* GetCmdChannel();
 
   ////////////////////////////// thread 相关函数
-  virtual void OnInit() {}
+  virtual void Init() {}
   virtual void Run() = 0;
-  virtual void OnExit() {}
+  virtual void Exit() {}
   void Start();
   void Stop();
   bool IsRuning() { return runing_.load(); }

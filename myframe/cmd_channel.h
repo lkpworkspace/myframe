@@ -5,6 +5,7 @@ All rights reserved.
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
+#include "myframe/macros.h"
 
 namespace myframe {
 
@@ -17,6 +18,7 @@ enum class Cmd : char {
 };
 
 class CmdChannel final {
+  DISALLOW_COPY_AND_ASSIGN(CmdChannel)
  public:
   CmdChannel();
   virtual ~CmdChannel();

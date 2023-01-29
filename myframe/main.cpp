@@ -15,7 +15,8 @@ Author: likepeng <likepeng0418@163.com>
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
-  // 利用构造函数初始化日志系统
+
+  // 初始化日志系统
   myframe::InitLog();
 
   // 初始化并启动线程

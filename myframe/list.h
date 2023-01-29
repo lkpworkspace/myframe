@@ -4,8 +4,8 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
+
 /**
  *  双向循环链表
  **/
@@ -21,7 +21,7 @@ class ListNode {
   ListNode* next;
 };
 
-class List {
+class List final {
  public:
   List() { __Init(); }
 

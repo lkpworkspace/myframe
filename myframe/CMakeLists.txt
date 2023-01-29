@@ -16,7 +16,9 @@ add_executable(myframe_main ${MYFRAME_MAIN})
 target_link_libraries(myframe_main myframe)
 
 ### install
-file(GLOB header_files 
+file(GLOB header_files
+    macros.h
+    flags.h
     log.h
     msg.h
     mailbox.h
@@ -27,7 +29,6 @@ file(GLOB header_files
     mod_lib.h
     mod_manager.h
     app.h
-    flags.h
 )
 install(FILES 
     ${header_files}
