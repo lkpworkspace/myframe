@@ -25,7 +25,7 @@ class Actor {
   friend class ActorContext;
   friend class ModLib;
   friend class ModManager;
-  DISALLOW_COPY_AND_ASSIGN(Actor)
+
  public:
   Actor() = default;
   virtual ~Actor();
@@ -101,6 +101,8 @@ class Actor {
   std::string actor_name_;
   std::string instance_name_;
   std::weak_ptr<ActorContext> ctx_;
+
+  DISALLOW_COPY_AND_ASSIGN(Actor)
 };
 
 }  // namespace myframe

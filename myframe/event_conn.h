@@ -25,7 +25,7 @@ class EventConnManager;
 class EventConn final : public Event {
   friend class App;
   friend class EventConnManager;
-  DISALLOW_COPY_AND_ASSIGN(EventConn)
+
  public:
   EventConn() = default;
 
@@ -49,6 +49,8 @@ class EventConn final : public Event {
   CmdChannel cmd_channel_;
   Mailbox mailbox_;
   EventConnType conn_type_{ EventConnType::kSendReq };
+
+  DISALLOW_COPY_AND_ASSIGN(EventConn)
 };
 
 }  // namespace myframe

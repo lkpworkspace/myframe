@@ -26,7 +26,7 @@ class ActorContext final : public std::enable_shared_from_this<ActorContext> {
   friend class ActorContextManager;
   friend class WorkerCommon;
   friend class App;
-  DISALLOW_COPY_AND_ASSIGN(ActorContext)
+
  public:
   ActorContext(std::shared_ptr<App> app, std::shared_ptr<Actor> actor);
   virtual ~ActorContext();
@@ -59,6 +59,8 @@ class ActorContext final : public std::enable_shared_from_this<ActorContext> {
   std::shared_ptr<Actor> actor_;
   std::weak_ptr<App> app_;
   Json::Value config_{ Json::Value::null };
+
+  DISALLOW_COPY_AND_ASSIGN(ActorContext)
 };
 
 std::ostream& operator<<(std::ostream& out, const ActorContext& ctx);

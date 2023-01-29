@@ -37,7 +37,7 @@ class ModManager;
 class App final : public std::enable_shared_from_this<App> {
   friend class Actor;
   friend class ActorContext;
-  DISALLOW_COPY_AND_ASSIGN(App)
+
  public:
   App();
   virtual ~App();
@@ -129,6 +129,8 @@ class App final : public std::enable_shared_from_this<App> {
   std::unique_ptr<EventConnManager> ev_conn_mgr_;
   /// 线程管理对象
   std::unique_ptr<WorkerManager> worker_mgr_;
+
+  DISALLOW_COPY_AND_ASSIGN(App)
 };
 
 }  // namespace myframe

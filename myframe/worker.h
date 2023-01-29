@@ -31,7 +31,7 @@ class Worker : public Event {
   friend class ModLib;
   friend class ModManager;
   friend class WorkerManager;
-  DISALLOW_COPY_AND_ASSIGN(Worker)
+
  public:
   Worker();
   virtual ~Worker();
@@ -104,6 +104,8 @@ class Worker : public Event {
   CmdChannel cmd_channel_;
   /// thread
   std::thread th_;
+
+  DISALLOW_COPY_AND_ASSIGN(Worker)
 };
 
 }  // namespace myframe

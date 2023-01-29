@@ -20,7 +20,6 @@ namespace myframe {
 class Msg;
 class ActorContext;
 class ActorContextManager final {
-  DISALLOW_COPY_AND_ASSIGN(ActorContextManager)
  public:
   ActorContextManager();
   virtual ~ActorContextManager();
@@ -48,6 +47,8 @@ class ActorContextManager final {
   pthread_rwlock_t rw_;
   /// key: context name, value: context
   std::unordered_map<std::string, std::shared_ptr<ActorContext>> ctxs_;
+
+  DISALLOW_COPY_AND_ASSIGN(ActorContextManager)
 };
 
 }  // namespace myframe

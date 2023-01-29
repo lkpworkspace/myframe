@@ -18,7 +18,6 @@ enum class Cmd : char {
 };
 
 class CmdChannel final {
-  DISALLOW_COPY_AND_ASSIGN(CmdChannel)
  public:
   CmdChannel();
   virtual ~CmdChannel();
@@ -36,6 +35,8 @@ class CmdChannel final {
   void CreateSockpair();
   void CloseSockpair();
   int sockpair_[2] {-1, -1};
+
+  DISALLOW_COPY_AND_ASSIGN(CmdChannel)
 };
 
 }  // namespace myframe

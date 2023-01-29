@@ -18,6 +18,7 @@ class Mailbox final {
   friend class Worker;
   friend class EventConnManager;
   friend class App;
+
  public:
   /// 邮箱地址
   const std::string& Addr() const;

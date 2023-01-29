@@ -20,7 +20,7 @@ class Msg;
 class EventConn;
 class EventConnManager final {
   friend class App;
-  DISALLOW_COPY_AND_ASSIGN(EventConnManager)
+
  public:
   EventConnManager();
   virtual ~EventConnManager();
@@ -44,6 +44,8 @@ class EventConnManager final {
   std::list<std::shared_ptr<EventConn>> idle_conn_;
 
   std::weak_ptr<App> app_;
+
+  DISALLOW_COPY_AND_ASSIGN(EventConnManager)
 };
 
 }  // namespace myframe

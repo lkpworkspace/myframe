@@ -20,7 +20,6 @@ namespace myframe {
 class Actor;
 class Worker;
 class ModLib final {
-  DISALLOW_COPY_AND_ASSIGN(ModLib)
  public:
   ModLib();
   virtual ~ModLib();
@@ -69,6 +68,8 @@ class ModLib final {
 
   std::unordered_map<std::string, void*> mods_;
   pthread_rwlock_t rw_;
+
+  DISALLOW_COPY_AND_ASSIGN(ModLib)
 };
 
 }  // namespace myframe

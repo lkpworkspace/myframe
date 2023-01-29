@@ -21,7 +21,6 @@ namespace myframe {
 class Msg;
 class Worker;
 class WorkerManager final {
-  DISALLOW_COPY_AND_ASSIGN(WorkerManager)
  public:
   WorkerManager();
   virtual ~WorkerManager();
@@ -56,6 +55,8 @@ class WorkerManager final {
   std::unordered_map<std::string, int> name_handle_map_;
   /// handle/worker 映射表
   std::unordered_map<int, std::shared_ptr<Worker>> workers_;
+
+  DISALLOW_COPY_AND_ASSIGN(WorkerManager)
 };
 
 }  // namespace myframe

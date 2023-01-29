@@ -19,8 +19,13 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-ActorContext::ActorContext(std::shared_ptr<App> app, std::shared_ptr<Actor> actor)
-    : app_(app), actor_(actor), in_worker_(false), in_wait_que_(false) {
+ActorContext::ActorContext(
+  std::shared_ptr<App> app,
+  std::shared_ptr<Actor> actor)
+    : app_(app)
+    , actor_(actor)
+    , in_worker_(false)
+    , in_wait_que_(false) {
   mailbox_.SetAddr(actor_->GetActorName());
   LOG(INFO) << mailbox_.Addr() << " context create";
 }

@@ -17,7 +17,6 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 class ModManager final {
-  DISALLOW_COPY_AND_ASSIGN(ModManager)
  public:
   ModManager();
   virtual ~ModManager();
@@ -48,6 +47,8 @@ class ModManager final {
   pthread_rwlock_t class_actor_rw_;
   pthread_rwlock_t class_worker_rw_;
   ModLib lib_mods_;
+
+  DISALLOW_COPY_AND_ASSIGN(ModManager)
 };
 
 }  // namespace myframe
