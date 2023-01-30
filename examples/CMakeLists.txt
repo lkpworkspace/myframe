@@ -19,6 +19,8 @@ add_library(example_worker_actor_interactive SHARED example_worker_actor_interac
 target_link_libraries(example_worker_actor_interactive myframe)
 add_library(example_worker_interactive_with_3rd_frame SHARED example_worker_interactive_with_3rd_frame.cpp)
 target_link_libraries(example_worker_interactive_with_3rd_frame myframe)
+add_library(example_worker_quit SHARED example_worker_quit.cpp)
+target_link_libraries(example_worker_quit myframe)
 
 add_library(example_config SHARED example_config.cpp)
 target_link_libraries(example_config myframe)
@@ -42,6 +44,7 @@ INSTALL(TARGETS
     example_worker_publish
     example_worker_talk 
     example_worker_interactive_with_3rd_frame
+    example_worker_quit
     example_config
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
