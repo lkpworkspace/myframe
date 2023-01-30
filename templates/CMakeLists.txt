@@ -3,14 +3,15 @@ PROJECT(@template_name@)
 
 #### compile setting
 SET(CMAKE_C_STANDARD 11)
-SET(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_C_FLGAS "-fPIC -DPIC")
-SET(CMAKE_CXX_FLGAS "-fPIC -DPIC")
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED YES)
+SET(CMAKE_C_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr")
+SET(CMAKE_CXX_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr")
 
 #### path setting
 SET(CMAKE_INSTALL_PREFIX "$ENV{HOME}/myframe")
 SET(MYFRAME_ROOT ${CMAKE_INSTALL_PREFIX})
-SET(MYFRAME_INSTALL_CONF_DIR ${MYFRAME_ROOT}/service)
+SET(MYFRAME_INSTALL_SERVICE_DIR ${MYFRAME_ROOT}/service)
 SET(MYFRAME_INSTALL_LIB_DIR ${MYFRAME_ROOT}/lib)
 
 #### dep 3rd lib
@@ -22,8 +23,11 @@ FIND_PACKAGE(GTest REQUIRED)
 INCLUDE_DIRECTORIES(${MYFRAME_ROOT}/inc)
 
 #### lib path
-LINK_LIBRARIES(dl pthread)
-LINK_LIBRARIES(glog gflags jsoncpp)
+LINK_LIBRARIES(
+    dl pthread
+    glog gflags jsoncpp
+    -Wl,-z,defs
+)
 LINK_DIRECTORIES(${MYFRAME_ROOT}/lib)
 
 #### genrate mod lib
@@ -47,5 +51,5 @@ INSTALL(FILES
     OWNER_READ
     GROUP_READ
     WORLD_READ
-    DESTINATION ${MYFRAME_INSTALL_CONF_DIR}
+    DESTINATION ${MYFRAME_INSTALL_SERVICE_DIR}
 )

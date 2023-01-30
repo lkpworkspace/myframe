@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 ### configure file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MyFlags.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/MyFlags.cpp @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flags.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/flags.cpp @ONLY)
 
 ### source
 aux_source_directory(. MYFRAME_SRCS)
@@ -16,18 +16,19 @@ add_executable(myframe_main ${MYFRAME_MAIN})
 target_link_libraries(myframe_main myframe)
 
 ### install
-file(GLOB header_files 
-    MyLog.h
-    MyMsg.h
-    MyActor.h
-    MyEvent.h
-    MyWorker.h
-    MyModLib.h
-    MyModManager.h
-    MyApp.h
-    MyCommon.h
-    MyFlags.h
-    MyQueue.h
+file(GLOB header_files
+    macros.h
+    flags.h
+    log.h
+    msg.h
+    mailbox.h
+    cmd_channel.h
+    actor.h
+    event.h
+    worker.h
+    mod_lib.h
+    mod_manager.h
+    app.h
 )
 install(FILES 
     ${header_files}
@@ -35,7 +36,7 @@ install(FILES
     OWNER_READ
     GROUP_READ
     WORLD_READ
-    DESTINATION ${MYFRAME_INC_DIR}
+    DESTINATION ${MYFRAME_INC_DIR}/myframe
 )
 install(TARGETS myframe myframe_main
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}

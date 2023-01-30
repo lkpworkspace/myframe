@@ -1,0 +1,11 @@
+{
+  "type":"library",
+  "lib":"libexample_worker_quit.so",
+  "worker":{
+      "example_worker_quit":[
+          {
+              "instance_name":"#1"
+          }
+      ]
+  }
+}

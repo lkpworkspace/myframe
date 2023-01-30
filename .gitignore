@@ -11,4 +11,4 @@ build/
 
 .vscode
 
-myframe/MyFlags.cpp
+myframe/flags.cpp
