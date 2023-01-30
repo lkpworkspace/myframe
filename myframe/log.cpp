@@ -24,9 +24,7 @@ static void signal_handler(const char *data, int size) {
 namespace myframe {
 
 void InitLog(const char* bin_name) {
-  if (!google::IsGoogleLoggingInitialized()) {
-    google::InitGoogleLogging(bin_name);
-  }
+  google::InitGoogleLogging(bin_name);
 
   FLAGS_logbufsecs = 0;
   FLAGS_max_log_size = 100;
