@@ -34,8 +34,12 @@ find_package(jsoncpp REQUIRED)
 find_package(gflags REQUIRED)
 find_package(GTest REQUIRED)
 
-link_libraries(pthread dl rt m)
-link_libraries(glog gflags jsoncpp)
+link_libraries(
+  pthread dl rt m
+  glog gflags
+  jsoncpp
+  -Wl,-z,defs
+)
 if (CMAKE_COMPILER_IS_GNUCC)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpfullversion -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)

@@ -85,7 +85,7 @@ class Actor {
   const Json::Value* GetConfig() const;
 
   /**
-   * GetConfig() - 获得应用实例
+   * GetApp() - 获得应用实例
    */
   std::shared_ptr<App> GetApp();
 
@@ -94,12 +94,15 @@ class Actor {
   void SetModName(const std::string& name);
   void SetTypeName(const std::string& name);
   void SetInstName(const std::string& name);
+  void SetConfig(const Json::Value& conf);
+
   void SetContext(std::shared_ptr<ActorContext>);
 
   bool is_from_lib_ = false;
   std::string mod_name_;
   std::string actor_name_;
   std::string instance_name_;
+  Json::Value config_{ Json::Value::null };
   std::weak_ptr<ActorContext> ctx_;
 
   DISALLOW_COPY_AND_ASSIGN(Actor)

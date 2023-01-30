@@ -30,9 +30,10 @@ class Event;
 class EventConn;
 class EventConnManager;
 class Worker;
+class WorkerContext;
 class WorkerCommon;
 class WorkerTimer;
-class WorkerManager;
+class WorkerContextManager;
 class ModManager;
 class App final : public std::enable_shared_from_this<App> {
   friend class Actor;
@@ -85,8 +86,7 @@ class App final : public std::enable_shared_from_this<App> {
     const Json::Value& config = Json::Value::null);
   bool CreateActorContext(
     std::shared_ptr<Actor> inst,
-    const std::string& params,
-    const Json::Value& config = Json::Value::null);
+    const std::string& params);
 
   std::shared_ptr<WorkerTimer> GetTimerWorker();
 
@@ -112,9 +112,9 @@ class App final : public std::enable_shared_from_this<App> {
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<ActorContext> context);
   void ProcessEvent(struct epoll_event* evs, int ev_count);
-  void ProcessWorkerEvent(std::shared_ptr<WorkerCommon>);
-  void ProcessTimerEvent(std::shared_ptr<WorkerTimer>);
-  void ProcessUserEvent(std::shared_ptr<Worker>);
+  void ProcessWorkerEvent(std::shared_ptr<WorkerContext>);
+  void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
+  void ProcessUserEvent(std::shared_ptr<WorkerContext>);
   void ProcessEventConn(std::shared_ptr<EventConn>);
 
   std::atomic_bool quit_ = {true};
@@ -128,7 +128,7 @@ class App final : public std::enable_shared_from_this<App> {
   /// 与框架通信管理对象
   std::unique_ptr<EventConnManager> ev_conn_mgr_;
   /// 线程管理对象
-  std::unique_ptr<WorkerManager> worker_mgr_;
+  std::unique_ptr<WorkerContextManager> worker_ctx_mgr_;
 
   DISALLOW_COPY_AND_ASSIGN(App)
 };

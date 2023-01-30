@@ -77,7 +77,7 @@ class WorkerTimer final : public Worker {
   friend class App;
 
  public:
-  WorkerTimer();
+  WorkerTimer() = default;
   virtual ~WorkerTimer();
 
   int SetTimeout(
@@ -85,17 +85,12 @@ class WorkerTimer final : public Worker {
     const std::string& timer_name,
     int time);
 
-  /**
-   * override Worker virtual method
-   */
   void Init() override;
   void Run() override;
   void Exit() override;
-
-  /**
-   * override Event virtual method
-   */
-  EventType GetType() override { return EventType::kWorkerTimer; }
+  EventType GetType() override {
+    return EventType::kWorkerTimer;
+  }
 
  private:
   int Work();

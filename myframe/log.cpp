@@ -8,6 +8,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/log.h"
 
 #include <string>
+#include <iostream>
 
 #include <glog/logging.h>
 
@@ -16,28 +17,30 @@ Author: likepeng <likepeng0418@163.com>
 
 static void signal_handler(const char *data, int size) {
   std::string str = std::string(data, size);
-  LOG(ERROR) << str;
+  std::cerr << str;
+  LOG(ERROR) << "\n" << str;
 }
 
 namespace myframe {
 
-void InitLog() {
-  // output log immediately
+void InitLog(const char* bin_name) {
+  if (!google::IsGoogleLoggingInitialized()) {
+    google::InitGoogleLogging(bin_name);
+  }
+
   FLAGS_logbufsecs = 0;
-  // set the log file to 100MB
   FLAGS_max_log_size = 100;
   FLAGS_stop_logging_if_full_disk = true;
-  // install core handle
+
+  auto log_dir = Common::GetAbsolutePath(FLAGS_myframe_log_dir);
+  std::string dst_str = log_dir + bin_name;
+  google::SetLogDestination(google::ERROR, "");
+  google::SetLogDestination(google::WARNING, "");
+  google::SetLogDestination(google::FATAL, "");
+  google::SetLogDestination(google::INFO, dst_str.c_str());
+
   google::InstallFailureSignalHandler();
   google::InstallFailureWriter(&signal_handler);
-  // init glog
-  google::InitGoogleLogging("myframe");
-  // log with level >=ERROR is output to stderr
-  google::SetStderrLogging(google::GLOG_FATAL);
-  // set the path for the log file
-  auto log_dir = Common::GetAbsolutePath(FLAGS_myframe_log_dir);
-  std::string dest_dir = log_dir + "info";
-  google::SetLogDestination(google::GLOG_INFO, dest_dir.c_str());
 }
 
 }  // namespace myframe

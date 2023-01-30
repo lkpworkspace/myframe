@@ -276,7 +276,7 @@ class FullSpeed100ActorTransTest : public myframe::Actor {
 };
 
 TEST(App, performance_test) {
-  myframe::InitLog();
+  myframe::InitLog("myframe_test");
 
   myframe::FLAGS_myframe_worker_count = 4;
 

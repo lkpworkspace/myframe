@@ -30,17 +30,15 @@ void WorkerCommon::Run() {
 }
 
 void WorkerCommon::Init() {
-  Worker::Init();
   LOG(INFO) << "Worker " << GetWorkerName() << " init";
 }
 
 void WorkerCommon::Exit() {
-  Worker::Exit();
   LOG(INFO) << "Worker " << GetWorkerName() << " exit";
 }
 
 int WorkerCommon::Work() {
-  auto ctx = (context_.expired() ? nullptr : context_.lock());
+  auto ctx = context_.lock();
   if (ctx == nullptr) {
     LOG(ERROR) << "context is nullptr";
     return -1;

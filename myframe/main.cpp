@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   // 初始化日志系统
-  myframe::InitLog();
+  myframe::InitLog("myframe");
 
   // 初始化并启动线程
   auto app = std::make_shared<myframe::App>();

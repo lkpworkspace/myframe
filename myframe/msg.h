@@ -37,7 +37,7 @@ class Msg final {
 
   /**
    * @brief 消息描述
-   * @note 目前myframe timer使用到该函数，见 Actor::Timeout()
+   * @note 目前timer使用到该函数，见 Actor::Timeout()
    *
    * @return const std::string& 消息描述
    */

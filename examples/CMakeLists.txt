@@ -2,17 +2,26 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 ### actor
 add_library(example_actor_helloworld SHARED example_actor_helloworld.cpp)
+target_link_libraries(example_actor_helloworld myframe)
 add_library(example_actor_timer SHARED example_actor_timer.cpp)
+target_link_libraries(example_actor_timer myframe)
 add_library(example_actor_serial SHARED example_actor_serial.cpp)
+target_link_libraries(example_actor_serial myframe)
 add_library(example_actor_concurrent SHARED example_actor_concurrent.cpp)
+target_link_libraries(example_actor_concurrent myframe)
 
 ### worker
 add_library(example_worker_publish SHARED example_worker_publish.cpp)
+target_link_libraries(example_worker_publish myframe)
 add_library(example_worker_talk SHARED example_worker_talk.cpp)
+target_link_libraries(example_worker_talk myframe)
 add_library(example_worker_actor_interactive SHARED example_worker_actor_interactive.cpp)
+target_link_libraries(example_worker_actor_interactive myframe)
 add_library(example_worker_interactive_with_3rd_frame SHARED example_worker_interactive_with_3rd_frame.cpp)
+target_link_libraries(example_worker_interactive_with_3rd_frame myframe)
 
 add_library(example_config SHARED example_config.cpp)
+target_link_libraries(example_config myframe)
 
 ### install
 FILE(GLOB conf_files "*.json")

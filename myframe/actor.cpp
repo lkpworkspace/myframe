@@ -69,11 +69,11 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
 void Actor::SetContext(std::shared_ptr<ActorContext> c) { ctx_ = c; }
 
 const Json::Value* Actor::GetConfig() const {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
-    return &Json::Value::null;
-  }
-  return ctx->GetConfig();
+  return &config_;
+}
+
+void Actor::SetConfig(const Json::Value& conf) {
+  config_ = conf;
 }
 
 std::shared_ptr<App> Actor::GetApp() {

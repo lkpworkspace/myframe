@@ -15,7 +15,7 @@ namespace myframe {
 class Msg;
 class Mailbox final {
   friend class ActorContext;
-  friend class Worker;
+  friend class WorkerContext;
   friend class EventConnManager;
   friend class App;
 

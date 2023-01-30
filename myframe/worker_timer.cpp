@@ -156,8 +156,6 @@ std::list<std::shared_ptr<Msg>>* TimerManager::Updatetime() {
 
 //////////////////////////////////////////////////////
 
-WorkerTimer::WorkerTimer() {}
-
 WorkerTimer::~WorkerTimer() {}
 
 void WorkerTimer::Run() {
@@ -169,17 +167,17 @@ void WorkerTimer::Run() {
 }
 
 void WorkerTimer::Init() {
-  Worker::Init();
   LOG(INFO) << "timer worker " << GetWorkerName() << " init";
 }
 
 void WorkerTimer::Exit() {
   LOG(INFO) << "timer worker " << GetWorkerName() << " exit";
-  Worker::Exit();
 }
 
-int WorkerTimer::SetTimeout(const std::string& actor_name,
-                              const std::string& timer_name, int time) {
+int WorkerTimer::SetTimeout(
+  const std::string& actor_name,
+  const std::string& timer_name,
+  int time) {
   DLOG(INFO) << actor_name << " set timeout(" << timer_name
              << "): " << (time * 10) << "ms";
   return timer_mgr_.Timeout(actor_name, timer_name, time);

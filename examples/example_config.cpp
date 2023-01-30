@@ -30,7 +30,7 @@ class ExampleWorkerConfig : public myframe::Worker {
   ExampleWorkerConfig() {}
   virtual ~ExampleWorkerConfig() {}
 
-  void OnInit() {
+  void Init() override {
     auto conf = GetConfig();
     LOG(INFO) << GetWorkerName() << " conf " << conf->toStyledString();
   }

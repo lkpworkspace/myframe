@@ -9,6 +9,6 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-void InitLog();
+void InitLog(const char* bin_name);
 
 }  // namespace myframe

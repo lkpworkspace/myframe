@@ -31,11 +31,10 @@ class ActorContext final : public std::enable_shared_from_this<ActorContext> {
   ActorContext(std::shared_ptr<App> app, std::shared_ptr<Actor> actor);
   virtual ~ActorContext();
 
-  int Init(const char* param);
-
   Mailbox* GetMailbox();
 
-  /* 工作线程调用回调让actor去处理消息 */
+  int Init(const char* param);
+
   void Proc(const std::shared_ptr<const Msg>& msg);
 
   void SetRuningFlag(bool in_worker) { in_worker_ = in_worker; }
@@ -47,9 +46,6 @@ class ActorContext final : public std::enable_shared_from_this<ActorContext> {
   std::shared_ptr<Actor> GetActor() { return actor_; }
   std::shared_ptr<App> GetApp();
 
-  const Json::Value* GetConfig() const { return &config_; }
-  void SetConfig(const Json::Value& conf) { config_ = conf; }
-
  private:
   Mailbox mailbox_;
   /* 该actor的是否在工作线程的标志 */
@@ -58,7 +54,6 @@ class ActorContext final : public std::enable_shared_from_this<ActorContext> {
   bool in_wait_que_;
   std::shared_ptr<Actor> actor_;
   std::weak_ptr<App> app_;
-  Json::Value config_{ Json::Value::null };
 
   DISALLOW_COPY_AND_ASSIGN(ActorContext)
 };

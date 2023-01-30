@@ -22,16 +22,18 @@ class WorkerCommon final : public Worker {
   WorkerCommon();
   ~WorkerCommon();
 
-  /// override MyWorker virtual method
   void Run() override;
   void Init() override;
   void Exit() override;
 
-  /// override Event virtual method
-  EventType GetType() { return EventType::kWorkerCommon; }
+  EventType GetType() override {
+    return EventType::kWorkerCommon;
+  }
 
-  void SetContext(std::shared_ptr<ActorContext> context) { context_ = context; }
-  std::shared_ptr<ActorContext> GetContext() {
+  void SetActorContext(std::shared_ptr<ActorContext> context) {
+    context_ = context;
+  }
+  std::shared_ptr<ActorContext> GetActorContext() {
     return (context_.expired() ? nullptr : context_.lock());
   }
 

@@ -37,7 +37,7 @@ class @template_name@Worker : public myframe::Worker {
   @template_name@Worker() {}
   virtual ~@template_name@Worker() {}
 
-  /* myframe会循环调用该函数 */
+  /* 框架会循环调用该函数 */
   void Run() override {
     /* 给 actor.@template_name@ 发送消息，并接收回复消息 */
     auto mailbox = GetMailbox();
