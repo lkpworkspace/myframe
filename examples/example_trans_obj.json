@@ -1,0 +1,18 @@
+{
+  "type":"library",
+  "lib":"libexample_trans_obj.so",
+  "actor":{
+      "example_actor_trans_obj":[
+          {
+              "instance_name":"#1"
+          }
+      ]
+  },
+  "worker":{
+      "example_worker_trans_obj":[
+          {
+              "instance_name":"#1"
+          }
+      ]
+  }
+}
