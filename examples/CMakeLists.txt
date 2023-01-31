@@ -24,6 +24,8 @@ target_link_libraries(example_worker_quit myframe)
 
 add_library(example_config SHARED example_config.cpp)
 target_link_libraries(example_config myframe)
+add_library(example_trans_obj SHARED example_trans_obj.cpp)
+target_link_libraries(example_trans_obj myframe)
 
 ### install
 FILE(GLOB conf_files "*.json")
@@ -46,6 +48,7 @@ INSTALL(TARGETS
     example_worker_interactive_with_3rd_frame
     example_worker_quit
     example_config
+    example_trans_obj
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
