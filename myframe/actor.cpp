@@ -7,6 +7,8 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/actor.h"
 
+#include <glog/logging.h>
+
 #include "myframe/app.h"
 #include "myframe/actor_context.h"
 #include "myframe/worker_timer.h"
@@ -53,14 +55,17 @@ void Actor::SetInstName(const std::string& name) { instance_name_ = name; }
 int Actor::Timeout(const std::string& timer_name, int expired) {
   auto ctx = ctx_.lock();
   if (ctx == nullptr) {
+    LOG(ERROR) << "actor context is nullptr";
     return -1;
   }
   auto app = ctx->GetApp();
   if (app == nullptr) {
+    LOG(ERROR) << "app is nullptr";
     return -1;
   }
   auto timer_worker = app->GetTimerWorker();
   if (timer_worker == nullptr) {
+    LOG(ERROR) << "timer worker is nullptr";
     return -1;
   }
   return timer_worker->SetTimeout(GetActorName(), timer_name, expired);

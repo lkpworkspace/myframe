@@ -34,10 +34,18 @@ namespace myframe {
 
 std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
   if (!worker_ctx_mgr_) {
+    LOG(ERROR) << "worker context manager is nullptr";
     return nullptr;
   }
   auto w = worker_ctx_mgr_->Get(myframe::FLAGS_myframe_worker_timer_name);
-  return std::dynamic_pointer_cast<WorkerTimer>(w);
+  if (w == nullptr) {
+    LOG(ERROR)
+      << "can't find "
+      << myframe::FLAGS_myframe_worker_timer_name;
+    return nullptr;
+  }
+  auto timer_worker = w->GetWorker<WorkerTimer>();
+  return timer_worker;
 }
 
 App::App()
