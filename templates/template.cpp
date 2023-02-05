@@ -10,13 +10,13 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/actor.h"
 #include "myframe/log.h"
 #include "myframe/msg.h"
+#include "myframe/actor.h"
 #include "myframe/worker.h"
 
 class @template_name@Actor : public myframe::Actor {
- public :
+ public:
   /* actor模块加载完毕后调用 */
   int Init(const char* param) override {
     return 0;
@@ -58,11 +58,17 @@ class @template_name@Worker : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<@template_name@Actor>();
+  if (actor_name == "@template_name@") {
+    return std::make_shared<@template_name@Actor>();
+  }
+  return nullptr;
 }
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  return std::make_shared<@template_name@Worker>();
+  if (worker_name == "@template_name@") {
+    return std::make_shared<@template_name@Worker>();
+  }
+  return nullptr;
 }
