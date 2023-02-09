@@ -97,4 +97,4 @@ std::ostream& operator<<(std::ostream& out, const Mailbox& mailbox) {
   return out;
 }
 
-};  // namespace myframe
+}  // namespace myframe

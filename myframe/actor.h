@@ -31,6 +31,23 @@ class Actor {
   virtual ~Actor();
 
   /**
+   * GetConfig() - 获得配置参数
+   * @return: 返回json对象
+   */
+  const Json::Value* GetConfig() const;
+
+  /**
+   * GetActorName() - 获得该actor的actor名
+   *
+   * @return:         成功返回：actor名，失败返回：空字符串
+   */
+  const std::string GetActorName() const;
+  const std::string& GetModName() const;
+  const std::string& GetTypeName() const;
+  const std::string& GetInstName() const;
+
+ protected:
+  /**
    * Init() - actor初始化调用的初始化函数
    * @c:      actor指针
    * @param:  actor参数
@@ -54,16 +71,6 @@ class Actor {
   Mailbox* GetMailbox();
 
   /**
-   * GetActorName() - 获得该actor的actor名
-   *
-   * @return:         成功返回：actor名，失败返回：空字符串
-   */
-  const std::string GetActorName() const;
-  const std::string& GetModName() const;
-  const std::string& GetTypeName() const;
-  const std::string& GetInstName() const;
-
-  /**
    * Timeout() - 设置定时器
    * @expired: 超时时间(单位:10ms, 比如 expired = 1, 那么超时时间就是10ms)
    *
@@ -77,12 +84,6 @@ class Actor {
    * @return:         成功返回: 0, 失败返回: -1
    */
   int Timeout(const std::string& timer_name, int expired);
-
-   /**
-    * GetConfig() - 获得配置参数
-    * @return: 返回json对象
-    */
-  const Json::Value* GetConfig() const;
 
   /**
    * GetApp() - 获得应用实例

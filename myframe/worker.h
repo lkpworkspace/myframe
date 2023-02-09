@@ -29,6 +29,30 @@ class Worker {
   virtual ~Worker();
 
   /**
+   * GetType() - 获得事件类型
+   *
+   * @return:    事件类型
+   */
+  virtual EventType GetType();
+
+  /**
+  * GetConfig() - 获得配置参数
+  * @return: 返回json对象
+  */
+  const Json::Value* GetConfig() const;
+
+  /**
+   * GetWorkerName() - 获得该worker的worker名
+   *
+   * @return:         成功返回：worker名，失败返回：空字符串
+   */
+  const std::string GetWorkerName() const;
+  const std::string& GetModName() const;
+  const std::string& GetTypeName() const;
+  const std::string& GetInstName() const;
+
+ protected:
+  /**
    * Mailbox() - 发送消息的mailbox
    *
    * @return:         失败 nullptr
@@ -41,13 +65,6 @@ class Worker {
    * @return:         失败 nullptr
    */
   CmdChannel* GetCmdChannel();
-
-  /**
-   * GetType() - 获得事件类型
-   *
-   * @return:    事件类型
-   */
-  virtual EventType GetType();
 
   /**
    * Init() - worker初始化
@@ -78,22 +95,6 @@ class Worker {
 
   /// 分发消息并等待回复消息
   int DispatchAndWaitMsg();
-
-  /**
-  * GetConfig() - 获得配置参数
-  * @return: 返回json对象
-  */
-  const Json::Value* GetConfig() const;
-
-  /**
-   * GetWorkerName() - 获得该worker的worker名
-   *
-   * @return:         成功返回：worker名，失败返回：空字符串
-   */
-  const std::string GetWorkerName() const;
-  const std::string& GetModName() const;
-  const std::string& GetTypeName() const;
-  const std::string& GetInstName() const;
 
  private:
   void SetModName(const std::string&);
