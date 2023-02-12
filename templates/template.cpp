@@ -4,13 +4,12 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-#include <chrono>
 #include <memory>
+#include <chrono>
 #include <thread>
 
 #include <glog/logging.h>
 
-#include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/worker.h"
