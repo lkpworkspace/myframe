@@ -24,18 +24,20 @@ class ModManager final {
   bool LoadMod(const std::string& dl_path);
 
   bool RegActor(
-      const std::string& class_name,
-      std::function<std::shared_ptr<Actor>(const std::string&)> func);
+    const std::string& class_name,
+    std::function<std::shared_ptr<Actor>(const std::string&)> func);
 
   bool RegWorker(
-      const std::string& class_name,
-      std::function<std::shared_ptr<Worker>(const std::string&)> func);
+    const std::string& class_name,
+    std::function<std::shared_ptr<Worker>(const std::string&)> func);
 
-  std::shared_ptr<Actor> CreateActorInst(const std::string& mod_or_class_name,
-                                           const std::string& actor_name);
+  std::shared_ptr<Actor> CreateActorInst(
+    const std::string& mod_or_class_name,
+    const std::string& actor_name);
 
   std::shared_ptr<Worker> CreateWorkerInst(
-      const std::string& mod_or_class_name, const std::string& worker_name);
+    const std::string& mod_or_class_name,
+    const std::string& worker_name);
 
  private:
   std::unordered_map<

@@ -49,8 +49,9 @@ class ModLib final {
    * @param actor_name eg: /my/test
    * @return std::shared_ptr<Actor>
    */
-  std::shared_ptr<Actor> CreateActorInst(const std::string& mod_name,
-                                           const std::string& actor_name);
+  std::shared_ptr<Actor> CreateActorInst(
+    const std::string& mod_name,
+    const std::string& actor_name);
 
   /**
    * @brief 创建Worker实例
@@ -59,8 +60,9 @@ class ModLib final {
    * @param worker_name eg: /my/test
    * @return Worker*
    */
-  std::shared_ptr<Worker> CreateWorkerInst(const std::string& mod_name,
-                                             const std::string& worker_name);
+  std::shared_ptr<Worker> CreateWorkerInst(
+    const std::string& mod_name,
+    const std::string& worker_name);
 
  private:
   bool UnloadMod(const std::string& dlname);
