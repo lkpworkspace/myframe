@@ -89,11 +89,19 @@ std::shared_ptr<Worker> ModLib::CreateWorkerInst(
       (my_worker_create_func)dlsym(handle, "my_worker_create");
   if (nullptr == create) {
     pthread_rwlock_unlock(&rw_);
-    LOG(ERROR) << "Load " << mod_name << "." << worker_name
-               << " module my_worker_create function failed";
+    LOG(ERROR)
+      << "Load " << mod_name << "." << worker_name
+      << " module my_worker_create function failed";
     return nullptr;
   }
   auto worker = create(worker_name);
+  if (nullptr == worker) {
+    pthread_rwlock_unlock(&rw_);
+    LOG(ERROR)
+      << "Create " << mod_name << "." << worker_name
+      << " failed";
+    return nullptr;
+  }
   worker->SetModName(mod_name);
   worker->SetTypeName(worker_name);
   pthread_rwlock_unlock(&rw_);
@@ -112,15 +120,23 @@ std::shared_ptr<Actor> ModLib::CreateActorInst(
       (my_actor_create_func)dlsym(handle, "my_actor_create");
   if (nullptr == create) {
     pthread_rwlock_unlock(&rw_);
-    LOG(ERROR) << "Load " << mod_name << "." << actor_name
-               << " module my_actor_create function failed";
+    LOG(ERROR)
+      << "Load " << mod_name << "." << actor_name
+      << " module my_actor_create function failed";
     return nullptr;
   }
-  auto mod = create(actor_name);
-  mod->SetModName(mod_name);
-  mod->SetTypeName(actor_name);
+  auto actor = create(actor_name);
+  if (nullptr == actor) {
+    pthread_rwlock_unlock(&rw_);
+    LOG(ERROR)
+      << "Create " << mod_name << "." << actor_name
+      << " failed";
+    return nullptr;
+  }
+  actor->SetModName(mod_name);
+  actor->SetTypeName(actor_name);
   pthread_rwlock_unlock(&rw_);
-  return mod;
+  return actor;
 }
 
 }  // namespace myframe

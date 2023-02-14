@@ -58,4 +58,4 @@ class Mailbox final {
 
 std::ostream& operator<<(std::ostream& out, const Mailbox& mailbox);
 
-};  // namespace myframe
+}  // namespace myframe

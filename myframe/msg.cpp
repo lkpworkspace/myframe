@@ -31,7 +31,6 @@ void Msg::SetData(const std::string& data) {
   SetData(data.data(), data.size());
 }
 void Msg::SetAnyData(const std::any& any_data) {
-  type_ = any_data.type().name();
   any_data_ = any_data;
 }
 

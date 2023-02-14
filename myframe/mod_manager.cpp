@@ -32,13 +32,14 @@ bool ModManager::LoadMod(const std::string& dl_path) {
 }
 
 bool ModManager::RegActor(
-    const std::string& class_name,
-    std::function<std::shared_ptr<Actor>(const std::string&)> func) {
+  const std::string& class_name,
+  std::function<std::shared_ptr<Actor>(const std::string&)> func) {
   pthread_rwlock_wrlock(&class_actor_rw_);
   if (class_actors_.find(class_name) != class_actors_.end()) {
     pthread_rwlock_unlock(&class_actor_rw_);
-    LOG(WARNING) << "reg " << class_name << " failed, "
-                 << " has exist";
+    LOG(WARNING)
+      << "reg " << class_name << " failed, "
+      << " has exist";
     return false;
   }
   class_actors_[class_name] = func;
@@ -47,13 +48,14 @@ bool ModManager::RegActor(
 }
 
 bool ModManager::RegWorker(
-    const std::string& class_name,
-    std::function<std::shared_ptr<Worker>(const std::string&)> func) {
+  const std::string& class_name,
+  std::function<std::shared_ptr<Worker>(const std::string&)> func) {
   pthread_rwlock_wrlock(&class_worker_rw_);
   if (class_workers_.find(class_name) != class_workers_.end()) {
     pthread_rwlock_unlock(&class_worker_rw_);
-    LOG(WARNING) << "reg " << class_name << " failed, "
-                 << " has exist";
+    LOG(WARNING)
+      << "reg " << class_name << " failed, "
+      << " has exist";
     return false;
   }
   class_workers_[class_name] = func;
@@ -62,7 +64,7 @@ bool ModManager::RegWorker(
 }
 
 std::shared_ptr<Actor> ModManager::CreateActorInst(
-    const std::string& mod_or_class_name, const std::string& actor_name) {
+  const std::string& mod_or_class_name, const std::string& actor_name) {
   if (lib_mods_.IsLoad(mod_or_class_name)) {
     DLOG(INFO) << actor_name << " actor from lib";
     return lib_mods_.CreateActorInst(mod_or_class_name, actor_name);
@@ -82,7 +84,7 @@ std::shared_ptr<Actor> ModManager::CreateActorInst(
 }
 
 std::shared_ptr<Worker> ModManager::CreateWorkerInst(
-    const std::string& mod_or_class_name, const std::string& worker_name) {
+  const std::string& mod_or_class_name, const std::string& worker_name) {
   if (lib_mods_.IsLoad(mod_or_class_name)) {
     LOG(INFO) << "instance worker from lib";
     return lib_mods_.CreateWorkerInst(mod_or_class_name, worker_name);
