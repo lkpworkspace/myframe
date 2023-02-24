@@ -116,11 +116,16 @@ class App final : public std::enable_shared_from_this<App> {
   void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
   void ProcessUserEvent(std::shared_ptr<WorkerContext>);
   void ProcessEventConn(std::shared_ptr<EventConn>);
+  void ProcessMain(std::shared_ptr<Msg>);
+  void GetAllUserModAddr(std::string* info);
 
   std::atomic_bool quit_ = {true};
   std::mutex dispatch_mtx_;
+  std::mutex local_mtx_;
   /// epoll文件描述符
   int epoll_fd_;
+  /// node地址
+  std::string node_addr_{""};
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// 句柄管理对象

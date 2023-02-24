@@ -12,6 +12,22 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+/* 发送给框架的地址 */
+const char* const MAIN_ADDR = "main";
+
+/**
+ * 发送给框架的命令
+ * 发送示例:
+ *  auto mailbox = GetMailbox();
+ *  auto msg = std::make_shared<Msg>(MAIN_CMD_ALL_USER_MOD_ADDR);
+ *  mailbox->Send(MAIN_ADDR, msg);
+ * MAIN_CMD_ALL_USER_MOD_ADDR:
+ *  返回用户所有模块列表
+ *  通过msg->GetData()获得列表
+ *  格式为 地址1\n地址2\n地址3
+ */
+const char* const MAIN_CMD_ALL_USER_MOD_ADDR = "kAllUserModAddr";
+
 class Msg final {
  public:
   Msg() = default;

@@ -131,6 +131,27 @@ void WorkerContextManager::PushBackIdleWorker(
   pthread_rwlock_unlock(&rw_);
 }
 
+bool WorkerContextManager::HasWorker(const std::string& name) {
+  bool res = false;
+  pthread_rwlock_rdlock(&rw_);
+  res = (name_handle_map_.find(name) != name_handle_map_.end());
+  pthread_rwlock_unlock(&rw_);
+  return res;
+}
+
+std::vector<std::string> WorkerContextManager::GetAllUserWorkerAddr() {
+  std::vector<std::string> res;
+  pthread_rwlock_rdlock(&rw_);
+  for (auto p : worker_ctxs_) {
+    if (p.second->GetType() == EventType::kWorkerUser
+        && p.second->GetWorker<Worker>()->GetTypeName() != "node") {
+      res.push_back(p.second->GetWorker<Worker>()->GetWorkerName());
+    }
+  }
+  pthread_rwlock_unlock(&rw_);
+  return res;
+}
+
 void WorkerContextManager::PushWaitWorker(
   std::shared_ptr<WorkerContext> worker) {
   worker->SetCtrlOwnerFlag(WorkerCtrlOwner::kMain);

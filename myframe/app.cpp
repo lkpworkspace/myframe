@@ -149,8 +149,8 @@ bool App::LoadModsFromConf(const std::string& path) {
         } else {
           LOG(ERROR) << "Unknown type " << type;
         }
-      }
-    }
+      }  // end for
+    }  // end load worker
   }
   return res;
 }
@@ -246,6 +246,15 @@ bool App::AddWorker(
     return false;
   }
   worker_ctx->Start();
+  if (worker->GetTypeName() == "node") {
+    std::lock_guard<std::mutex> lock(local_mtx_);
+    if (node_addr_.empty()) {
+      LOG(INFO) << "create node " << worker->GetWorkerName();
+      node_addr_ = worker->GetWorkerName();
+    } else {
+      LOG(ERROR) << "has more than one node instance, using " << node_addr_;
+    }
+  }
   return true;
 }
 
@@ -390,19 +399,40 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
   LOG_IF(WARNING,
       msg_list->size() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
     << " dispatch msg too many";
+  std::string node_addr;
+  {
+    std::lock_guard<std::mutex> lock(local_mtx_);
+    node_addr = node_addr_;
+  }
   std::lock_guard<std::mutex> lock(dispatch_mtx_);
   for (auto& msg : (*msg_list)) {
     DLOG(INFO) << *msg;
+    /// 处理框架消息
+    if (msg->GetDst() == MAIN_ADDR) {
+      ProcessMain(msg);
+      continue;
+    }
+    /// 转换来自其它框架的消息
+    if (!node_addr.empty() && msg->GetSrc() == node_addr) {
+      // FIXME: 不支持进程间/机器间转发event.conn消息
+      if (msg->GetDesc().substr(0, 10) == "event.conn") {
+        continue;
+      }
+      msg->SetSrc(msg->GetDesc());
+      msg->SetDesc(node_addr);
+    }
+    /// 消息分发
     auto name_list = Common::SplitMsgName(msg->GetDst());
     if (name_list.size() < 2) {
       LOG(ERROR) << "Unknown msg " << *msg;
       continue;
     }
-
-    if (name_list[0] == "worker") {
+    if (name_list[0] == "worker"
+        && worker_ctx_mgr_->HasWorker(msg->GetDst())) {
       // dispatch to user worker
       worker_ctx_mgr_->DispatchWorkerMsg(msg);
-    } else if (name_list[0] == "actor") {
+    } else if (name_list[0] == "actor"
+               && actor_ctx_mgr_->HasActor(msg->GetDst())) {
       // dispatch to actor
       actor_ctx_mgr_->DispatchMsg(msg);
     } else if (name_list[0] == "event") {
@@ -412,7 +442,13 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
         LOG(ERROR) << "Unknown msg " << *msg;
       }
     } else {
-      LOG(ERROR) << "Unknown msg " << *msg;
+      if (!node_addr.empty()) {
+        msg->SetDesc(msg->GetDst());
+        msg->SetDst(node_addr);
+        worker_ctx_mgr_->DispatchWorkerMsg(msg);
+      } else {
+        LOG(ERROR) << "Unknown msg " << *msg;
+      }
     }
   }
   msg_list->clear();
@@ -465,6 +501,49 @@ void App::CheckStopWorkers() {
       LOG(ERROR) << actor_ctx->GetActor()->GetActorName() << " has no msg";
     }
   }
+}
+
+// Tips: 发送给框架的事件都应该立即处理完成，不应该影响调度
+void App::ProcessMain(std::shared_ptr<Msg> msg) {
+  // 接收发送给框架消息，处理并回复
+  auto src = msg->GetSrc();
+  auto cmd = msg->GetData();
+  if (cmd.empty()) {
+    LOG(WARNING) << "unknown MAIN_CMD " << cmd;
+    return;
+  }
+  auto resp_msg = std::make_shared<Msg>();
+  if (cmd == MAIN_CMD_ALL_USER_MOD_ADDR) {
+    resp_msg->SetSrc(MAIN_ADDR);
+    resp_msg->SetDst(src);
+    std::string mod_addr_list;
+    GetAllUserModAddr(&mod_addr_list);
+    resp_msg->SetData(mod_addr_list);
+  } else {
+    LOG(WARNING) << "unknown MAIN_CMD " << cmd;
+    return;
+  }
+  if (src.substr(0, 6) == "worker") {
+    worker_ctx_mgr_->DispatchWorkerMsg(resp_msg);
+  } else if (src.substr(0, 5) == "actor") {
+    actor_ctx_mgr_->DispatchMsg(resp_msg);
+  } else {
+    LOG(ERROR) << "unknow msg " << *msg;
+  }
+}
+
+void App::GetAllUserModAddr(std::string* info) {
+  auto res_actor = actor_ctx_mgr_->GetAllActorAddr();
+  auto res_worker = worker_ctx_mgr_->GetAllUserWorkerAddr();
+  std::stringstream ss;
+  for (int i = 0; i < res_actor.size(); ++i) {
+    ss << res_actor[i] << "\n";
+  }
+  for (int i = 0; i < res_worker.size(); ++i) {
+    ss << res_worker[i] << "\n";
+  }
+  info->clear();
+  info->append(ss.str());
 }
 
 void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
