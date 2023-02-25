@@ -83,75 +83,97 @@ bool App::Init() {
   return ret;
 }
 
-bool App::LoadModsFromConf(const std::string& path) {
+bool App::LoadServiceFromDir(const std::string& path) {
   auto service_list = Common::GetDirFiles(path);
-  LOG(INFO) << "Search " << service_list.size() << " service conf"
-            << ", from " << path;
+  LOG(INFO)
+    << "Search " << service_list.size() << " service conf"
+    << ", from " << path;
   if (service_list.empty()) {
-    LOG(WARNING) << "Can't find service conf file,"
-                 << " skip load from service conf file";
+    LOG(WARNING)
+      << "Can't find service conf file,"
+      << " skip load from service conf file";
     return false;
   }
   bool res = false;
   for (const auto& it : service_list) {
-    LOG(INFO) << "Load " << it << " ...";
-    auto root = Common::LoadJsonFromFile(it);
-    if (root.isNull()) {
-      LOG(ERROR) << it << " parse failed, skip";
-      continue;
-    }
-    if (!root.isMember("type") || !root["type"].isString()) {
-      LOG(ERROR) << it << " key \"type\": no key or not string, skip";
-      continue;
-    }
-    const auto& type = root["type"].asString();
-    std::string lib_name;
-    // load library
-    if (type == "library") {
-      if (!root.isMember("lib") || !root["lib"].isString()) {
-        LOG(ERROR) << " key \"lib\": no key or not string, skip";
-        continue;
-      }
-      lib_name = root["lib"].asString();
-      auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
-      if (!mods_->LoadMod(lib_dir + lib_name)) {
-        LOG(ERROR) << "load lib " << (lib_dir + lib_name) << " failed, skip";
-        continue;
-      }
-    }
-    // load actor
-    if (root.isMember("actor") && root["actor"].isObject()) {
-      const auto& actor_list = root["actor"];
-      Json::Value::Members actor_name_list = actor_list.getMemberNames();
-      for (auto inst_name_it = actor_name_list.begin();
-           inst_name_it != actor_name_list.end(); ++inst_name_it) {
-        LOG(INFO) << "search actor " << *inst_name_it << " ...";
-        if (type == "library") {
-          res |= LoadActors(lib_name, *inst_name_it, actor_list);
-        } else if (type == "class") {
-          res |= LoadActors("class", *inst_name_it, actor_list);
-        } else {
-          LOG(ERROR) << "Unknown type " << type;
-        }
-      }
-    }
-    // load worker
-    if (root.isMember("worker") && root["worker"].isObject()) {
-      const auto& worker_list = root["worker"];
-      Json::Value::Members worker_name_list = worker_list.getMemberNames();
-      for (auto inst_name_it = worker_name_list.begin();
-           inst_name_it != worker_name_list.end(); ++inst_name_it) {
-        LOG(INFO) << "search worker " << *inst_name_it << " ...";
-        if (type == "library") {
-          res |= LoadWorkers(lib_name, *inst_name_it, worker_list);
-        } else if (type == "class") {
-          res |= LoadWorkers("class", *inst_name_it, worker_list);
-        } else {
-          LOG(ERROR) << "Unknown type " << type;
-        }
-      }  // end for
-    }  // end load worker
+    res |= LoadServiceFromFile(it);
   }
+  return res;
+}
+
+bool App::LoadServiceFromFile(const std::string& file) {
+  LOG(INFO) << "Load service from " << file << " ...";
+  auto root = Common::LoadJsonFromFile(file);
+  return LoadServiceFromJson(root);
+}
+
+bool App::LoadServiceFromJsonStr(const std::string& service) {
+  Json::Value root;
+  Json::Reader reader(Json::Features::strictMode());
+  if (!reader.parse(service, root)) {
+    LOG(ERROR) << "parse service string failed";
+    return false;
+  }
+  return LoadServiceFromJson(root);
+}
+
+bool App::LoadServiceFromJson(const Json::Value& service) {
+  if (service.isNull()) {
+    LOG(ERROR) << "parse service json failed, skip";
+    return false;
+  }
+  if (!service.isMember("type") || !service["type"].isString()) {
+    LOG(ERROR) << "key \"type\": no key or not string, skip";
+    return false;
+  }
+  const auto& type = service["type"].asString();
+  std::string lib_name;
+  // load library
+  if (type == "library") {
+    if (!service.isMember("lib") || !service["lib"].isString()) {
+      LOG(ERROR) << " key \"lib\": no key or not string, skip";
+      return false;
+    }
+    lib_name = service["lib"].asString();
+    auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
+    if (!mods_->LoadMod(lib_dir + lib_name)) {
+      LOG(ERROR) << "load lib " << (lib_dir + lib_name) << " failed, skip";
+      return false;
+    }
+  }
+  bool res = false;
+  // load actor
+  if (service.isMember("actor") && service["actor"].isObject()) {
+    const auto& actor_list = service["actor"];
+    Json::Value::Members actor_name_list = actor_list.getMemberNames();
+    for (auto inst_name_it = actor_name_list.begin();
+          inst_name_it != actor_name_list.end(); ++inst_name_it) {
+      LOG(INFO) << "search actor " << *inst_name_it << " ...";
+      if (type == "library") {
+        res |= LoadActors(lib_name, *inst_name_it, actor_list);
+      } else if (type == "class") {
+        res |= LoadActors("class", *inst_name_it, actor_list);
+      } else {
+        LOG(ERROR) << "Unknown type " << type;
+      }
+    }
+  }
+  // load worker
+  if (service.isMember("worker") && service["worker"].isObject()) {
+    const auto& worker_list = service["worker"];
+    Json::Value::Members worker_name_list = worker_list.getMemberNames();
+    for (auto inst_name_it = worker_name_list.begin();
+          inst_name_it != worker_name_list.end(); ++inst_name_it) {
+      LOG(INFO) << "search worker " << *inst_name_it << " ...";
+      if (type == "library") {
+        res |= LoadWorkers(lib_name, *inst_name_it, worker_list);
+      } else if (type == "class") {
+        res |= LoadWorkers("class", *inst_name_it, worker_list);
+      } else {
+        LOG(ERROR) << "Unknown type " << type;
+      }
+    }  // end for
+  }  // end load worker
   return res;
 }
 
@@ -165,11 +187,13 @@ bool App::LoadActors(
     std::string inst_name;
     std::string inst_param;
     Json::Value cfg;
-    LOG(INFO) << "create actor instance \"" << actor_name
-              << "\": " << inst.toStyledString();
+    LOG(INFO)
+      << "create actor instance \"" << actor_name
+      << "\": " << inst.toStyledString();
     if (!inst.isMember("instance_name")) {
-      LOG(ERROR) << "actor " << actor_name
-                 << " key \"instance_name\": no key, skip";
+      LOG(ERROR)
+        << "actor " << actor_name
+        << " key \"instance_name\": no key, skip";
       continue;
     }
     inst_name = inst["instance_name"].asString();
@@ -198,11 +222,13 @@ bool App::LoadWorkers(
   for (const auto& inst : insts) {
     std::string inst_name;
     Json::Value cfg;
-    LOG(INFO) << "create worker instance \"" << worker_name
-              << "\": " << inst.toStyledString();
+    LOG(INFO)
+      << "create worker instance \"" << worker_name
+      << "\": " << inst.toStyledString();
     if (!inst.isMember("instance_name")) {
-      LOG(ERROR) << "worker " << worker_name
-                 << " key \"instance_name\": no key, skip";
+      LOG(ERROR)
+        << "worker " << worker_name
+        << " key \"instance_name\": no key, skip";
       continue;
     }
     inst_name = inst["instance_name"].asString();
@@ -211,8 +237,9 @@ bool App::LoadWorkers(
     }
     auto worker = mods_->CreateWorkerInst(mod_name, worker_name);
     if (worker == nullptr) {
-      LOG(ERROR) << "create worker " << mod_name << "." << worker_name << "."
-                 << inst_name << " failed, continue";
+      LOG(ERROR)
+        << "create worker " << mod_name << "." << worker_name << "."
+        << inst_name << " failed, continue";
       continue;
     }
     res |= AddWorker(inst_name, worker, cfg);

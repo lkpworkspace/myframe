@@ -45,7 +45,13 @@ class App final : public std::enable_shared_from_this<App> {
 
   bool Init();
 
-  bool LoadModsFromConf(const std::string& path);
+  bool LoadServiceFromDir(const std::string& path);
+
+  bool LoadServiceFromFile(const std::string& file);
+
+  bool LoadServiceFromJson(const Json::Value& service);
+
+  bool LoadServiceFromJsonStr(const std::string& service);
 
   bool AddActor(
     const std::string& inst_name,

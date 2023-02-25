@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   // 从配置文件加载服务
   auto service_dir =
       myframe::Common::GetAbsolutePath(myframe::FLAGS_myframe_service_dir);
-  if (!app->LoadModsFromConf(service_dir)) {
+  if (!app->LoadServiceFromDir(service_dir)) {
     LOG(ERROR) << "Load service failed, exit";
     return -1;
   }
