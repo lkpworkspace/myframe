@@ -11,4 +11,5 @@ build/
 
 .vscode
 
-myframe/flags.cpp
+launcher/launcher.cpp
+test/performance_test.cpp

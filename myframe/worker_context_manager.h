@@ -10,6 +10,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <atomic>
 #include <list>
+#include <vector>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -25,6 +26,8 @@ class WorkerContextManager final {
   WorkerContextManager();
   virtual ~WorkerContextManager();
 
+  bool Init(int warning_msg_size = 10);
+
   int WorkerSize();
 
   std::shared_ptr<WorkerContext> Get(int fd);
@@ -32,17 +35,22 @@ class WorkerContextManager final {
   bool Add(std::shared_ptr<WorkerContext> worker);
   void Del(std::shared_ptr<WorkerContext> worker);
 
+  // 内置工作线程池
   int IdleWorkerSize();
   std::shared_ptr<WorkerContext> FrontIdleWorker();
   void PopFrontIdleWorker();
   void PushBackIdleWorker(std::shared_ptr<WorkerContext> worker);
 
+  // 用户工作线程
   void PushWaitWorker(std::shared_ptr<WorkerContext> worker);
   void WeakupWorker();
-
   void DispatchWorkerMsg(std::shared_ptr<Msg> msg);
 
+  std::vector<std::string> GetAllUserWorkerAddr();
+  bool HasWorker(const std::string& name);
+
  private:
+  std::atomic_int warning_msg_size_{10};
   /// 工作线程数(包含用户线程)
   std::atomic_int cur_worker_count_ = {0};
   /// 读写锁

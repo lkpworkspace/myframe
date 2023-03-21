@@ -68,6 +68,24 @@ std::shared_ptr<ActorContext> ActorContextManager::GetContext(
   return ctx;
 }
 
+std::vector<std::string> ActorContextManager::GetAllActorAddr() {
+  std::vector<std::string> res;
+  pthread_rwlock_rdlock(&rw_);
+  for (auto ctx : ctxs_) {
+    res.push_back(ctx.first);
+  }
+  pthread_rwlock_unlock(&rw_);
+  return res;
+}
+
+bool ActorContextManager::HasActor(const std::string& name) {
+  bool res = false;
+  pthread_rwlock_rdlock(&rw_);
+  res = (ctxs_.find(name) != ctxs_.end());
+  pthread_rwlock_unlock(&rw_);
+  return res;
+}
+
 void ActorContextManager::PrintWaitQueue() {
   DLOG(INFO) << "cur wait queue actor:";
   auto it = wait_queue_.begin();

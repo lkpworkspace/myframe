@@ -11,12 +11,15 @@ Author: likepeng <likepeng0418@163.com>
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 
+#include "myframe/common.h"
 #include "myframe/actor.h"
 #include "myframe/app.h"
-#include "myframe/flags.h"
 #include "myframe/log.h"
 #include "myframe/mod_manager.h"
 #include "myframe/msg.h"
+
+#define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
+#define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"
 
 class EchoActorTest : public myframe::Actor {
  public:
@@ -276,12 +279,15 @@ class FullSpeed100ActorTransTest : public myframe::Actor {
 };
 
 TEST(App, performance_test) {
-  myframe::InitLog("myframe_test");
+  auto lib_dir =
+      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
+  auto log_dir =
+      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
 
-  myframe::FLAGS_myframe_worker_count = 4;
+  myframe::InitLog(log_dir, "myframe_test");
 
   auto app = std::make_shared<myframe::App>();
-  if (false == app->Init()) {
+  if (false == app->Init(lib_dir, 4)) {
     LOG(ERROR) << "Init failed";
     return;
   }

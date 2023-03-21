@@ -12,7 +12,6 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/flags.h"
 #include "myframe/common.h"
 
 static void signal_handler(const char *data, int size) {
@@ -23,15 +22,15 @@ static void signal_handler(const char *data, int size) {
 
 namespace myframe {
 
-void InitLog(const char* bin_name) {
-  google::InitGoogleLogging(bin_name);
+void InitLog(const std::string& log_dir, const std::string& bin_name) {
+  google::InitGoogleLogging(bin_name.c_str());
 
   FLAGS_logbufsecs = 0;
   FLAGS_max_log_size = 100;
   FLAGS_stop_logging_if_full_disk = true;
 
-  auto log_dir = Common::GetAbsolutePath(FLAGS_myframe_log_dir);
-  std::string dst_str = log_dir + bin_name;
+  auto full_log_dir = Common::GetAbsolutePath(log_dir);
+  std::string dst_str = full_log_dir + bin_name;
   google::SetLogDestination(google::ERROR, "");
   google::SetLogDestination(google::WARNING, "");
   google::SetLogDestination(google::FATAL, "");

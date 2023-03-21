@@ -4,11 +4,11 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-
 #pragma once
+#include <string>
 
 namespace myframe {
 
-void InitLog(const char* bin_name);
+void InitLog(const std::string& log_dir, const std::string& bin_name);
 
 }  // namespace myframe

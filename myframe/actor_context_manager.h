@@ -10,6 +10,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <stdint.h>
 
 #include <list>
+#include <vector>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -31,6 +32,9 @@ class ActorContextManager final {
 
   /* 获得一个待处理的actor */
   std::shared_ptr<ActorContext> GetContextWithMsg();
+
+  std::vector<std::string> GetAllActorAddr();
+  bool HasActor(const std::string& name);
 
  private:
   /* 获得actor名对应的actor */
