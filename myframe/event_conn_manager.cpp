@@ -22,12 +22,10 @@ EventConnManager::~EventConnManager() {
   LOG(INFO) << "EventConnManager deconstruct";
   std::lock_guard<std::mutex> g(mtx_);
   auto app = app_.lock();
-  if (app == nullptr) {
-    LOG(ERROR) << "app is nullptr";
-    return;
-  }
-  for (auto p : run_conn_) {
-    app->DelEvent(p.second);
+  if (app != nullptr) {
+    for (auto p : run_conn_) {
+      app->DelEvent(p.second);
+    }
   }
   run_conn_.clear();
   run_conn_map_.clear();

@@ -6,7 +6,7 @@
 C++实现的actors框架,程序由actor和worker组成;  
 actor基于消息驱动,actor之间可以进行消息传递;  
 worker自驱动，可以通过消息与actor交互;  
-不同actor和worker组合使用,可以提高代码复用,降低程序耦合度。
+组件化的编程模式可以提高代码复用,降低程序耦合度。
 
 ## 开发/运行环境
 操作系统: Ubuntu 18.04+  
@@ -33,7 +33,8 @@ make install
 
 ## 运行
 ```sh
-cd ~/myframe/bin && ./myframe_main
+cd ~/myframe/bin
+./launcher -p app
 ```
 
 ## 创建模块工程

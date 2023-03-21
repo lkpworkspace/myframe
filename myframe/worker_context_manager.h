@@ -26,6 +26,8 @@ class WorkerContextManager final {
   WorkerContextManager();
   virtual ~WorkerContextManager();
 
+  bool Init(int warning_msg_size = 10);
+
   int WorkerSize();
 
   std::shared_ptr<WorkerContext> Get(int fd);
@@ -48,6 +50,7 @@ class WorkerContextManager final {
   bool HasWorker(const std::string& name);
 
  private:
+  std::atomic_int warning_msg_size_{10};
   /// 工作线程数(包含用户线程)
   std::atomic_int cur_worker_count_ = {0};
   /// 读写锁

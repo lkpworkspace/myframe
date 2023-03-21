@@ -125,4 +125,12 @@ std::string Common::GetAbsolutePath(const std::string& flag_path) {
   return root;
 }
 
+bool Common::IsAbsolutePath(const std::string& path) {
+  stdfs::path p(path);
+  if (p.is_absolute()) {
+    return true;
+  }
+  return false;
+}
+
 }  // namespace myframe

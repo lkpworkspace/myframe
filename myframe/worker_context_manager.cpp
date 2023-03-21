@@ -9,7 +9,6 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/flags.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
@@ -25,6 +24,11 @@ WorkerContextManager::WorkerContextManager() {
 WorkerContextManager::~WorkerContextManager() {
   LOG(INFO) << "WorkerContextManager deconstruct";
   pthread_rwlock_destroy(&rw_);
+}
+
+bool WorkerContextManager::Init(int warning_msg_size) {
+  warning_msg_size_.store(warning_msg_size);
+  return true;
 }
 
 int WorkerContextManager::WorkerSize() { return cur_worker_count_; }
@@ -197,7 +201,7 @@ void WorkerContextManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
   }
   worker_ctx->Cache(msg);
   LOG_IF(WARNING,
-    worker_ctx->CacheSize() > FLAGS_myframe_dispatch_or_process_msg_max)
+    worker_ctx->CacheSize() > warning_msg_size_.load())
       << *worker_ctx << " has " << worker_ctx->CacheSize()
       << " msg not process!!!";
   if (worker_ctx->IsInWaitMsgQueue()) {

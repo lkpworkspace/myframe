@@ -60,6 +60,7 @@ include_directories(.)
 
 ### sub directory
 add_subdirectory(myframe)
+add_subdirectory(launcher)
 if (GENERATE_EXAMPLE)
     add_subdirectory(examples)
 endif()

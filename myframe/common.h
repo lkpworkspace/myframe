@@ -34,6 +34,7 @@ class Common final {
   static bool IsBlockFd(int fd);
   static stdfs::path GetWorkRoot();
   static std::string GetAbsolutePath(const std::string& flag_path);
+  static bool IsAbsolutePath(const std::string& path);
   template <typename T>
   static void ListAppend(
     std::list<std::shared_ptr<T>>* dst,

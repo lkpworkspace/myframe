@@ -1,0 +1,94 @@
+/****************************************************************************
+Copyright (c) 2018, likepeng
+All rights reserved.
+
+Author: likepeng <likepeng0418@163.com>
+****************************************************************************/
+#include <iostream>
+
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
+#include "myframe/common.h"
+#include "myframe/log.h"
+#include "myframe/app.h"
+#include "module_argument.h"
+
+#define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
+#define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"
+#define MYFRAME_SERVICE_DIR "@MYFRAME_SERVICE_DIR@"
+#define MYFRAME_CONF_DIR "@MYFRAME_CONF_DIR@"
+#define MYFRAME_THREAD_POOL_SIZE 4
+#define MYFRAME_WARNING_MSG_SIZE 10
+#define MYFRAME_CONN_EVENT_SIZE 2
+
+int main(int argc, char** argv) {
+  // 命令行参数解析
+  myframe::ModuleArgument module_args;
+  auto opt = module_args.ParseArgument(argc, argv);
+  if (opt == myframe::ModuleArgument::kGetHelpInfo
+      || opt == myframe::ModuleArgument::kNoArgument) {
+    module_args.DisplayUsage();
+    return 0;
+  }
+
+  // 初始化日志系统
+  myframe::InitLog(MYFRAME_LOG_DIR, module_args.GetProcessName());
+  LOG(INFO) << "launch command: " << module_args.GetCmd();
+  std::string root_dir = myframe::Common::GetWorkRoot();
+  auto lib_dir = myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
+  auto service_dir = myframe::Common::GetAbsolutePath(MYFRAME_SERVICE_DIR);
+  auto log_dir = myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
+  auto conf_dir = myframe::Common::GetAbsolutePath(MYFRAME_CONF_DIR);
+  LOG(INFO) << "root dir: " << root_dir;
+  LOG(INFO) << "default lib dir: " << lib_dir;
+  LOG(INFO) << "default service dir: " << service_dir;
+  LOG(INFO) << "default log dir: " << log_dir;
+  LOG(INFO) << "default conf dir: " << conf_dir;
+
+  // 初始化并启动线程
+  auto app = std::make_shared<myframe::App>();
+  if (false == app->Init(
+    lib_dir,
+    MYFRAME_THREAD_POOL_SIZE,
+    MYFRAME_CONN_EVENT_SIZE,
+    MYFRAME_WARNING_MSG_SIZE)) {
+    LOG(ERROR) << "Init failed";
+    return -1;
+  }
+
+  // 从配置文件加载服务
+  if (!module_args.GetConfList().empty()) {
+    auto conf_list = module_args.GetConfList();
+    for (auto conf : conf_list) {
+      std::string abs_conf_file;
+      if (myframe::Common::IsAbsolutePath(conf)) {
+        abs_conf_file = conf;
+      } else {
+        abs_conf_file = service_dir + conf;
+      }
+      if (!app->LoadServiceFromFile(abs_conf_file)) {
+        LOG(ERROR) << "Load " << abs_conf_file << " failed, exit";
+        return -1;
+      }
+    }
+  } else {
+    std::string abs_service_dir;
+    if (!module_args.GetConfDir().empty()) {
+       if (myframe::Common::IsAbsolutePath(module_args.GetConfDir())) {
+        abs_service_dir = module_args.GetConfDir();
+      } else {
+        abs_service_dir = root_dir + "/" + module_args.GetConfDir() + "/";
+      }
+    } else {
+      abs_service_dir = service_dir;
+    }
+    if (app->LoadServiceFromDir(abs_service_dir) <= 0) {
+      LOG(ERROR) << "Load service from " << abs_service_dir << " failed, exit";
+      return -1;
+    }
+  }
+
+  // 开始事件循环
+  return app->Exec();
+}

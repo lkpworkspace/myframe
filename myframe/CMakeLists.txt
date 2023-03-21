@@ -1,24 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 
-### configure file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flags.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/flags.cpp @ONLY)
-
 ### source
-aux_source_directory(. MYFRAME_SRCS)
-list(FILTER MYFRAME_SRCS EXCLUDE REGEX ".*main.cpp$")
-set(MYFRAME_MAIN main.cpp)
+get_filename_component(PROJECT_NAME ${CMAKE_CURRENT_LIST_DIR} NAME_WE)
+project(${PROJECT_NAME})
+aux_source_directory(. __srcs)
 
 ### lib
-add_library(myframe SHARED ${MYFRAME_SRCS})
-
-### bin
-add_executable(myframe_main ${MYFRAME_MAIN})
-target_link_libraries(myframe_main myframe)
+add_library(${PROJECT_NAME} SHARED ${__srcs})
 
 ### install
 file(GLOB header_files
     macros.h
-    flags.h
     log.h
     msg.h
     mailbox.h
@@ -38,7 +30,7 @@ install(FILES
     WORLD_READ
     DESTINATION ${MYFRAME_INC_DIR}/myframe
 )
-install(TARGETS myframe myframe_main
+install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_BIN_DIR}

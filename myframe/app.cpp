@@ -16,7 +16,6 @@ Author: likepeng <likepeng0418@163.com>
 #include <glog/logging.h>
 
 #include "myframe/common.h"
-#include "myframe/flags.h"
 #include "myframe/msg.h"
 #include "myframe/mailbox.h"
 #include "myframe/actor.h"
@@ -37,11 +36,11 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
     LOG(ERROR) << "worker context manager is nullptr";
     return nullptr;
   }
-  auto w = worker_ctx_mgr_->Get(myframe::FLAGS_myframe_worker_timer_name);
+  std::string worker_timer_name = "worker.timer.#1";
+  auto w = worker_ctx_mgr_->Get(worker_timer_name);
   if (w == nullptr) {
     LOG(ERROR)
-      << "can't find "
-      << myframe::FLAGS_myframe_worker_timer_name;
+      << "can't find " << worker_timer_name;
     return nullptr;
   }
   auto timer_worker = w->GetWorker<WorkerTimer>();
@@ -63,7 +62,11 @@ App::~App() {
   LOG(INFO) << "app deconstruct";
 }
 
-bool App::Init() {
+bool App::Init(
+  const std::string& lib_dir,
+  int thread_pool_size,
+  int event_conn_size,
+  int warning_msg_size) {
   epoll_fd_ = epoll_create(1024);
   if (-1 == epoll_fd_) {
     LOG(ERROR) << strerror(errno);
@@ -72,18 +75,18 @@ bool App::Init() {
   LOG(INFO) << "Create epoll fd " << epoll_fd_;
 
   bool ret = true;
-  ret &=
-      ev_conn_mgr_->Init(
-        shared_from_this(),
-        myframe::FLAGS_myframe_conn_count);
-  ret &= StartCommonWorker(myframe::FLAGS_myframe_worker_count);
+  lib_dir_ = lib_dir;
+  warning_msg_size_.store(warning_msg_size);
+  ret &= worker_ctx_mgr_->Init(warning_msg_size);
+  ret &= ev_conn_mgr_->Init(shared_from_this(), event_conn_size);
+  ret &= StartCommonWorker(thread_pool_size);
   ret &= StartTimerWorker();
 
-  quit_ = false;
+  quit_.store(false);
   return ret;
 }
 
-bool App::LoadServiceFromDir(const std::string& path) {
+int App::LoadServiceFromDir(const std::string& path) {
   auto service_list = Common::GetDirFiles(path);
   LOG(INFO)
     << "Search " << service_list.size() << " service conf"
@@ -94,11 +97,15 @@ bool App::LoadServiceFromDir(const std::string& path) {
       << " skip load from service conf file";
     return false;
   }
-  bool res = false;
+  int load_service_cnt = 0;
   for (const auto& it : service_list) {
-    res |= LoadServiceFromFile(it);
+    if (!LoadServiceFromFile(it)) {
+      LOG(ERROR) << "Load " << it << " failed";
+      return -1;
+    }
+    load_service_cnt++;
   }
-  return res;
+  return load_service_cnt;
 }
 
 bool App::LoadServiceFromFile(const std::string& file) {
@@ -135,13 +142,13 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
       return false;
     }
     lib_name = service["lib"].asString();
-    auto lib_dir = Common::GetAbsolutePath(FLAGS_myframe_lib_dir);
+    auto lib_dir = Common::GetAbsolutePath(lib_dir_);
     if (!mods_->LoadMod(lib_dir + lib_name)) {
       LOG(ERROR) << "load lib " << (lib_dir + lib_name) << " failed, skip";
       return false;
     }
   }
-  bool res = false;
+  bool res = true;
   // load actor
   if (service.isMember("actor") && service["actor"].isObject()) {
     const auto& actor_list = service["actor"];
@@ -150,11 +157,15 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
           inst_name_it != actor_name_list.end(); ++inst_name_it) {
       LOG(INFO) << "search actor " << *inst_name_it << " ...";
       if (type == "library") {
-        res |= LoadActors(lib_name, *inst_name_it, actor_list);
+        res = LoadActors(lib_name, *inst_name_it, actor_list);
       } else if (type == "class") {
-        res |= LoadActors("class", *inst_name_it, actor_list);
+        res = LoadActors("class", *inst_name_it, actor_list);
       } else {
         LOG(ERROR) << "Unknown type " << type;
+        res = false;
+      }
+      if (!res) {
+        return res;
       }
     }
   }
@@ -166,11 +177,15 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
           inst_name_it != worker_name_list.end(); ++inst_name_it) {
       LOG(INFO) << "search worker " << *inst_name_it << " ...";
       if (type == "library") {
-        res |= LoadWorkers(lib_name, *inst_name_it, worker_list);
+        res = LoadWorkers(lib_name, *inst_name_it, worker_list);
       } else if (type == "class") {
-        res |= LoadWorkers("class", *inst_name_it, worker_list);
+        res = LoadWorkers("class", *inst_name_it, worker_list);
       } else {
         LOG(ERROR) << "Unknown type " << type;
+        res = false;
+      }
+      if (!res) {
+        return res;
       }
     }  // end for
   }  // end load worker
@@ -194,7 +209,7 @@ bool App::LoadActors(
       LOG(ERROR)
         << "actor " << actor_name
         << " key \"instance_name\": no key, skip";
-      continue;
+      return false;
     }
     inst_name = inst["instance_name"].asString();
     if (inst.isMember("instance_params")) {
@@ -203,14 +218,17 @@ bool App::LoadActors(
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    res |= CreateActorContext(
+    auto res = CreateActorContext(
       mod_name,
       actor_name,
       inst_name,
       inst_param,
       cfg);
+    if (!res) {
+      return res;
+    }
   }
-  return res;
+  return true;
 }
 
 bool App::LoadWorkers(
@@ -218,7 +236,6 @@ bool App::LoadWorkers(
   const std::string& worker_name,
   const Json::Value& worker_list) {
   const auto& insts = worker_list[worker_name];
-  bool res = false;
   for (const auto& inst : insts) {
     std::string inst_name;
     Json::Value cfg;
@@ -229,7 +246,7 @@ bool App::LoadWorkers(
       LOG(ERROR)
         << "worker " << worker_name
         << " key \"instance_name\": no key, skip";
-      continue;
+      return false;
     }
     inst_name = inst["instance_name"].asString();
     if (inst.isMember("instance_config")) {
@@ -240,11 +257,13 @@ bool App::LoadWorkers(
       LOG(ERROR)
         << "create worker " << mod_name << "." << worker_name << "."
         << inst_name << " failed, continue";
-      continue;
+      return false;
     }
-    res |= AddWorker(inst_name, worker, cfg);
+    if (!AddWorker(inst_name, worker, cfg)) {
+      return false;
+    }
   }
-  return res;
+  return true;
 }
 
 bool App::AddActor(
@@ -424,7 +443,7 @@ int App::ToEpollType(const EventIOType& type) {
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
   LOG_IF(WARNING,
-      msg_list->size() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
+      msg_list->size() > warning_msg_size_.load())
     << " dispatch msg too many";
   std::string node_addr;
   {
@@ -512,7 +531,7 @@ void App::CheckStopWorkers() {
     auto msg_list = actor_ctx->GetMailbox()->GetRecvList();
     if (!msg_list->empty()) {
       LOG_IF(WARNING,
-        msg_list->size() > myframe::FLAGS_myframe_dispatch_or_process_msg_max)
+        msg_list->size() > warning_msg_size_.load())
           << actor_ctx->GetActor()->GetActorName()
           << " recv msg size too many: " << msg_list->size();
       DLOG(INFO) << "run " << actor_ctx->GetActor()->GetActorName();

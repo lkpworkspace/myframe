@@ -43,9 +43,13 @@ class App final : public std::enable_shared_from_this<App> {
   App();
   virtual ~App();
 
-  bool Init();
+  bool Init(
+    const std::string& lib_dir,
+    int thread_pool_size = 4,
+    int event_conn_size = 2,
+    int warning_msg_size = 10);
 
-  bool LoadServiceFromDir(const std::string& path);
+  int LoadServiceFromDir(const std::string& path);
 
   bool LoadServiceFromFile(const std::string& file);
 
@@ -125,6 +129,8 @@ class App final : public std::enable_shared_from_this<App> {
   void ProcessMain(std::shared_ptr<Msg>);
   void GetAllUserModAddr(std::string* info);
 
+  std::string lib_dir_{""};
+  std::atomic_int warning_msg_size_{10};
   std::atomic_bool quit_ = {true};
   std::mutex dispatch_mtx_;
   std::mutex local_mtx_;
