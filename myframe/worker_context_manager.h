@@ -50,7 +50,7 @@ class WorkerContextManager final {
   bool HasWorker(const std::string& name);
 
  private:
-  std::atomic_int warning_msg_size_{10};
+  std::atomic<std::size_t> warning_msg_size_{10};
   /// 工作线程数(包含用户线程)
   std::atomic_int cur_worker_count_ = {0};
   /// 读写锁

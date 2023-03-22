@@ -53,7 +53,7 @@ class WorkerContext final : public Event {
   }
 
   /// recv cache list method
-  int CacheSize() const;
+  std::size_t CacheSize() const;
   std::list<std::shared_ptr<Msg>>* GetCache();
   void Cache(std::shared_ptr<Msg> msg);
   void Cache(std::list<std::shared_ptr<Msg>>* msg_list);

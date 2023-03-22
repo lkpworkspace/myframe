@@ -5,9 +5,22 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-# -DNDEBUG -DDCHECK_ALWAYS_ON
-set(CMAKE_C_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr -DNDEBUG")
-set(CMAKE_CXX_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr -DNDEBUG")
+# glog option:
+#   -DNDEBUG
+#   -DDCHECK_ALWAYS_ON
+# unit test option:
+#   -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined
+set(CMAKE_C_FLAGS
+  "-fPIC -Wall -Wextra -Werror -pedantic-errors \
+  -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
+  -DNDEBUG"
+)
+set(CMAKE_CXX_FLAGS
+  "-fPIC -Wall -Wextra -Werror -pedantic-errors \
+  -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
+  -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override -Wextra-semi \
+  -DNDEBUG"
+)
 
 option(GENERATE_EXAMPLE "generate example library" ON)
 option(GENERATE_TEST "generate test exec" ON)

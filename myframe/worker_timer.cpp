@@ -143,10 +143,9 @@ std::list<std::shared_ptr<Msg>>* TimerManager::Updatetime() {
     LOG(ERROR) << "Future time: " << cp << ":" << cur_point_;
     cur_point_ = cp;
   } else if (cp != cur_point_) {
-    uint32_t diff = (uint32_t)(cp - cur_point_);
+    uint32_t diff = static_cast<uint32_t>(cp - cur_point_);
     cur_point_ = cp;
-    int i;
-    for (i = 0; i < diff; ++i) {
+    for (std::size_t i = 0; i < diff; ++i) {
       _Updatetime();
     }
   }

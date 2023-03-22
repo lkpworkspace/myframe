@@ -158,6 +158,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
 class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     Timeout("100ms", 10);
     return 0;
   }
@@ -177,11 +178,17 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
+  if (worker_name == "worker.example_worker_interactive_with_3rd_frame.#1") {
+    return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
+  }
+  return nullptr;
 }
 
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
+  if (actor_name == "actor.example_actor_interactive_with_3rd_frame.#1") {
+    return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
+  }
+  return nullptr;
 }

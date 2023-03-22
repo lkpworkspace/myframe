@@ -125,7 +125,7 @@ std::shared_ptr<ActorContext> ActorContextManager::GetContextWithMsg() {
       break;
     }
   }
-  for (int i = 0; i < in_runing_context.size(); ++i) {
+  for (std::size_t i = 0; i < in_runing_context.size(); ++i) {
     DLOG(INFO) << in_runing_context[i]->GetActor()->GetActorName()
                << " is runing, move to wait queue back";
     wait_queue_.push_back(in_runing_context[i]);

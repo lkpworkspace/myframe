@@ -16,12 +16,14 @@ Author: likepeng <likepeng0418@163.com>
 class ExampleActorConfig : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     auto conf = GetConfig();
     LOG(INFO) << GetActorName() << " conf " << conf->toStyledString();
     return 0;
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
   }
 };
 
@@ -42,11 +44,17 @@ class ExampleWorkerConfig : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<ExampleActorConfig>();
+  if (actor_name == "actor.example_actor_config.#1") {
+    return std::make_shared<ExampleActorConfig>();
+  }
+  return nullptr;
 }
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  return std::make_shared<ExampleWorkerConfig>();
+  if (worker_name == "worker.example_worker_config.#1") {
+    return std::make_shared<ExampleWorkerConfig>();
+  }
+  return nullptr;
 }
