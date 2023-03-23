@@ -1,10 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
 project(myframe)
 
+### gcc version
+if (CMAKE_COMPILER_IS_GNUCC)
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpfullversion -dumpversion
+    OUTPUT_VARIABLE GCC_VERSION)
+  string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
+  list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
+  list(GET GCC_VERSION_COMPONENTS 1 GCC_MINOR)
+  set(GCC_VERSION "${GCC_MAJOR}.${GCC_MINOR}")
+endif ()
+
+### cpp option
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-
 # glog option:
 #   -DNDEBUG
 #   -DDCHECK_ALWAYS_ON
@@ -18,10 +28,14 @@ set(CMAKE_C_FLAGS
 set(CMAKE_CXX_FLAGS
   "-fPIC -Wall -Wextra -Werror -pedantic-errors \
   -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
-  -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override -Wextra-semi \
+  -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override \
   -DNDEBUG"
 )
+if (GCC_VERSION GREATER "8.0")
+  list(APPEND CMAKE_CXX_FLAGS " -Wextra-semi ")
+endif ()
 
+### option
 option(GENERATE_EXAMPLE "generate example library" ON)
 option(GENERATE_TEST "generate test exec" ON)
 
@@ -53,19 +67,10 @@ link_libraries(
   jsoncpp
   -Wl,-z,defs
 )
-if (CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpfullversion -dumpversion
-    OUTPUT_VARIABLE GCC_VERSION)
-  string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
-  list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
-  list(GET GCC_VERSION_COMPONENTS 1 GCC_MINOR)
-
-  set(GCC_VERSION "${GCC_MAJOR}.${GCC_MINOR}")
-  if (GCC_VERSION LESS "8.0")
-    link_libraries(
-      stdc++fs
-    )
-  endif ()
+if (GCC_VERSION LESS "8.0")
+  link_libraries(
+    stdc++fs
+  )
 endif ()
 
 ### include dir
