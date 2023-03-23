@@ -32,7 +32,7 @@ class ExampleWorkerPublic : public myframe::Worker {
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  if (worker_name == "worker.example_worker_publish.#1") {
+  if (worker_name == "example_worker_publish") {
     return std::make_shared<ExampleWorkerPublic>();
   }
   return nullptr;

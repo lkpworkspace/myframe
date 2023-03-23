@@ -34,7 +34,7 @@ class ExampleActorHelloWorld : public myframe::Actor {
 /* 创建actor模块实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  if (actor_name == "actor.example.helloworld") {
+  if (actor_name == "example") {
     return std::make_shared<ExampleActorHelloWorld>();
   }
   return nullptr;

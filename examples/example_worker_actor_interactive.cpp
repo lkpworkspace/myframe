@@ -55,7 +55,7 @@ class ExampleWorkerInteractive : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  if (actor_name == "actor.example_actor_interactive.#1") {
+  if (actor_name == "example_actor_interactive") {
     return std::make_shared<ExampleActorInteractive>();
   }
   return nullptr;
@@ -64,7 +64,7 @@ extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  if (worker_name == "worker.example_worker_interactive.#1") {
+  if (worker_name == "example_worker_interactive") {
     return std::make_shared<ExampleWorkerInteractive>();
   }
   return nullptr;

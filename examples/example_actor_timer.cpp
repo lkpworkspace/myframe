@@ -30,7 +30,7 @@ class ExampleActorTimer : public myframe::Actor {
 
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  if (actor_name == "actor.example_actor_timer.echo_per_one_second") {
+  if (actor_name == "example_actor_timer") {
     return std::make_shared<ExampleActorTimer>();
   }
   return nullptr;
