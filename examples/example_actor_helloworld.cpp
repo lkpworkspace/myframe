@@ -17,6 +17,7 @@ class ExampleActorHelloWorld : public myframe::Actor {
  public:
   /* actor模块加载完毕后调用 */
   int Init(const char* param) override {
+    (void)param;
     auto mailbox = GetMailbox();
     /* 构造 hello,world 消息发送给自己 */
     mailbox->Send(mailbox->Addr(), std::string("hello,world"));
@@ -33,5 +34,8 @@ class ExampleActorHelloWorld : public myframe::Actor {
 /* 创建actor模块实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<ExampleActorHelloWorld>();
+  if (actor_name == "example") {
+    return std::make_shared<ExampleActorHelloWorld>();
+  }
+  return nullptr;
 }

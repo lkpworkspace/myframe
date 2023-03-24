@@ -85,8 +85,8 @@ std::shared_ptr<Worker> ModLib::CreateWorkerInst(
     return nullptr;
   }
   void* handle = mods_[mod_name];
-  my_worker_create_func create =
-      (my_worker_create_func)dlsym(handle, "my_worker_create");
+  auto void_func = dlsym(handle, "my_worker_create");
+  auto create = reinterpret_cast<my_worker_create_func>(void_func);
   if (nullptr == create) {
     pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
@@ -116,8 +116,8 @@ std::shared_ptr<Actor> ModLib::CreateActorInst(
     return nullptr;
   }
   void* handle = mods_[mod_name];
-  my_actor_create_func create =
-      (my_actor_create_func)dlsym(handle, "my_actor_create");
+  auto void_func = dlsym(handle, "my_actor_create");
+  auto create = reinterpret_cast<my_actor_create_func>(void_func);
   if (nullptr == create) {
     pthread_rwlock_unlock(&rw_);
     LOG(ERROR)

@@ -21,8 +21,8 @@ WorkerContext::WorkerContext(
   std::shared_ptr<App> app,
   std::shared_ptr<Worker> worker)
   : runing_(false)
-  , app_(app)
-  , worker_(worker) {
+  , worker_(worker)
+  , app_(app) {
 }
 
 WorkerContext::~WorkerContext() {
@@ -70,7 +70,7 @@ void WorkerContext::ListenThread(std::shared_ptr<WorkerContext> w) {
   w->cmd_channel_.SendToMain(Cmd::kQuit);
 }
 
-int WorkerContext::CacheSize() const {
+std::size_t WorkerContext::CacheSize() const {
   return cache_.size();
 }
 

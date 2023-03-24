@@ -23,7 +23,10 @@ class ExampleActorConcurrent : public myframe::Actor {
     return distrib(engine);
   }
 
-  int Init(const char* param) override { return 0; }
+  int Init(const char* param) override {
+    (void)param;
+    return 0;
+  }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     if (msg->GetSrc() == "actor.example_actor_concurrent_trigger.#1") {
@@ -41,6 +44,7 @@ class ExampleActorConcurrent : public myframe::Actor {
 class ExampleActorConcurrentTrigger : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     state_ = {
         {"actor.example_actor_concurrent.#1", false},
         {"actor.example_actor_concurrent.#2", false},

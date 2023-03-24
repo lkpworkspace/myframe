@@ -64,15 +64,17 @@ uint64_t Common::GetMonoTimeMs() {
   uint64_t t;
   struct timespec ti;
   clock_gettime(CLOCK_MONOTONIC, &ti);
-  t = (uint64_t)ti.tv_sec * 1000;
+  t = static_cast<uint64_t>(ti.tv_sec * 1000);
   t += ti.tv_nsec / 1000000;
   return t;
 }
 
 bool Common::SetSockRecvTimeout(int fd, int timeout_ms) {
   struct timeval timeout = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
-  return 0 == setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout,
-                         sizeof(timeout));
+  return 0 == setsockopt(
+    fd, SOL_SOCKET, SO_RCVTIMEO,
+    reinterpret_cast<const char*>(&timeout),
+    sizeof(timeout));
 }
 
 bool Common::SetNonblockFd(int fd, bool b) {
@@ -97,7 +99,7 @@ stdfs::path Common::GetWorkRoot() {
   if (ret == -1) {
     return "";
   }
-  if (ret >= sizeof(path_buf)) {
+  if (static_cast<std::size_t>(ret) >= sizeof(path_buf)) {
     path_buf[sizeof(path_buf) - 1] = '\0';
   }
   stdfs::path p(path_buf);

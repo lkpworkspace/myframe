@@ -13,6 +13,7 @@ Author: likepeng <likepeng0418@163.com>
 class ExampleActorTimer : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     /* 设置超时时间为 100 * 10 ms */
     Timeout("1000ms", 10);
     return 0;
@@ -29,5 +30,8 @@ class ExampleActorTimer : public myframe::Actor {
 
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<ExampleActorTimer>();
+  if (actor_name == "example_actor_timer") {
+    return std::make_shared<ExampleActorTimer>();
+  }
+  return nullptr;
 }

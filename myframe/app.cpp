@@ -48,11 +48,12 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : epoll_fd_(-1),
-    actor_ctx_mgr_(new ActorContextManager()),
-    mods_(new ModManager()),
-    worker_ctx_mgr_(new WorkerContextManager()),
-    ev_conn_mgr_(new EventConnManager()) {}
+  : epoll_fd_(-1)
+  , mods_(new ModManager())
+  , actor_ctx_mgr_(new ActorContextManager())
+  , ev_conn_mgr_(new EventConnManager())
+  , worker_ctx_mgr_(new WorkerContextManager())
+{}
 
 App::~App() {
   if (epoll_fd_ != -1) {
@@ -197,7 +198,6 @@ bool App::LoadActors(
   const std::string& actor_name,
   const Json::Value& actor_list) {
   const auto& insts = actor_list[actor_name];
-  bool res = false;
   for (const auto& inst : insts) {
     std::string inst_name;
     std::string inst_param;
@@ -582,10 +582,10 @@ void App::GetAllUserModAddr(std::string* info) {
   auto res_actor = actor_ctx_mgr_->GetAllActorAddr();
   auto res_worker = worker_ctx_mgr_->GetAllUserWorkerAddr();
   std::stringstream ss;
-  for (int i = 0; i < res_actor.size(); ++i) {
+  for (std::size_t i = 0; i < res_actor.size(); ++i) {
     ss << res_actor[i] << "\n";
   }
-  for (int i = 0; i < res_worker.size(); ++i) {
+  for (std::size_t i = 0; i < res_worker.size(); ++i) {
     ss << res_worker[i] << "\n";
   }
   info->clear();
@@ -740,8 +740,9 @@ int App::Exec() {
   int ev_count = 0;
   int max_ev_count = 64;
   int time_wait_ms = 1000;
-  struct epoll_event* evs;
-  evs = (struct epoll_event*)malloc(sizeof(struct epoll_event) * max_ev_count);
+  struct epoll_event* evs = nullptr;
+  auto void_evs = malloc(sizeof(struct epoll_event) * max_ev_count);
+  evs = reinterpret_cast<struct epoll_event*>(void_evs);
 
   while (worker_ctx_mgr_->WorkerSize()) {
     /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理

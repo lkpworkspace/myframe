@@ -9,9 +9,9 @@ Author: likepeng <likepeng0418@163.com>
 
 class Environment : public testing::Environment {
  public:
-  virtual void SetUp() { std::cout << "Environment SetUP" << std::endl; }
+  void SetUp() override { std::cout << "Environment SetUP" << std::endl; }
 
-  virtual void TearDown() { std::cout << "Environment TearDown" << std::endl; }
+  void TearDown() override { std::cout << "Environment TearDown" << std::endl; }
 };
 
 int main(int argc, char** argv) {

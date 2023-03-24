@@ -32,6 +32,7 @@ class TransObj {
 class ExampleActorTransObj : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     return 0;
   }
 
@@ -62,11 +63,17 @@ class ExampleWorkerTransObj : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<ExampleActorTransObj>();
+  if (actor_name == "example_actor_trans_obj") {
+    return std::make_shared<ExampleActorTransObj>();
+  }
+  return nullptr;
 }
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  return std::make_shared<ExampleWorkerTransObj>();
+  if (worker_name == "example_worker_trans_obj") {
+    return std::make_shared<ExampleWorkerTransObj>();
+  }
+  return nullptr;
 }

@@ -5,15 +5,14 @@ PROJECT(@template_name@)
 SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED YES)
-SET(CMAKE_C_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr")
-SET(CMAKE_CXX_FLAGS "-fPIC -DPIC -Werror=return-type -Werror=return-local-addr")
+SET(CMAKE_C_FLAGS "-fPIC -Werror=return-type -Werror=return-local-addr")
+SET(CMAKE_CXX_FLAGS "-fPIC -Werror=return-type -Werror=return-local-addr")
 
 #### path setting
 SET(CMAKE_INSTALL_PREFIX "$ENV{HOME}/myframe")
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-SET(MYFRAME_ROOT ${CMAKE_INSTALL_PREFIX})
-SET(MYFRAME_INSTALL_SERVICE_DIR ${MYFRAME_ROOT}/service)
-SET(MYFRAME_INSTALL_LIB_DIR ${MYFRAME_ROOT}/lib)
+SET(MYFRAME_INSTALL_SERVICE_DIR ${CMAKE_INSTALL_PREFIX}/service)
+SET(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 #### dep 3rd lib
 FIND_PACKAGE(jsoncpp REQUIRED)
@@ -21,17 +20,18 @@ FIND_PACKAGE(gflags REQUIRED)
 FIND_PACKAGE(GTest REQUIRED)
 
 #### include directory
-INCLUDE_DIRECTORIES(${MYFRAME_ROOT}/inc)
+INCLUDE_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/inc)
 
-#### lib path
+#### deps libs
 LINK_LIBRARIES(
     dl pthread
-    glog gflags jsoncpp
+    glog gflags
+    jsoncpp
     -Wl,-z,defs
 )
-LINK_DIRECTORIES(${MYFRAME_ROOT}/lib)
+LINK_DIRECTORIES(${MYFRAME_INSTALL_LIB_DIR})
 
-#### genrate mod lib
+#### lib
 ADD_LIBRARY(${PROJECT_NAME} SHARED
     ${PROJECT_NAME}.cpp
 )

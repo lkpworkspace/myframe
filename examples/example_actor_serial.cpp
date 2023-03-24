@@ -24,6 +24,7 @@ int random(int min, int max) {
 class ExampleActorSerial1 : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     auto mailbox = GetMailbox();
     mailbox->Send("actor.example_serial1.#1",
       std::make_shared<myframe::Msg>(""));
@@ -31,6 +32,7 @@ class ExampleActorSerial1 : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     int cost_ms = random(100, 500);
     LOG(INFO) << "-----> begin runing task " << GetActorName() << "...";
     std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
@@ -44,9 +46,13 @@ class ExampleActorSerial1 : public myframe::Actor {
 
 class ExampleActorSerial2 : public myframe::Actor {
  public:
-  int Init(const char* param) override { return 0; }
+  int Init(const char* param) override {
+    (void)param;
+    return 0;
+  }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     int cost_ms = random(100, 500);
     LOG(INFO) << "-----> begin runing task " << GetActorName() << "...";
     std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
@@ -60,9 +66,13 @@ class ExampleActorSerial2 : public myframe::Actor {
 
 class ExampleActorSerial3 : public myframe::Actor {
  public:
-  int Init(const char* param) override { return 0; }
+  int Init(const char* param) override {
+    (void)param;
+    return 0;
+  }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     int cost_ms = random(100, 500);
     LOG(INFO) << "-----> begin runing task " << GetActorName() << "...";
     std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));

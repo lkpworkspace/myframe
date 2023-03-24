@@ -13,22 +13,15 @@ worker自驱动，可以通过消息与actor交互;
 开发语言：C++17
 
 ## 安装依赖
-```sh
-sudo apt-get install build-essential cmake
-sudo apt-get install libjsoncpp-dev libgflags-dev libgtest-dev libgoogle-glog-dev
-# ubuntu18.04需要编译安装gtest
-cd /usr/src/gtest
-sudo cmake CMakeLists.txt 
-sudo make 
-sudo cp *.a /usr/lib
-```
+参考 [github ci](.github/workflows/cmake.yml)
 
 ## 构建
 ```sh
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make install
+cmake ..
+# 默认安装到HOME目录
+make -j4 install
 ```
 
 ## 运行
@@ -37,18 +30,13 @@ cd ~/myframe/bin
 ./launcher -p app
 ```
 
-## 创建模块工程
-```sh
-python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_name"
-```
-
-### actor Hello,World Demo 示例
+### Hello,World 示例
 ```c
-#include <iostream>
 #include <string.h>
+#include <iostream>
 
-#include "myframe/actor.h"
 #include "myframe/msg.h"
+#include "myframe/actor.h"
 
 using namespace myframe;
 /*
@@ -71,9 +59,12 @@ class Demo : public Actor
   }
 };
 
-/* 创建actor模块实例函数 */
+/* 框架根据描述文件创建actor实例函数 */
 extern "C" std::shared_ptr<Actor> my_actor_create(const std::string& actor_name) {
-  return std::make_shared<Demo>();
+  if (actor_name == "demo") {
+    return std::make_shared<Demo>();
+  }
+  return nullptr;
 }
 
 ```
@@ -101,13 +92,14 @@ extern "C" std::shared_ptr<Actor> my_actor_create(const std::string& actor_name)
     - instance_params：实例参数
 
 ## 程序接口
-
+- [Example](https://github.com/lkpworkspace/myframe/tree/master/examples)
 - [Actor模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/actor.h)
 - [Worker模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/worker.h)
-- [消息类型](https://github.com/lkpworkspace/myframe/blob/master/myframe/msg.h)
+- [Msg模块](https://github.com/lkpworkspace/myframe/blob/master/myframe/msg.h)
 
 ## 文档
-- [文档入口](https://github.com/lkpworkspace/myframe/wiki)
-
-## 常见问题
-- [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)
+- [开发手册](doc/development_guide.md)
+- [Discussions](https://github.com/lkpworkspace/myframe/discussions)
+- [WIKI](https://github.com/lkpworkspace/myframe/wiki)
+- [FAQ](https://github.com/lkpworkspace/myframe/wiki/FAQs)
+- [TODOLIST](doc/TODOLIST.md)

@@ -24,6 +24,7 @@ Author: likepeng <likepeng0418@163.com>
 class EchoActorTest : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     LOG(INFO) << "init EchoActorTest";
     return 0;
   }
@@ -44,6 +45,7 @@ class TransMsgCostTest : public myframe::Actor {
   TransMsgCostTest() : msg_(8192, 'x') {}
 
   int Init(const char* param) override {
+    (void)param;
     LOG(INFO) << "begin runing TransMsgCostTest";
     last_ = std::chrono::high_resolution_clock::now();
     begin_ = std::chrono::high_resolution_clock::now();
@@ -53,6 +55,7 @@ class TransMsgCostTest : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     auto now = std::chrono::high_resolution_clock::now();
     auto us = std::chrono::duration_cast<std::chrono::microseconds>(now - last_)
                   .count();
@@ -90,6 +93,7 @@ class Trans10ActorCostTest : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     if (!init_) {
       init_ = true;
       total_ = std::chrono::high_resolution_clock::now();
@@ -138,11 +142,13 @@ class FullSpeedTransTest : public myframe::Actor {
   FullSpeedTransTest() : msg_(8192, 'z') {}
 
   int Init(const char* param) override {
+    (void)param;
     LOG(INFO) << "init full speed trans ";
     return 0;
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     if (!init_) {
       init_ = true;
       begin_ = std::chrono::high_resolution_clock::now();
@@ -187,11 +193,13 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
   FullSpeed20ActorTransTest() : msg_(8192, 'j') {}
 
   int Init(const char* param) override {
+    (void)param;
     LOG(INFO) << "init full speed 20 actor trans ";
     return 0;
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     if (!init_) {
       init_ = true;
       begin_ = std::chrono::high_resolution_clock::now();
@@ -241,11 +249,13 @@ class FullSpeed100ActorTransTest : public myframe::Actor {
   FullSpeed100ActorTransTest() : msg_(8192, 'k') {}
 
   int Init(const char* param) override {
+    (void)param;
     LOG(INFO) << "init full speed 100 actor trans ";
     return 0;
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
     if (!init_) {
       init_ = true;
       begin_ = std::chrono::high_resolution_clock::now();

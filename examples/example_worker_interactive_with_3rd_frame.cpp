@@ -5,78 +5,47 @@ All rights reserved.
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 #include <poll.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 #include <chrono>
 #include <thread>
 
 #include <glog/logging.h>
 
-#include "myframe/actor.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"
+#include "myframe/cmd_channel.h"
+#include "myframe/actor.h"
 #include "myframe/worker.h"
 
 template <typename T>
 class MyQueue final {
  public:
-  MyQueue() { CreateSockPair(); }
-  ~MyQueue() { CloseSockPair(); }
+  MyQueue() = default;
+  ~MyQueue() = default;
 
-  int GetFd0() { return fd_pair_[0]; }
-  int GetFd1() { return fd_pair_[1]; }
+  int GetFd0() { return cmd_channel_.GetOwnerFd(); }
+  int GetFd1() { return cmd_channel_.GetMainFd(); }
 
   void Push(std::shared_ptr<T> data) {
     data_ = data;
-    char cmd_char = 'p';
-    write(fd_pair_[0], &cmd_char, 1);
-    read(fd_pair_[0], &cmd_char, 1);
+    myframe::Cmd cmd = myframe::Cmd::kRun;
+    cmd_channel_.SendToOwner(cmd);
+    cmd_channel_.RecvFromOwner(&cmd);
   }
 
   std::shared_ptr<T> Pop() {
     std::shared_ptr<T> ret = nullptr;
-    char cmd_char = '\0';
-    read(fd_pair_[1], &cmd_char, 1);
+    myframe::Cmd cmd = myframe::Cmd::kRun;
+    cmd_channel_.RecvFromMain(&cmd);
     ret = data_;
     data_ = nullptr;
-    write(fd_pair_[1], &cmd_char, 1);
+    cmd_channel_.SendToMain(myframe::Cmd::kIdle);
     return ret;
   }
 
  private:
-  bool CreateSockPair() {
-    int res = -1;
-    bool ret = true;
-
-    res = socketpair(AF_UNIX, SOCK_DGRAM, 0, fd_pair_);
-    if (res == -1) {
-      LOG(ERROR) << "create sockpair failed";
-      return false;
-    }
-    ret = myframe::Common::SetNonblockFd(fd_pair_[0], false);
-    if (!ret) {
-      LOG(ERROR) << "set sockpair[0] block failed";
-      return ret;
-    }
-    ret = myframe::Common::SetNonblockFd(fd_pair_[1], false);
-    if (!ret) {
-      LOG(ERROR) << "set sockpair[1] block failed";
-      return ret;
-    }
-    return ret;
-  }
-  void CloseSockPair() {
-    if (-1 == close(fd_pair_[0])) {
-      LOG(ERROR) << "close sockpair[0]: " << strerror(errno);
-    }
-    if (-1 == close(fd_pair_[1])) {
-      LOG(ERROR) << "close sockpair[1]: " << strerror(errno);
-    }
-  }
-
   std::shared_ptr<T> data_;
-  int fd_pair_[2] = {-1, -1};
+  myframe::CmdChannel cmd_channel_;
 };
 
 /**
@@ -91,7 +60,9 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     // 线程_th通过MyQueue与myframe交互
     _th = std::thread([this]() {
       while (1) {
-        _queue.Push(std::make_shared<std::string>("this is 3rd frame"));
+        seq_num_++;
+        LOG(INFO) << "3rd frame pub " << seq_num_;
+        _queue.Push(std::make_shared<std::string>(std::to_string(seq_num_)));
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       }
     });
@@ -102,42 +73,42 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
   }
 
   void Run() override {
-    bool has_main_msg = false;
     auto cmd_channel = GetCmdChannel();
-    struct pollfd fds[] = {{cmd_channel->GetOwnerFd(), POLLIN, 0},
-                           {_queue.GetFd1(), POLLIN, 0}};
+    struct pollfd fds[] = {
+      {cmd_channel->GetOwnerFd(), POLLIN, 0},
+      {_queue.GetFd0(), POLLIN, 0}};
     // 等待来自queue或者myframe的消息
-    poll(fds, 2, -1);
-    if (fds[0].revents & POLLIN) {
-      has_main_msg = true;
+    int ret = poll(fds, 2, -1);
+    if (ret < 0) {
+      LOG(ERROR) << "poll error, " << strerror(errno);
+      return;
     }
-    if (fds[1].revents & POLLIN) {
-      auto data = _queue.Pop();
-      // 可以将queue里的消息发给myfrmae的worker或actor
-      // eg: Send("actor.xx.xx", std::make_shared<Msg>(data->c_str()));
-      LOG(INFO) << "get msg from queue: " << data->c_str();
+    for (std::size_t i = 0; i < 2; ++i) {
+      if (!(fds[i].revents & POLLIN)) {
+        continue;
+      }
+      if (i == 0) {
+        OnMainMsg();
+      } else if (i == 1) {
+        auto data = _queue.Pop();
+        // 可以将queue里的消息发给myfrmae的worker或actor
+        // eg: Send("actor.xx.xx", std::make_shared<Msg>(data->c_str()));
+        LOG(INFO) << "get 3rd frame: " << data->c_str();
+        cmd_channel->SendToMain(myframe::Cmd::kIdle);
+      }
     }
-    OnMainMsg(has_main_msg);
   }
 
   // 分发消息、处理来自myframe的消息
-  void OnMainMsg(bool has_main_msg) {
-    if (!has_main_msg) {
-      GetCmdChannel()->SendToMain(myframe::Cmd::kIdle);
-    }
-    while (1) {
-      myframe::Cmd cmd;
-      GetCmdChannel()->RecvFromMain(&cmd);
-      if (myframe::Cmd::kRun == cmd) {
-        return;
-      }
-      if (myframe::Cmd::kRunWithMsg == cmd) {
-        ProcessMainMsg();
-        GetCmdChannel()->SendToMain(myframe::Cmd::kWaitForMsg);
-        if (has_main_msg) {
-          return;
-        }
-      }
+  void OnMainMsg() {
+    auto cmd_channel = GetCmdChannel();
+    myframe::Cmd cmd;
+    cmd_channel->RecvFromMain(&cmd);
+    if (cmd == myframe::Cmd::kRun) {
+      return;
+    } else if (cmd == myframe::Cmd::kRunWithMsg) {
+      ProcessMainMsg();
+      cmd_channel->SendToMain(myframe::Cmd::kWaitForMsg);
     }
   }
 
@@ -146,11 +117,12 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     while (!mailbox->RecvEmpty()) {
       const auto& msg = mailbox->PopRecv();
       // ...
-      LOG(INFO) << "get msg from main " << msg->GetData();
+      LOG(INFO) << "get main " << msg->GetData();
     }
   }
 
  private:
+  int seq_num_{0};
   std::thread _th;
   MyQueue<std::string> _queue;
 };
@@ -158,6 +130,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
 class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
  public:
   int Init(const char* param) override {
+    (void)param;
     Timeout("100ms", 10);
     return 0;
   }
@@ -165,23 +138,32 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     if (msg->GetType() == "TIMER") {
       auto mailbox = GetMailbox();
+      seq_num_++;
+      LOG(INFO) << "actor pub " << seq_num_;
       mailbox->Send(
         "worker.example_worker_interactive_with_3rd_frame.#1",
-        std::make_shared<myframe::Msg>(
-          "this is interactive_with_3rd_frame actor"));
-      Timeout("1000ms", 100);
+        std::make_shared<myframe::Msg>(std::to_string(seq_num_)));
+      Timeout("100ms", 10);
     }
   }
+ private:
+  int seq_num_{0};
 };
 
 /* 创建worker实例函数 */
 extern "C" std::shared_ptr<myframe::Worker> my_worker_create(
     const std::string& worker_name) {
-  return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
+  if (worker_name == "example_worker_interactive_with_3rd_frame") {
+    return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
+  }
+  return nullptr;
 }
 
 /* 创建actor实例函数 */
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
     const std::string& actor_name) {
-  return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
+  if (actor_name == "example_actor_interactive_with_3rd_frame") {
+    return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
+  }
+  return nullptr;
 }
