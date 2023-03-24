@@ -13,22 +13,14 @@ worker自驱动，可以通过消息与actor交互;
 开发语言：C++17
 
 ## 安装依赖
-```sh
-sudo apt-get install build-essential cmake
-sudo apt-get install libjsoncpp-dev libgflags-dev libgtest-dev libgoogle-glog-dev
-# ubuntu18.04需要编译安装gtest
-cd /usr/src/gtest
-sudo cmake CMakeLists.txt 
-sudo make 
-sudo cp *.a /usr/lib
-```
+参考 [github ci](.github/workflows/cmake.yml)
 
 ## 构建
 ```sh
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make install
+cmake ..
+make -j4 install
 ```
 
 ## 运行
@@ -37,12 +29,7 @@ cd ~/myframe/bin
 ./launcher -p app
 ```
 
-## 创建模块工程
-```sh
-python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_name"
-```
-
-### actor Hello,World Demo 示例
+### Hello,World 示例
 ```c
 #include <iostream>
 #include <string.h>
@@ -107,7 +94,7 @@ extern "C" std::shared_ptr<Actor> my_actor_create(const std::string& actor_name)
 - [消息类型](https://github.com/lkpworkspace/myframe/blob/master/myframe/msg.h)
 
 ## 文档
-- [文档入口](https://github.com/lkpworkspace/myframe/wiki)
-
-## 常见问题
+- [开发手册](doc/development_guide.md)
+- [wiki](https://github.com/lkpworkspace/myframe/wiki)
 - [FAQs](https://github.com/lkpworkspace/myframe/wiki/FAQs)
+- [TODOLIST](doc/TODOLIST.md)
