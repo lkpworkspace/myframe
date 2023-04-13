@@ -117,6 +117,6 @@ class Worker {
 }  // namespace myframe
 
 extern "C" {
-typedef std::shared_ptr<myframe::Worker> (*my_worker_create_func)(
+typedef std::shared_ptr<myframe::Worker> (*worker_create_func_t)(
     const std::string&);
 }  // extern "C"

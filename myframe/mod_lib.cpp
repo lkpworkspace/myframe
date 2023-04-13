@@ -85,13 +85,13 @@ std::shared_ptr<Worker> ModLib::CreateWorkerInst(
     return nullptr;
   }
   void* handle = mods_[mod_name];
-  auto void_func = dlsym(handle, "my_worker_create");
-  auto create = reinterpret_cast<my_worker_create_func>(void_func);
+  auto void_func = dlsym(handle, "worker_create");
+  auto create = reinterpret_cast<worker_create_func_t>(void_func);
   if (nullptr == create) {
     pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
       << "Load " << mod_name << "." << worker_name
-      << " module my_worker_create function failed";
+      << " module worker_create function failed";
     return nullptr;
   }
   auto worker = create(worker_name);
@@ -116,13 +116,13 @@ std::shared_ptr<Actor> ModLib::CreateActorInst(
     return nullptr;
   }
   void* handle = mods_[mod_name];
-  auto void_func = dlsym(handle, "my_actor_create");
-  auto create = reinterpret_cast<my_actor_create_func>(void_func);
+  auto void_func = dlsym(handle, "actor_create");
+  auto create = reinterpret_cast<actor_create_func_t>(void_func);
   if (nullptr == create) {
     pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
       << "Load " << mod_name << "." << actor_name
-      << " module my_actor_create function failed";
+      << " module actor_create function failed";
     return nullptr;
   }
   auto actor = create(actor_name);
