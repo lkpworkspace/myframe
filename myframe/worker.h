@@ -17,6 +17,7 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+class App;
 class WorkerContext;
 class Worker {
   friend class App;
@@ -95,6 +96,9 @@ class Worker {
 
   /// 分发消息并等待回复消息
   int DispatchAndWaitMsg();
+
+  /// 获得app
+  std::shared_ptr<App> GetApp();
 
  private:
   void SetModName(const std::string&);

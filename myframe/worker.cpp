@@ -13,6 +13,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/worker_context.h"
+#include "myframe/app.h"
 
 namespace myframe {
 
@@ -86,6 +87,14 @@ void Worker::SetContext(std::shared_ptr<WorkerContext> ctx) {
 
 EventType Worker::GetType() {
   return EventType::kWorkerUser;
+}
+
+std::shared_ptr<App> Worker::GetApp() {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
+    return nullptr;
+  }
+  return ctx->GetApp();
 }
 
 }  // namespace myframe

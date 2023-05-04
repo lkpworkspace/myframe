@@ -12,8 +12,8 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/common.h"
 #include "myframe/msg.h"
-#include "myframe/app.h"
 #include "myframe/worker.h"
+#include "myframe/app.h"
 
 namespace myframe {
 
@@ -92,6 +92,10 @@ Mailbox* WorkerContext::GetMailbox() {
 
 CmdChannel* WorkerContext::GetCmdChannel() {
   return &cmd_channel_;
+}
+
+std::shared_ptr<App> WorkerContext::GetApp() {
+  return app_.lock();
 }
 
 std::ostream& operator<<(std::ostream& out, WorkerContext& ctx) {
