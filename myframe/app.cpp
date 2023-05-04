@@ -285,6 +285,17 @@ bool App::AddWorker(
   worker->SetContext(worker_ctx);
   worker->SetInstName(inst_name);
   worker->SetConfig(config);
+  if (worker->GetTypeName() == "node") {
+    std::lock_guard<std::mutex> lock(local_mtx_);
+    if (node_addr_.empty()) {
+      LOG(INFO) << "create node " << worker->GetWorkerName();
+      node_addr_ = worker->GetWorkerName();
+    } else {
+      LOG(ERROR) << "has more than one node instance, "
+        << node_addr_ << " and " << worker->GetWorkerName();
+      return false;
+    }
+  }
   if (!worker_ctx_mgr_->Add(worker_ctx)) {
     return false;
   }
@@ -292,15 +303,6 @@ bool App::AddWorker(
     return false;
   }
   worker_ctx->Start();
-  if (worker->GetTypeName() == "node") {
-    std::lock_guard<std::mutex> lock(local_mtx_);
-    if (node_addr_.empty()) {
-      LOG(INFO) << "create node " << worker->GetWorkerName();
-      node_addr_ = worker->GetWorkerName();
-    } else {
-      LOG(ERROR) << "has more than one node instance, using " << node_addr_;
-    }
-  }
   return true;
 }
 
