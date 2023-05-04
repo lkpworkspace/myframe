@@ -31,6 +31,7 @@ class ModuleArgument final {
   inline int GetThreadPoolSize() const { return thread_poll_size_; }
   inline int GetConnEventSize() const { return conn_event_size_; }
   inline int GetWarningMsgSize() const { return warning_msg_size_; }
+
  private:
   bool ParseSysConf(const std::string&);
 
