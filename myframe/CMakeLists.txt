@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME} SHARED ${__srcs})
 ### install
 file(GLOB header_files
     macros.h
+    common.h
     log.h
     msg.h
     mailbox.h

@@ -28,7 +28,7 @@ class ExampleActorTimer : public myframe::Actor {
   }
 };
 
-extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
+extern "C" std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
   if (actor_name == "example_actor_timer") {
     return std::make_shared<ExampleActorTimer>();

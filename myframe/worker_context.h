@@ -72,6 +72,8 @@ class WorkerContext final : public Event {
     return in_msg_wait_queue_;
   }
 
+  std::shared_ptr<App> GetApp();
+
  private:
   static void ListenThread(std::shared_ptr<WorkerContext> w);
   void Initialize();

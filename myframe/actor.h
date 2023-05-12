@@ -112,6 +112,6 @@ class Actor {
 }  // namespace myframe
 
 extern "C" {
-typedef std::shared_ptr<myframe::Actor> (*my_actor_create_func)(
+typedef std::shared_ptr<myframe::Actor> (*actor_create_func_t)(
     const std::string&);
 }  // extern "C"

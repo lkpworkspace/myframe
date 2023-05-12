@@ -60,7 +60,7 @@ class Demo : public Actor
 };
 
 /* 框架根据描述文件创建actor实例函数 */
-extern "C" std::shared_ptr<Actor> my_actor_create(const std::string& actor_name) {
+extern "C" std::shared_ptr<Actor> actor_create(const std::string& actor_name) {
   if (actor_name == "demo") {
     return std::make_shared<Demo>();
   }

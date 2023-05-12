@@ -17,6 +17,7 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+class App;
 class WorkerContext;
 class Worker {
   friend class App;
@@ -96,6 +97,9 @@ class Worker {
   /// 分发消息并等待回复消息
   int DispatchAndWaitMsg();
 
+  /// 获得app
+  std::shared_ptr<App> GetApp();
+
  private:
   void SetModName(const std::string&);
   void SetTypeName(const std::string&);
@@ -117,6 +121,6 @@ class Worker {
 }  // namespace myframe
 
 extern "C" {
-typedef std::shared_ptr<myframe::Worker> (*my_worker_create_func)(
+typedef std::shared_ptr<myframe::Worker> (*worker_create_func_t)(
     const std::string&);
 }  // extern "C"

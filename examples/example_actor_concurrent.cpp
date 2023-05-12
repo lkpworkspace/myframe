@@ -78,7 +78,7 @@ class ExampleActorConcurrentTrigger : public myframe::Actor {
   std::unordered_map<std::string, bool> state_;
 };
 
-extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
+extern "C" std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
   if (actor_name == "example_actor_concurrent") {
     return std::make_shared<ExampleActorConcurrent>();
