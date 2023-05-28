@@ -25,7 +25,9 @@ void WorkerCommon::Idle() {
 }
 
 void WorkerCommon::Run() {
-  DispatchMsg();
+  if (-1 == DispatchMsg()) {
+    return;
+  }
   Work();
 }
 

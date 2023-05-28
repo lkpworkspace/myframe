@@ -11,5 +11,5 @@ build/
 
 .vscode
 
-launcher/launcher.cpp
-test/performance_test.cpp
+launcher/launcher_config.h
+test/performance_test_config.h

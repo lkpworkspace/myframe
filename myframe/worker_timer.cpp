@@ -158,10 +158,12 @@ WorkerTimer::~WorkerTimer() {}
 
 void WorkerTimer::Run() {
   int dispatch = Work();
-  if (dispatch) {
+  if (dispatch || cur_us_ >= dispatch_timeout_us_) {
     DispatchMsg();
+    cur_us_ = 0;
   }
-  usleep(2500);
+  usleep(sleep_us_);
+  cur_us_ += sleep_us_;
 }
 
 void WorkerTimer::Init() {

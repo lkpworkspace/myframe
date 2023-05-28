@@ -87,6 +87,8 @@ class App final : public std::enable_shared_from_this<App> {
 
   int Exec();
 
+  void Quit();
+
  private:
   bool CreateActorContext(
     const std::string& mod_name,
@@ -133,7 +135,7 @@ class App final : public std::enable_shared_from_this<App> {
   /// node地址
   std::string node_addr_{""};
   std::atomic<std::size_t> warning_msg_size_{10};
-  std::atomic_bool quit_ = {true};
+  std::atomic_bool quit_{true};
   std::mutex dispatch_mtx_;
   std::mutex local_mtx_;
   /// epoll文件描述符

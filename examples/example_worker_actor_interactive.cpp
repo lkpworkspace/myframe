@@ -40,7 +40,9 @@ class ExampleWorkerInteractive : public myframe::Worker {
     auto send_msg =
         std::make_shared<myframe::Msg>("this is ExampleWorkerInteractive req");
     mailbox->Send("actor.example_actor_interactive.#1", send_msg);
-    DispatchAndWaitMsg();
+    if (-1 == DispatchAndWaitMsg()) {
+      return;
+    }
     while (1) {
       const auto& msg = mailbox->PopRecv();
       if (msg == nullptr) {

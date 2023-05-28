@@ -44,12 +44,17 @@ void WorkerContext::Start() {
       std::bind(
         &WorkerContext::ListenThread,
         std::dynamic_pointer_cast<WorkerContext>(shared_from_this())));
-    th_.detach();
   }
 }
 
 void WorkerContext::Stop() {
   runing_.store(false);
+}
+
+void WorkerContext::Join() {
+  if (th_.joinable()) {
+    th_.join();
+  }
 }
 
 void WorkerContext::Initialize() {
@@ -58,7 +63,6 @@ void WorkerContext::Initialize() {
 }
 
 void WorkerContext::ListenThread(std::shared_ptr<WorkerContext> w) {
-  thread_local std::shared_ptr<WorkerContext> worker_ctx_local = w;
   if (w->worker_ == nullptr) {
     return;
   }

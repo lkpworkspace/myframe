@@ -49,6 +49,10 @@ class WorkerContextManager final {
   std::vector<std::string> GetAllUserWorkerAddr();
   bool HasWorker(const std::string& name);
 
+  // 停止工作线程
+  void StopAllWorker();
+  void WaitAllWorkerQuit();
+
  private:
   std::atomic<std::size_t> warning_msg_size_{10};
   /// 工作线程数(包含用户线程)
@@ -59,6 +63,8 @@ class WorkerContextManager final {
   std::list<std::weak_ptr<WorkerContext>> idle_workers_ctx_;
   /// 有消息user线程
   std::list<std::weak_ptr<WorkerContext>> weakup_workers_ctx_;
+  /// 停止的线程列表
+  std::list<std::shared_ptr<WorkerContext>> stoped_workers_ctx_;
   /// name/handle 映射表
   std::unordered_map<std::string, int> name_handle_map_;
   /// handle/worker 映射表

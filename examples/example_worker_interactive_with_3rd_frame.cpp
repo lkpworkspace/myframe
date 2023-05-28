@@ -57,16 +57,16 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
   virtual ~ExampleWorkerInteractiveWith3rdFrame() {}
 
   void Init() override {
-    // 线程_th通过MyQueue与myframe交互
-    _th = std::thread([this]() {
-      while (1) {
+    quit_.store(false);
+    // 线程th_通过MyQueue与myframe交互
+    th_ = std::thread([this]() {
+      while (!quit_.load()) {
         seq_num_++;
         LOG(INFO) << "3rd frame pub " << seq_num_;
-        _queue.Push(std::make_shared<std::string>(std::to_string(seq_num_)));
+        queue_.Push(std::make_shared<std::string>(std::to_string(seq_num_)));
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       }
     });
-    _th.detach();
 
     // 通知myframe该worker可以接收来自myframe的消息
     GetCmdChannel()->SendToMain(myframe::Cmd::kWaitForMsg);
@@ -76,7 +76,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     auto cmd_channel = GetCmdChannel();
     struct pollfd fds[] = {
       {cmd_channel->GetOwnerFd(), POLLIN, 0},
-      {_queue.GetFd0(), POLLIN, 0}};
+      {queue_.GetFd0(), POLLIN, 0}};
     // 等待来自queue或者myframe的消息
     int ret = poll(fds, 2, -1);
     if (ret < 0) {
@@ -90,12 +90,18 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
       if (i == 0) {
         OnMainMsg();
       } else if (i == 1) {
-        auto data = _queue.Pop();
+        auto data = queue_.Pop();
         // 可以将queue里的消息发给myfrmae的worker或actor
         // eg: Send("actor.xx.xx", std::make_shared<Msg>(data->c_str()));
         LOG(INFO) << "get 3rd frame: " << data->c_str();
         cmd_channel->SendToMain(myframe::Cmd::kIdle);
       }
+    }
+  }
+
+  void Exit() override {
+    if (th_.joinable()) {
+      th_.join();
     }
   }
 
@@ -105,10 +111,14 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     myframe::Cmd cmd;
     cmd_channel->RecvFromMain(&cmd);
     if (cmd == myframe::Cmd::kRun) {
+      // do nothing
       return;
     } else if (cmd == myframe::Cmd::kRunWithMsg) {
       ProcessMainMsg();
       cmd_channel->SendToMain(myframe::Cmd::kWaitForMsg);
+    } else if (cmd == myframe::Cmd::kQuit) {
+      quit_.store(true);
+      Stop();
     }
   }
 
@@ -123,8 +133,9 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
 
  private:
   int seq_num_{0};
-  std::thread _th;
-  MyQueue<std::string> _queue;
+  std::atomic_bool quit_{true};
+  std::thread th_;
+  MyQueue<std::string> queue_;
 };
 
 class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {

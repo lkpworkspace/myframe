@@ -19,7 +19,9 @@ class ExampleWorkerPublic : public myframe::Worker {
   virtual ~ExampleWorkerPublic() {}
 
   void Run() override {
-    DispatchAndWaitMsg();
+    if (-1 == DispatchAndWaitMsg()) {
+      return;
+    }
     auto mailbox = GetMailbox();
     while (!mailbox->RecvEmpty()) {
       const auto& msg = mailbox->PopRecv();
