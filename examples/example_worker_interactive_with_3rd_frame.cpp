@@ -8,6 +8,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <chrono>
 #include <thread>
+#include <atomic>
 
 #include <glog/logging.h>
 
