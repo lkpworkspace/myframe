@@ -99,6 +99,10 @@ int main(int argc, char** argv) {
 
   // 开始事件循环
   g_app->Exec();
+
+  // 退出资源清理
+  g_app = nullptr;
   LOG(INFO) << "launcher exit";
+  myframe::ShutdownLog();
   return 0;
 }
