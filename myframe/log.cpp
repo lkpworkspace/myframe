@@ -40,4 +40,8 @@ void InitLog(const std::string& log_dir, const std::string& bin_name) {
   google::InstallFailureWriter(&signal_handler);
 }
 
+void ShutdownLog() {
+  google::ShutdownGoogleLogging();
+}
+
 }  // namespace myframe

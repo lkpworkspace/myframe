@@ -19,8 +19,8 @@ class WorkerCommon final : public Worker {
   friend class App;
 
  public:
-  WorkerCommon();
-  ~WorkerCommon();
+  WorkerCommon() = default;
+  virtual ~WorkerCommon();
 
   void Run() override;
   void Init() override;
@@ -34,7 +34,7 @@ class WorkerCommon final : public Worker {
     context_ = context;
   }
   std::shared_ptr<ActorContext> GetActorContext() {
-    return (context_.expired() ? nullptr : context_.lock());
+    return context_.lock();
   }
 
  private:

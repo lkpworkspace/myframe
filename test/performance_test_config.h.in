@@ -5,12 +5,6 @@ All rights reserved.
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
-#include <string>
 
-namespace myframe {
-
-void InitLog(const std::string& log_dir, const std::string& bin_name);
-
-void ShutdownLog();
-
-}  // namespace myframe
+#define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
+#define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"

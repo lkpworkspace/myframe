@@ -17,9 +17,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/log.h"
 #include "myframe/mod_manager.h"
 #include "myframe/msg.h"
-
-#define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
-#define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"
+#include "performance_test_config.h"
 
 class EchoActorTest : public myframe::Actor {
  public:

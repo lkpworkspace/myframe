@@ -44,7 +44,13 @@ int Worker::DispatchMsg() {
   }
   Cmd cmd = Cmd::kIdle;
   channel->SendToMain(cmd);
-  return channel->RecvFromMain(&cmd);
+  auto ret = channel->RecvFromMain(&cmd);
+  if (cmd == Cmd::kQuit) {
+    LOG(INFO) << GetWorkerName() << " recv stop msg, stoping...";
+    Stop();
+    return -1;
+  }
+  return ret;
 }
 
 int Worker::DispatchAndWaitMsg() {
@@ -54,7 +60,13 @@ int Worker::DispatchAndWaitMsg() {
   }
   Cmd cmd = Cmd::kWaitForMsg;
   channel->SendToMain(cmd);
-  return channel->RecvFromMain(&cmd);
+  auto ret = channel->RecvFromMain(&cmd);
+  if (cmd == Cmd::kQuit) {
+    LOG(INFO) << GetWorkerName() << " recv stop msg, stoping...";
+    Stop();
+    return -1;
+  }
+  return ret;
 }
 
 Mailbox* Worker::GetMailbox() {

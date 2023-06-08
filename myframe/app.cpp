@@ -68,6 +68,9 @@ bool App::Init(
   int thread_pool_size,
   int event_conn_size,
   int warning_msg_size) {
+  if (!quit_.load()) {
+    return true;
+  }
   epoll_fd_ = epoll_create(1024);
   if (-1 == epoll_fd_) {
     LOG(ERROR) << strerror(errno);
@@ -753,17 +756,28 @@ int App::Exec() {
     ev_count = epoll_wait(epoll_fd_, evs, max_ev_count, time_wait_ms);
     if (0 > ev_count) {
       LOG(ERROR) << "epoll wait error: " << strerror(errno);
+      continue;
     }
     /// 处理事件
     ProcessEvent(evs, ev_count);
   }
 
   // quit App
+  worker_ctx_mgr_->WaitAllWorkerQuit();
   free(evs);
   close(epoll_fd_);
   epoll_fd_ = -1;
+  quit_.store(true);
   LOG(INFO) << "app exit exec";
   return 0;
+}
+
+void App::Quit() {
+  // wait worker stop
+  if (quit_.load()) {
+    return;
+  }
+  worker_ctx_mgr_->StopAllWorker();
 }
 
 }  // namespace myframe

@@ -94,7 +94,9 @@ class WorkerTimer final : public Worker {
 
  private:
   int Work();
-
+  int sleep_us_{2500};
+  int cur_us_{0};
+  int dispatch_timeout_us_{1000000};
   TimerManager timer_mgr_;
 };
 

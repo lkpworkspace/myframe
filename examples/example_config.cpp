@@ -37,7 +37,7 @@ class ExampleWorkerConfig : public myframe::Worker {
     LOG(INFO) << GetWorkerName() << " conf " << conf->toStyledString();
   }
   void Run() override {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    Stop();
   }
 };
 

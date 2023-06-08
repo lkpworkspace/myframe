@@ -14,8 +14,6 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-WorkerCommon::WorkerCommon() {}
-
 WorkerCommon::~WorkerCommon() {}
 
 void WorkerCommon::Idle() {
@@ -25,7 +23,9 @@ void WorkerCommon::Idle() {
 }
 
 void WorkerCommon::Run() {
-  DispatchMsg();
+  if (-1 == DispatchMsg()) {
+    return;
+  }
   Work();
 }
 

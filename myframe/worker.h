@@ -97,7 +97,14 @@ class Worker {
   /// 分发消息并等待回复消息
   int DispatchAndWaitMsg();
 
-  /// 获得app
+  /**
+   * GetApp() - 获得应用实例
+   *
+   *    注意：不要将返回的对象存储为成员变量或者静态变量，
+   *        否则会导致程序退出异常。
+   *
+   * @return: 成功返回: app对象指针, 失败返回: nullptr
+   */
   std::shared_ptr<App> GetApp();
 
  private:

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 ### configure file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/performance_test.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/performance_test.cpp @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h @ONLY)
 
 AUX_SOURCE_DIRECTORY(. TEST_SRCS)
 ADD_EXECUTABLE(myframe_test ${TEST_SRCS})

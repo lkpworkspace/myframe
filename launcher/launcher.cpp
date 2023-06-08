@@ -4,6 +4,7 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
+#include <csignal>
 #include <iostream>
 
 #include <gflags/gflags.h>
@@ -12,12 +13,18 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/common.h"
 #include "myframe/log.h"
 #include "myframe/app.h"
+#include "launcher_config.h"
 #include "module_argument.h"
 
-#define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
-#define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"
-#define MYFRAME_SERVICE_DIR "@MYFRAME_SERVICE_DIR@"
-#define MYFRAME_CONF_DIR "@MYFRAME_CONF_DIR@"
+static std::shared_ptr<myframe::App> g_app{nullptr};
+
+void OnShutDown(int sig) {
+  if (g_app == nullptr) {
+    return;
+  }
+  LOG(INFO) << "received interrupt " << sig << ", quiting...";
+  g_app->Quit();
+}
 
 int main(int argc, char** argv) {
   // 命令行参数解析
@@ -45,8 +52,8 @@ int main(int argc, char** argv) {
   LOG(INFO) << "default conf dir: " << conf_dir;
 
   // 初始化并启动线程
-  auto app = std::make_shared<myframe::App>();
-  if (false == app->Init(
+  g_app = std::make_shared<myframe::App>();
+  if (false == g_app->Init(
     lib_dir,
     module_args.GetThreadPoolSize(),
     module_args.GetConnEventSize(),
@@ -65,7 +72,7 @@ int main(int argc, char** argv) {
       } else {
         abs_conf_file = service_dir + conf;
       }
-      if (!app->LoadServiceFromFile(abs_conf_file)) {
+      if (!g_app->LoadServiceFromFile(abs_conf_file)) {
         LOG(ERROR) << "Load " << abs_conf_file << " failed, exit";
         return -1;
       }
@@ -81,12 +88,21 @@ int main(int argc, char** argv) {
     } else {
       abs_service_dir = service_dir;
     }
-    if (app->LoadServiceFromDir(abs_service_dir) <= 0) {
+    if (g_app->LoadServiceFromDir(abs_service_dir) <= 0) {
       LOG(ERROR) << "Load service from " << abs_service_dir << " failed, exit";
       return -1;
     }
   }
 
+  // 注册退出函数
+  std::signal(SIGINT, OnShutDown);
+
   // 开始事件循环
-  return app->Exec();
+  g_app->Exec();
+
+  // 退出资源清理
+  g_app = nullptr;
+  LOG(INFO) << "launcher exit";
+  myframe::ShutdownLog();
+  return 0;
 }

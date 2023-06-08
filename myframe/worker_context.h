@@ -36,6 +36,7 @@ class WorkerContext final : public Event {
   /// thread 相关函数
   void Start();
   void Stop();
+  void Join();
   bool IsRuning() { return runing_.load(); }
   pthread_t GetPosixThreadId() { return th_.native_handle(); }
 

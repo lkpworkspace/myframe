@@ -71,11 +71,7 @@ bool WorkerContextManager::Add(std::shared_ptr<WorkerContext> worker_ctx) {
   }
   worker_ctxs_[handle] = worker_ctx;
   name_handle_map_[worker->GetWorkerName()] = handle;
-  auto ev_type = worker->GetType();
-  if (ev_type == EventType::kWorkerCommon ||
-      ev_type == EventType::kWorkerUser) {
-    ++cur_worker_count_;
-  }
+  ++cur_worker_count_;
   pthread_rwlock_unlock(&rw_);
   return true;
 }
@@ -88,13 +84,10 @@ void WorkerContextManager::Del(std::shared_ptr<WorkerContext> worker_ctx) {
     pthread_rwlock_unlock(&rw_);
     return;
   }
+  stoped_workers_ctx_.push_back(worker_ctx);
   worker_ctxs_.erase(worker_ctxs_.find(handle));
   name_handle_map_.erase(worker->GetWorkerName());
-  auto ev_type = worker->GetType();
-  if (ev_type == EventType::kWorkerCommon ||
-      ev_type == EventType::kWorkerUser) {
-    --cur_worker_count_;
-  }
+  --cur_worker_count_;
   pthread_rwlock_unlock(&rw_);
 }
 
@@ -154,6 +147,27 @@ std::vector<std::string> WorkerContextManager::GetAllUserWorkerAddr() {
   }
   pthread_rwlock_unlock(&rw_);
   return res;
+}
+
+void WorkerContextManager::StopAllWorker() {
+  pthread_rwlock_rdlock(&rw_);
+  for (auto p : worker_ctxs_) {
+    // 目前仅支持使用channel通信的worker停止退出
+    // 不使用的可以调用Stop函数退出(目前暂无需求)
+    //   p.second->Stop();
+    p.second->GetCmdChannel()->SendToOwner(Cmd::kQuit);
+  }
+  pthread_rwlock_unlock(&rw_);
+}
+
+void WorkerContextManager::WaitAllWorkerQuit() {
+  // FIXME(likepeng): 只支持退出时释放worker资源
+  // 运行时释放worker资源有可能导致主线程阻塞，影响其它组件调度
+  pthread_rwlock_rdlock(&rw_);
+  for (auto p : stoped_workers_ctx_) {
+    p->Join();
+  }
+  pthread_rwlock_unlock(&rw_);
 }
 
 void WorkerContextManager::PushWaitWorker(

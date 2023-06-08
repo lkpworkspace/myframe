@@ -87,6 +87,11 @@ class Actor {
 
   /**
    * GetApp() - 获得应用实例
+   *
+   *    注意：不要将返回的对象存储为成员变量或者静态变量，
+   *        否则会导致程序退出异常。
+   *
+   * @return: 成功返回: app对象指针, 失败返回: nullptr
    */
   std::shared_ptr<App> GetApp();
 
@@ -99,7 +104,7 @@ class Actor {
 
   void SetContext(std::shared_ptr<ActorContext>);
 
-  bool is_from_lib_ = false;
+  bool is_from_lib_{ false };
   std::string mod_name_;
   std::string actor_name_;
   std::string instance_name_;
