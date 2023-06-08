@@ -56,7 +56,7 @@ class WorkerContextManager final {
  private:
   std::atomic<std::size_t> warning_msg_size_{10};
   /// 工作线程数(包含用户线程)
-  std::atomic_int cur_worker_count_ = {0};
+  std::atomic_int cur_worker_count_{0};
   /// 读写锁
   pthread_rwlock_t rw_;
   /// 空闲线程链表

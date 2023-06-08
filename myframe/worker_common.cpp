@@ -14,8 +14,6 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-WorkerCommon::WorkerCommon() {}
-
 WorkerCommon::~WorkerCommon() {}
 
 void WorkerCommon::Idle() {
