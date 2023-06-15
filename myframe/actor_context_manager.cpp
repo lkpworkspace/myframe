@@ -22,12 +22,10 @@ namespace myframe {
 
 ActorContextManager::ActorContextManager() : ctx_count_(0) {
   LOG(INFO) << "ActorContextManager create";
-  pthread_rwlock_init(&rw_, NULL);
 }
 
 ActorContextManager::~ActorContextManager() {
   LOG(INFO) << "ActorContextManager deconstruct";
-  pthread_rwlock_destroy(&rw_);
 }
 
 void ActorContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
@@ -42,47 +40,41 @@ void ActorContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
 }
 
 bool ActorContextManager::RegContext(std::shared_ptr<ActorContext> ctx) {
-  pthread_rwlock_wrlock(&rw_);
+  std::unique_lock<std::shared_mutex> lk(rw_);
   if (ctxs_.find(ctx->GetActor()->GetActorName()) != ctxs_.end()) {
     LOG(WARNING) << "reg the same actor name: "
                  << ctx->GetActor()->GetActorName();
-    pthread_rwlock_unlock(&rw_);
     return false;
   }
   LOG(INFO) << "reg actor " << ctx->GetActor()->GetActorName();
   ctxs_[ctx->GetActor()->GetActorName()] = ctx;
-  pthread_rwlock_unlock(&rw_);
   return true;
 }
 
 std::shared_ptr<ActorContext> ActorContextManager::GetContext(
     const std::string& actor_name) {
-  pthread_rwlock_rdlock(&rw_);
+  std::shared_lock<std::shared_mutex> lk(rw_);
   if (ctxs_.find(actor_name) == ctxs_.end()) {
     LOG(WARNING) << "not found " << actor_name;
-    pthread_rwlock_unlock(&rw_);
     return nullptr;
   }
   auto ctx = ctxs_[actor_name];
-  pthread_rwlock_unlock(&rw_);
   return ctx;
 }
 
 std::vector<std::string> ActorContextManager::GetAllActorAddr() {
   std::vector<std::string> res;
-  pthread_rwlock_rdlock(&rw_);
+  std::shared_lock<std::shared_mutex> lk(rw_);
   for (auto ctx : ctxs_) {
     res.push_back(ctx.first);
   }
-  pthread_rwlock_unlock(&rw_);
   return res;
 }
 
 bool ActorContextManager::HasActor(const std::string& name) {
   bool res = false;
-  pthread_rwlock_rdlock(&rw_);
+  std::shared_lock<std::shared_mutex> lk(rw_);
   res = (ctxs_.find(name) != ctxs_.end());
-  pthread_rwlock_unlock(&rw_);
   return res;
 }
 

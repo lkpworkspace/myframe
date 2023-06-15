@@ -6,8 +6,7 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <pthread.h>
-
+#include <shared_mutex>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -69,7 +68,7 @@ class ModLib final {
   std::string GetModName(const std::string& full_path);
 
   std::unordered_map<std::string, void*> mods_;
-  pthread_rwlock_t rw_;
+  std::shared_mutex rw_;
 
   DISALLOW_COPY_AND_ASSIGN(ModLib)
 };

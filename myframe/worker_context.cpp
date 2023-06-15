@@ -40,10 +40,7 @@ EventType WorkerContext::GetType() {
 void WorkerContext::Start() {
   if (runing_.load() == false) {
     runing_.store(true);
-    th_ = std::thread(
-      std::bind(
-        &WorkerContext::ListenThread,
-        std::dynamic_pointer_cast<WorkerContext>(shared_from_this())));
+    th_ = std::thread(std::bind(&WorkerContext::ListenThread, this));
   }
 }
 
@@ -62,16 +59,16 @@ void WorkerContext::Initialize() {
   worker_->Init();
 }
 
-void WorkerContext::ListenThread(std::shared_ptr<WorkerContext> w) {
-  if (w->worker_ == nullptr) {
+void WorkerContext::ListenThread() {
+  if (worker_ == nullptr) {
     return;
   }
-  w->Initialize();
-  while (w->runing_.load()) {
-    w->worker_->Run();
+  Initialize();
+  while (runing_.load()) {
+    worker_->Run();
   }
-  w->worker_->Exit();
-  w->cmd_channel_.SendToMain(Cmd::kQuit);
+  worker_->Exit();
+  cmd_channel_.SendToMain(Cmd::kQuit);
 }
 
 std::size_t WorkerContext::CacheSize() const {

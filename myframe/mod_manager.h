@@ -6,6 +6,7 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
+#include <shared_mutex>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -46,8 +47,8 @@ class ModManager final {
   std::unordered_map<
       std::string, std::function<std::shared_ptr<Worker>(const std::string&)>>
       class_workers_;
-  pthread_rwlock_t class_actor_rw_;
-  pthread_rwlock_t class_worker_rw_;
+  std::shared_mutex class_actor_rw_;
+  std::shared_mutex class_worker_rw_;
   ModLib lib_mods_;
 
   DISALLOW_COPY_AND_ASSIGN(ModManager)

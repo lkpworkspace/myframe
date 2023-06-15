@@ -76,7 +76,7 @@ class WorkerContext final : public Event {
   std::shared_ptr<App> GetApp();
 
  private:
-  static void ListenThread(std::shared_ptr<WorkerContext> w);
+  void ListenThread();
   void Initialize();
 
   /// state flag

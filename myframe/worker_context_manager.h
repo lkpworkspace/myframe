@@ -6,8 +6,7 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <pthread.h>
-
+#include <shared_mutex>
 #include <atomic>
 #include <list>
 #include <vector>
@@ -58,7 +57,7 @@ class WorkerContextManager final {
   /// 工作线程数(包含用户线程)
   std::atomic_int cur_worker_count_{0};
   /// 读写锁
-  pthread_rwlock_t rw_;
+  std::shared_mutex rw_;
   /// 空闲线程链表
   std::list<std::weak_ptr<WorkerContext>> idle_workers_ctx_;
   /// 有消息user线程

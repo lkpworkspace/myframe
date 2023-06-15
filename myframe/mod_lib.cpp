@@ -16,16 +16,14 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-ModLib::ModLib() { pthread_rwlock_init(&rw_, NULL); }
+ModLib::ModLib() {}
 
 ModLib::~ModLib() {
-  pthread_rwlock_wrlock(&rw_);
+  std::unique_lock<std::shared_mutex> lk(rw_);
   for (const auto& p : mods_) {
     dlclose(p.second);
   }
   mods_.clear();
-  pthread_rwlock_unlock(&rw_);
-  pthread_rwlock_destroy(&rw_);
 }
 
 std::string ModLib::GetModName(const std::string& full_path) {
@@ -36,36 +34,31 @@ std::string ModLib::GetModName(const std::string& full_path) {
 
 bool ModLib::LoadMod(const std::string& dlpath) {
   auto dlname = GetModName(dlpath);
-  pthread_rwlock_wrlock(&rw_);
+  std::unique_lock<std::shared_mutex> lk(rw_);
   if (mods_.find(dlname) != mods_.end()) {
-    pthread_rwlock_unlock(&rw_);
     DLOG(INFO) << dlname << " has loaded";
     return true;
   }
 
   void* dll_handle = dlopen(dlpath.c_str(), RTLD_NOW | RTLD_LOCAL);
   if (dll_handle == nullptr) {
-    pthread_rwlock_unlock(&rw_);
     LOG(ERROR) << "Open dll " << dlpath << " failed, " << dlerror();
     return false;
   }
   mods_[dlname] = dll_handle;
-  pthread_rwlock_unlock(&rw_);
   LOG(INFO) << "Load lib " << dlpath;
   return true;
 }
 
 bool ModLib::IsLoad(const std::string& dlname) {
-  pthread_rwlock_rdlock(&rw_);
+  std::shared_lock<std::shared_mutex> lk(rw_);
   auto res = mods_.find(dlname) != mods_.end();
-  pthread_rwlock_unlock(&rw_);
   return res;
 }
 
 bool ModLib::UnloadMod(const std::string& dlname) {
-  pthread_rwlock_wrlock(&rw_);
+  std::unique_lock<std::shared_mutex> lk(rw_);
   if (mods_.find(dlname) == mods_.end()) {
-    pthread_rwlock_unlock(&rw_);
     return true;
   }
 
@@ -73,13 +66,12 @@ bool ModLib::UnloadMod(const std::string& dlname) {
     LOG(ERROR) << "lib close failed, " << dlerror();
   }
   mods_.erase(dlname);
-  pthread_rwlock_unlock(&rw_);
   return true;
 }
 
 std::shared_ptr<Worker> ModLib::CreateWorkerInst(
     const std::string& mod_name, const std::string& worker_name) {
-  pthread_rwlock_rdlock(&rw_);
+  std::shared_lock<std::shared_mutex> lk(rw_);
   if (mods_.find(mod_name) == mods_.end()) {
     LOG(ERROR) << "Find " << mod_name << "." << worker_name << " failed";
     return nullptr;
@@ -88,7 +80,6 @@ std::shared_ptr<Worker> ModLib::CreateWorkerInst(
   auto void_func = dlsym(handle, "worker_create");
   auto create = reinterpret_cast<worker_create_func_t>(void_func);
   if (nullptr == create) {
-    pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
       << "Load " << mod_name << "." << worker_name
       << " module worker_create function failed";
@@ -96,7 +87,6 @@ std::shared_ptr<Worker> ModLib::CreateWorkerInst(
   }
   auto worker = create(worker_name);
   if (nullptr == worker) {
-    pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
       << "Create " << mod_name << "." << worker_name
       << " failed";
@@ -104,13 +94,12 @@ std::shared_ptr<Worker> ModLib::CreateWorkerInst(
   }
   worker->SetModName(mod_name);
   worker->SetTypeName(worker_name);
-  pthread_rwlock_unlock(&rw_);
   return worker;
 }
 
 std::shared_ptr<Actor> ModLib::CreateActorInst(
     const std::string& mod_name, const std::string& actor_name) {
-  pthread_rwlock_rdlock(&rw_);
+  std::shared_lock<std::shared_mutex> lk(rw_);
   if (mods_.find(mod_name) == mods_.end()) {
     LOG(ERROR) << "Find " << mod_name << "." << actor_name << " failed";
     return nullptr;
@@ -119,7 +108,6 @@ std::shared_ptr<Actor> ModLib::CreateActorInst(
   auto void_func = dlsym(handle, "actor_create");
   auto create = reinterpret_cast<actor_create_func_t>(void_func);
   if (nullptr == create) {
-    pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
       << "Load " << mod_name << "." << actor_name
       << " module actor_create function failed";
@@ -127,7 +115,6 @@ std::shared_ptr<Actor> ModLib::CreateActorInst(
   }
   auto actor = create(actor_name);
   if (nullptr == actor) {
-    pthread_rwlock_unlock(&rw_);
     LOG(ERROR)
       << "Create " << mod_name << "." << actor_name
       << " failed";
@@ -135,7 +122,6 @@ std::shared_ptr<Actor> ModLib::CreateActorInst(
   }
   actor->SetModName(mod_name);
   actor->SetTypeName(actor_name);
-  pthread_rwlock_unlock(&rw_);
   return actor;
 }
 
