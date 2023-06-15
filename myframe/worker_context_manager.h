@@ -6,6 +6,7 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
+#include <mutex>
 #include <shared_mutex>
 #include <atomic>
 #include <list>

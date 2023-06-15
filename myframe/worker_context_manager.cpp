@@ -29,7 +29,7 @@ bool WorkerContextManager::Init(int warning_msg_size) {
   return true;
 }
 
-int WorkerContextManager::WorkerSize() { return cur_worker_count_; }
+int WorkerContextManager::WorkerSize() { return cur_worker_count_.load(); }
 
 std::shared_ptr<WorkerContext> WorkerContextManager::Get(int handle) {
   std::shared_lock<std::shared_mutex> lk(rw_);
@@ -64,7 +64,7 @@ bool WorkerContextManager::Add(std::shared_ptr<WorkerContext> worker_ctx) {
   }
   worker_ctxs_[handle] = worker_ctx;
   name_handle_map_[worker->GetWorkerName()] = handle;
-  ++cur_worker_count_;
+  cur_worker_count_.fetch_add(1);
   return true;
 }
 
@@ -78,7 +78,7 @@ void WorkerContextManager::Del(std::shared_ptr<WorkerContext> worker_ctx) {
   stoped_workers_ctx_.push_back(worker_ctx);
   worker_ctxs_.erase(worker_ctxs_.find(handle));
   name_handle_map_.erase(worker->GetWorkerName());
-  --cur_worker_count_;
+  cur_worker_count_.fetch_sub(1);
 }
 
 int WorkerContextManager::IdleWorkerSize() {
