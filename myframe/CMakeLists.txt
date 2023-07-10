@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 ### source
-get_filename_component(PROJECT_NAME ${CMAKE_CURRENT_LIST_DIR} NAME_WE)
-project(${PROJECT_NAME})
 aux_source_directory(. __srcs)
 
 ### lib
@@ -25,11 +23,8 @@ file(GLOB header_files
 )
 install(FILES 
     ${header_files}
-    PERMISSIONS
-    OWNER_READ
-    GROUP_READ
-    WORLD_READ
-    DESTINATION ${MYFRAME_INC_DIR}/myframe
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    DESTINATION ${MYFRAME_INC_DIR}/${PROJECT_NAME}
 )
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}

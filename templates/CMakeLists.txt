@@ -2,11 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 PROJECT(@template_name@)
 
 #### compile setting
-SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED YES)
-SET(CMAKE_C_FLAGS "-fPIC -Werror=return-type -Werror=return-local-addr")
-SET(CMAKE_CXX_FLAGS "-fPIC -Werror=return-type -Werror=return-local-addr")
+SET(CMAKE_CXX_FLAGS "-fPIC -Wall -Wextra -Werror")
 
 #### path setting
 SET(CMAKE_INSTALL_PREFIX "$ENV{HOME}/myframe")
@@ -48,9 +46,6 @@ INSTALL(TARGETS ${PROJECT_NAME}
 FILE(GLOB conf_files "*.json")
 INSTALL(FILES 
     ${conf_files}
-    PERMISSIONS
-    OWNER_READ
-    GROUP_READ
-    WORLD_READ
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DESTINATION ${MYFRAME_INSTALL_SERVICE_DIR}
 )

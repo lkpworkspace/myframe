@@ -5,7 +5,7 @@ function main() {
   set -e
   cd "$PWD0"
   # shellcheck disable=SC2038
-  find '(' \
+  find . '(' \
     -name "*.c" -or \
     -name "*.cc" -or \
     -name "*.h" -or \
@@ -18,7 +18,7 @@ function main() {
     -name "*.hxx" -or \
     -name "*.cxx" -or \
     -name "*.cuh" \
-    ')' | xargs ./cpplint.py
+    ')' | xargs python3 ./cpplint.py
 }
 
 main "$@"
