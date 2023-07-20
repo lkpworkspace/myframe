@@ -18,6 +18,7 @@ class @template_name@Actor : public myframe::Actor {
  public:
   /* actor模块加载完毕后调用 */
   int Init(const char* param) override {
+    (void)param;
     return 0;
   }
 
