@@ -34,10 +34,7 @@ jobs:
 
       - name: Configure
         env:
-          CXXFLAGS: -fPIC -Wall -Wextra -Werror -pedantic-errors \
-            -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
-            -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override \
-            -DNDEBUG ${{env.CXXFLAGS}}
+          CXXFLAGS: ${{env.CXXFLAGS}} -DNDEBUG -fPIC -Wall -Wextra -Werror -pedantic-errors -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override
         run: |
           cmake -S . -B build_${{matrix.abi}} \
                 -DCMAKE_ANDROID_API=28 \
