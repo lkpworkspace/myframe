@@ -48,6 +48,3 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build_${{matrix.build_type}} --config ${{matrix.build_type}}
-
-    - name: Install
-      run: cd ${{github.workspace}}/build_${{matrix.build_type}} && sudo make install
