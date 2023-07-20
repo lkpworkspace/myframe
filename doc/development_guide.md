@@ -62,5 +62,20 @@ python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_n
 - 配置文件：
   - Template.json：Service配置
 
-### 安装
-通过make install安装到框架中的组件目录中
+### 组件工程构建安装
+```sh
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX=${myframe目录}
+make -C build -j "$(nproc)" install
+```
+
+### 运行组件
+```sh
+cd ${myframe目录}/bin
+./launcher -c ${组件名}.json -p app
+```
+
+### 查看运行日志
+```sh
+cd ${myframe目录}/log
+vi ${日志}
+```

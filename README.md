@@ -3,28 +3,19 @@
 ![myframe](doc/pics/myframe.png)
 
 ## 概述
-C++实现的actors框架,程序由actor和worker组成;  
+C++实现的组件化的编程框架,程序由actor和worker组成;  
 actor基于消息驱动,actor之间可以进行消息传递;  
 worker自驱动，可以通过消息与actor交互;  
-组件化的编程模式可以提高代码复用,降低程序耦合度。
+适用于构建中大型项目.  
 
 ## 开发/运行环境
 操作系统: Ubuntu 18.04+  
 开发语言：C++17
 
-## 安装依赖
-参考 [github ci](.github/workflows/cmake.yml)
-
 ## 构建
-```sh
-mkdir build
-cd build
-cmake ..
-# 默认安装到HOME目录
-make -j4 install
-```
+参考 [github ci](.github/workflows/linux.yml)
 
-## 运行
+## 运行所有的example
 ```sh
 cd ~/myframe/bin
 ./launcher -p app
@@ -102,4 +93,3 @@ extern "C" std::shared_ptr<Actor> actor_create(const std::string& actor_name) {
 - [Discussions](https://github.com/lkpworkspace/myframe/discussions)
 - [WIKI](https://github.com/lkpworkspace/myframe/wiki)
 - [FAQ](https://github.com/lkpworkspace/myframe/wiki/FAQs)
-- [TODOLIST](doc/TODOLIST.md)
