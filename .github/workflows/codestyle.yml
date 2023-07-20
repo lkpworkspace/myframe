@@ -1,0 +1,13 @@
+name: codestyle
+
+on: [push, pull_request]
+
+jobs:
+  Ubuntu-latest:
+    name: codestyle
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Check code style
+      run: bash ${{github.workspace}}/cpplint.bash

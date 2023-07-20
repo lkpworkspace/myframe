@@ -12,19 +12,6 @@ if (CMAKE_COMPILER_IS_GNUCC)
 endif ()
 
 ### cpp option
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-# glog option:
-#   -DNDEBUG
-#   -DDCHECK_ALWAYS_ON
-# unit test option:
-#   -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined
-set(CMAKE_CXX_FLAGS
-  "-fPIC -Wall -Wextra -Werror -pedantic-errors \
-  -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
-  -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override \
-  -DNDEBUG"
-)
 if (GCC_VERSION GREATER "8.0")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra-semi")
 endif ()
@@ -40,7 +27,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/bin)
 
 ### install path
-set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}")
+# set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(MYFRAME_TEST_DIR "test")
 set(MYFRAME_BIN_DIR "bin")
