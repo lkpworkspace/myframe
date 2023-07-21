@@ -13,9 +13,11 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-int EventConn::GetFd() const { return cmd_channel_.GetMainFd(); }
+ev_handle_t EventConn::GetHandle() const {
+  return cmd_channel_.GetMainHandle();
+}
 
-EventType EventConn::GetType() { return EventType::kEventConn; }
+Event::Type EventConn::GetType() { return Event::Type::kEventConn; }
 
 Mailbox* EventConn::GetMailbox() {
   return &mailbox_;
@@ -28,22 +30,22 @@ CmdChannel* EventConn::GetCmdChannel() {
 int EventConn::Send(
   const std::string& dst,
   std::shared_ptr<Msg> msg) {
-  conn_type_ = EventConnType::kSend;
+  conn_type_ = EventConn::Type::kSend;
   mailbox_.SendClear();
   mailbox_.Send(dst, msg);
-  cmd_channel_.SendToMain(Cmd::kRun);
-  Cmd cmd;
+  cmd_channel_.SendToMain(CmdChannel::Cmd::kRun);
+  CmdChannel::Cmd cmd;
   return cmd_channel_.RecvFromMain(&cmd);
 }
 
 const std::shared_ptr<const Msg> EventConn::SendRequest(
   const std::string& dst,
   std::shared_ptr<Msg> req) {
-  conn_type_ = EventConnType::kSendReq;
+  conn_type_ = EventConn::Type::kSendReq;
   mailbox_.SendClear();
   mailbox_.Send(dst, req);
-  cmd_channel_.SendToMain(Cmd::kRunWithMsg);
-  Cmd cmd;
+  cmd_channel_.SendToMain(CmdChannel::Cmd::kRunWithMsg);
+  CmdChannel::Cmd cmd;
   cmd_channel_.RecvFromMain(&cmd);
   if (mailbox_.RecvEmpty()) {
     return nullptr;

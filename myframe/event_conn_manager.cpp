@@ -80,7 +80,7 @@ std::shared_ptr<EventConn> EventConnManager::Get() {
   // add to run_conn
   const auto& addr = conn->GetMailbox()->Addr();
   run_conn_[addr] = conn;
-  run_conn_map_[conn->GetFd()] = addr;
+  run_conn_map_[conn->GetHandle()] = addr;
   // add to epoll
   app->AddEvent(conn);
   return conn;
@@ -98,7 +98,7 @@ void EventConnManager::Release(std::shared_ptr<EventConn> ev) {
   // remove from run_conn
   const auto& name = ev->GetMailbox()->Addr();
   run_conn_.erase(name);
-  run_conn_map_.erase(ev->GetFd());
+  run_conn_map_.erase(ev->GetHandle());
   // add to idle_conn
   idle_conn_.emplace_back(ev);
 }
@@ -116,14 +116,14 @@ void EventConnManager::Notify(
     }
     ev = run_conn_[name];
   }
-  if (ev->GetConnType() == EventConnType::kSend) {
+  if (ev->GetConnType() == EventConn::Type::kSend) {
     return;
   }
   // push msg to event_conn
   ev->GetMailbox()->Recv(msg);
   // send cmd to event_conn
   auto cmd_channel = ev->GetCmdChannel();
-  cmd_channel->SendToOwner(Cmd::kIdle);
+  cmd_channel->SendToOwner(CmdChannel::Cmd::kIdle);
 }
 
 }  // namespace myframe

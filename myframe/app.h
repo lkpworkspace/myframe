@@ -119,8 +119,8 @@ class App final : public std::enable_shared_from_this<App> {
   void CheckStopWorkers();
 
   /// 分发事件
-  EventIOType ToEventIOType(int ev);
-  int ToEpollType(const EventIOType& type);
+  Event::IOType ToEventIOType(int ev);
+  int ToEpollType(const Event::IOType& type);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<ActorContext> context);
   void ProcessEvent(struct epoll_event* evs, int ev_count);

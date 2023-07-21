@@ -29,11 +29,11 @@ WorkerContext::~WorkerContext() {
   LOG(INFO) << worker_->GetWorkerName() << " deconstruct";
 }
 
-int WorkerContext::GetFd() const {
-  return cmd_channel_.GetMainFd();
+ev_handle_t WorkerContext::GetHandle() const {
+  return cmd_channel_.GetMainHandle();
 }
 
-EventType WorkerContext::GetType() {
+Event::Type WorkerContext::GetType() {
   return worker_->GetType();
 }
 
@@ -68,7 +68,7 @@ void WorkerContext::ListenThread() {
     worker_->Run();
   }
   worker_->Exit();
-  cmd_channel_.SendToMain(Cmd::kQuit);
+  cmd_channel_.SendToMain(CmdChannel::Cmd::kQuit);
 }
 
 std::size_t WorkerContext::CacheSize() const {
@@ -101,7 +101,7 @@ std::shared_ptr<App> WorkerContext::GetApp() {
 
 std::ostream& operator<<(std::ostream& out, WorkerContext& ctx) {
   auto w = ctx.GetWorker<Worker>();
-  out << w->GetWorkerName() << "." << ctx.GetPosixThreadId();
+  out << w->GetWorkerName() << "." << ctx.GetThreadId();
   return out;
 }
 

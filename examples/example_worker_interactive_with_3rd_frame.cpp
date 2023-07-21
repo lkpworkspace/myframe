@@ -24,23 +24,23 @@ class MyQueue final {
   MyQueue() = default;
   ~MyQueue() = default;
 
-  int GetFd0() { return cmd_channel_.GetOwnerFd(); }
-  int GetFd1() { return cmd_channel_.GetMainFd(); }
+  int GetFd0() { return cmd_channel_.GetOwnerHandle(); }
+  int GetFd1() { return cmd_channel_.GetMainHandle(); }
 
   void Push(std::shared_ptr<T> data) {
     data_ = data;
-    myframe::Cmd cmd = myframe::Cmd::kRun;
+    myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
     cmd_channel_.SendToOwner(cmd);
     cmd_channel_.RecvFromOwner(&cmd);
   }
 
   std::shared_ptr<T> Pop() {
     std::shared_ptr<T> ret = nullptr;
-    myframe::Cmd cmd = myframe::Cmd::kRun;
+    myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
     cmd_channel_.RecvFromMain(&cmd);
     ret = data_;
     data_ = nullptr;
-    cmd_channel_.SendToMain(myframe::Cmd::kIdle);
+    cmd_channel_.SendToMain(myframe::CmdChannel::Cmd::kIdle);
     return ret;
   }
 
@@ -70,13 +70,13 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     });
 
     // 通知myframe该worker可以接收来自myframe的消息
-    GetCmdChannel()->SendToMain(myframe::Cmd::kWaitForMsg);
+    GetCmdChannel()->SendToMain(myframe::CmdChannel::Cmd::kWaitForMsg);
   }
 
   void Run() override {
     auto cmd_channel = GetCmdChannel();
     struct pollfd fds[] = {
-      {cmd_channel->GetOwnerFd(), POLLIN, 0},
+      {cmd_channel->GetOwnerHandle(), POLLIN, 0},
       {queue_.GetFd0(), POLLIN, 0}};
     // 等待来自queue或者myframe的消息
     int ret = poll(fds, 2, -1);
@@ -89,19 +89,19 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
         continue;
       }
       if (i == 0) {
-        myframe::Cmd cmd;
+        myframe::CmdChannel::Cmd cmd;
         cmd_channel->RecvFromMain(&cmd);
-        if (cmd == myframe::Cmd::kRun) {
+        if (cmd == myframe::CmdChannel::Cmd::kRun) {
           recv_run_flag_ = true;
-        } else if (cmd == myframe::Cmd::kRunWithMsg) {
+        } else if (cmd == myframe::CmdChannel::Cmd::kRunWithMsg) {
           auto mailbox = GetMailbox();
           while (!mailbox->RecvEmpty()) {
             const auto& msg = mailbox->PopRecv();
             // 接收到其它组件消息
             LOG(INFO) << "get main " << msg->GetData();
           }
-          cmd_channel->SendToMain(myframe::Cmd::kWaitForMsg);
-        } else if (cmd == myframe::Cmd::kQuit) {
+          cmd_channel->SendToMain(myframe::CmdChannel::Cmd::kWaitForMsg);
+        } else if (cmd == myframe::CmdChannel::Cmd::kQuit) {
           quit_.store(true);
           Stop();
         }
@@ -121,7 +121,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
         // mailbox->Send("actor.xx.xx", send_msgs_[i]);
       }
       send_msgs_.clear();
-      cmd_channel->SendToMain(myframe::Cmd::kIdle);
+      cmd_channel->SendToMain(myframe::CmdChannel::Cmd::kIdle);
     }
   }
 

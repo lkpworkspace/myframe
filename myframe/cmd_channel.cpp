@@ -23,11 +23,11 @@ CmdChannel::~CmdChannel() {
   CloseSockpair();
 }
 
-int CmdChannel::GetOwnerFd() const {
+ev_handle_t CmdChannel::GetOwnerHandle() const {
   return sockpair_[0];
 }
 
-int CmdChannel::GetMainFd() const {
+ev_handle_t CmdChannel::GetMainHandle() const {
   return sockpair_[1];
 }
 

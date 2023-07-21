@@ -367,21 +367,21 @@ bool App::CreateActorContext(
 
 bool App::AddEvent(std::shared_ptr<Event> ev) {
   struct epoll_event event;
-  event.data.fd = ev->GetFd();
+  event.data.fd = ev->GetHandle();
   event.events = ToEpollType(ev->ListenIOType());
   int res = 0;
   // 如果该事件已经注册，就修改事件类型
-  res = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ev->GetFd(), &event);
+  res = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ev->GetHandle(), &event);
   if (-1 == res) {
     // 没有注册就添加至epoll
-    res = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, ev->GetFd(), &event);
+    res = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, ev->GetHandle(), &event);
     if (-1 == res) {
       LOG(ERROR) << "epoll " << strerror(errno);
       return false;
     }
   } else {
     LOG(WARNING)
-      << " has already reg ev " << ev->GetFd() << ": "
+      << " has already reg ev " << ev->GetHandle() << ": "
       << strerror(errno);
     return false;
   }
@@ -389,8 +389,8 @@ bool App::AddEvent(std::shared_ptr<Event> ev) {
 }
 
 bool App::DelEvent(std::shared_ptr<Event> ev) {
-  if (-1 == epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, ev->GetFd(), NULL)) {
-    LOG(ERROR) << "del event " << ev->GetFd() << ": " << strerror(errno);
+  if (-1 == epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, ev->GetHandle(), NULL)) {
+    LOG(ERROR) << "del event " << ev->GetHandle() << ": " << strerror(errno);
     return false;
   }
   return true;
@@ -424,22 +424,22 @@ bool App::StartTimerWorker() {
   return true;
 }
 
-EventIOType App::ToEventIOType(int ev) {
+Event::IOType App::ToEventIOType(int ev) {
   switch (ev) {
   case EPOLLIN:
-    return EventIOType::kIn;
+    return Event::IOType::kIn;
   case EPOLLOUT:
-    return EventIOType::kOut;
+    return Event::IOType::kOut;
   default:
-    return EventIOType::kNone;
+    return Event::IOType::kNone;
   }
 }
 
-int App::ToEpollType(const EventIOType& type) {
+int App::ToEpollType(const Event::IOType& type) {
   switch (type) {
-  case EventIOType::kIn:
+  case Event::IOType::kIn:
     return EPOLLIN;
-  case EventIOType::kOut:
+  case Event::IOType::kOut:
     return EPOLLOUT;
   default:
     return EPOLLERR;
@@ -547,7 +547,7 @@ void App::CheckStopWorkers() {
       worker_ctx_mgr_->PopFrontIdleWorker();
       auto common_idle_worker = worker_ctx->GetWorker<WorkerCommon>();
       common_idle_worker->SetActorContext(actor_ctx);
-      worker_ctx->GetCmdChannel()->SendToOwner(Cmd::kRun);
+      worker_ctx->GetCmdChannel()->SendToOwner(CmdChannel::Cmd::kRun);
     } else {
       LOG(ERROR) << actor_ctx->GetActor()->GetActorName() << " has no msg";
     }
@@ -602,15 +602,15 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   DLOG(INFO) << *worker_ctx << " dispatch msg...";
   DispatchMsg(worker_ctx->GetMailbox()->GetSendList());
 
-  Cmd cmd;
+  CmdChannel::Cmd cmd;
   auto cmd_channel = worker_ctx->GetCmdChannel();
   cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case Cmd::kIdle:  // idle
+    case CmdChannel::Cmd::kIdle:  // idle
       DLOG(INFO) << *worker_ctx << " run again";
-      cmd_channel->SendToOwner(Cmd::kRun);
+      cmd_channel->SendToOwner(CmdChannel::Cmd::kRun);
       break;
-    case Cmd::kQuit:  // quit
+    case CmdChannel::Cmd::kQuit:  // quit
       LOG(INFO) << *worker_ctx
                 << " quit, delete from main";
       DelEvent(worker_ctx);
@@ -627,19 +627,19 @@ void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   DLOG(INFO) << *worker_ctx << " dispatch msg...";
   DispatchMsg(worker_ctx->GetMailbox()->GetSendList());
 
-  Cmd cmd;
+  CmdChannel::Cmd cmd;
   auto cmd_channel = worker_ctx->GetCmdChannel();
   cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case Cmd::kIdle:  // idle
+    case CmdChannel::Cmd::kIdle:  // idle
       DLOG(INFO) << *worker_ctx << " run again";
-      cmd_channel->SendToOwner(Cmd::kRun);
+      cmd_channel->SendToOwner(CmdChannel::Cmd::kRun);
       break;
-    case Cmd::kWaitForMsg:
+    case CmdChannel::Cmd::kWaitForMsg:
       DLOG(INFO) << *worker_ctx << " wait for msg...";
       worker_ctx_mgr_->PushWaitWorker(worker_ctx);
       break;
-    case Cmd::kQuit:  // quit
+    case CmdChannel::Cmd::kQuit:  // quit
       LOG(INFO) << *worker_ctx << " quit, delete from main";
       DelEvent(worker_ctx);
       worker_ctx_mgr_->Del(worker_ctx);
@@ -661,11 +661,11 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
       << *worker_ctx << " no context";
   DispatchMsg(worker->GetActorContext());
 
-  Cmd cmd;
+  CmdChannel::Cmd cmd;
   auto cmd_channel = worker->GetCmdChannel();
   cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case Cmd::kIdle:  // idle
+    case CmdChannel::Cmd::kIdle:  // idle
       // 将工作线程中的actor状态设置为全局状态
       // 将线程加入空闲队列
       DLOG(INFO)
@@ -674,7 +674,7 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
       worker->Idle();
       worker_ctx_mgr_->PushBackIdleWorker(worker_ctx);
       break;
-    case Cmd::kQuit:  // quit
+    case CmdChannel::Cmd::kQuit:  // quit
       LOG(INFO)
         << *worker_ctx
         << " quit, delete from main";
@@ -693,13 +693,13 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
   // 将event_conn的发送队列分发完毕
   DispatchMsg(ev->GetMailbox()->GetSendList());
   auto cmd_channel = ev->GetCmdChannel();
-  Cmd cmd;
+  CmdChannel::Cmd cmd;
   cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
-    case Cmd::kRun:
-      cmd_channel->SendToOwner(Cmd::kIdle);
+    case CmdChannel::Cmd::kRun:
+      cmd_channel->SendToOwner(CmdChannel::Cmd::kIdle);
       break;
-    case Cmd::kRunWithMsg:
+    case CmdChannel::Cmd::kRunWithMsg:
       // do nothing
       break;
     default:
@@ -722,16 +722,16 @@ void App::ProcessEvent(struct epoll_event* evs, int ev_count) {
     }
     ev_obj->RetListenIOType(ToEventIOType(evs[i].events));
     switch (ev_obj->GetType()) {
-      case EventType::kWorkerCommon:
+      case Event::Type::kWorkerCommon:
         ProcessWorkerEvent(std::dynamic_pointer_cast<WorkerContext>(ev_obj));
         break;
-      case EventType::kWorkerTimer:
+      case Event::Type::kWorkerTimer:
         ProcessTimerEvent(std::dynamic_pointer_cast<WorkerContext>(ev_obj));
         break;
-      case EventType::kWorkerUser:
+      case Event::Type::kWorkerUser:
         ProcessUserEvent(std::dynamic_pointer_cast<WorkerContext>(ev_obj));
         break;
-      case EventType::kEventConn:
+      case Event::Type::kEventConn:
         ProcessEventConn(std::dynamic_pointer_cast<EventConn>(ev_obj));
         break;
       default:

@@ -74,7 +74,8 @@ int main(int argc, char** argv) {
       }
       if (!g_app->LoadServiceFromFile(abs_conf_file)) {
         LOG(ERROR) << "Load " << abs_conf_file << " failed, exit";
-        return -1;
+        g_app->Quit();
+        break;
       }
     }
   } else {
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
     }
     if (g_app->LoadServiceFromDir(abs_service_dir) <= 0) {
       LOG(ERROR) << "Load service from " << abs_service_dir << " failed, exit";
-      return -1;
+      g_app->Quit();
     }
   }
 

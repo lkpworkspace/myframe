@@ -55,7 +55,7 @@ std::shared_ptr<WorkerContext> WorkerContextManager::Get(
 
 bool WorkerContextManager::Add(std::shared_ptr<WorkerContext> worker_ctx) {
   auto worker = worker_ctx->GetWorker<Worker>();
-  int handle = worker_ctx->GetFd();
+  ev_handle_t handle = worker_ctx->GetHandle();
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (worker_ctxs_.find(handle) != worker_ctxs_.end()) {
     LOG(ERROR) << *worker_ctx << " reg handle " << handle
@@ -70,7 +70,7 @@ bool WorkerContextManager::Add(std::shared_ptr<WorkerContext> worker_ctx) {
 
 void WorkerContextManager::Del(std::shared_ptr<WorkerContext> worker_ctx) {
   auto worker = worker_ctx->GetWorker<Worker>();
-  int handle = worker_ctx->GetFd();
+  ev_handle_t handle = worker_ctx->GetHandle();
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (worker_ctxs_.find(handle) == worker_ctxs_.end()) {
     return;
@@ -123,7 +123,7 @@ std::vector<std::string> WorkerContextManager::GetAllUserWorkerAddr() {
   std::vector<std::string> res;
   std::shared_lock<std::shared_mutex> lk(rw_);
   for (auto p : worker_ctxs_) {
-    if (p.second->GetType() == EventType::kWorkerUser
+    if (p.second->GetType() == Event::Type::kWorkerUser
         && p.second->GetWorker<Worker>()->GetTypeName() != "node") {
       res.push_back(p.second->GetWorker<Worker>()->GetWorkerName());
     }
@@ -137,7 +137,7 @@ void WorkerContextManager::StopAllWorker() {
     // 目前仅支持使用channel通信的worker停止退出
     // 不使用的可以调用Stop函数退出(目前暂无需求)
     //   p.second->Stop();
-    p.second->GetCmdChannel()->SendToOwner(Cmd::kQuit);
+    p.second->GetCmdChannel()->SendToOwner(CmdChannel::Cmd::kQuit);
   }
 }
 
@@ -152,7 +152,7 @@ void WorkerContextManager::WaitAllWorkerQuit() {
 
 void WorkerContextManager::PushWaitWorker(
   std::shared_ptr<WorkerContext> worker) {
-  worker->SetCtrlOwnerFlag(WorkerCtrlOwner::kMain);
+  worker->SetCtrlOwnerFlag(WorkerContext::CtrlOwner::kMain);
 }
 
 void WorkerContextManager::WeakupWorker() {
@@ -164,16 +164,16 @@ void WorkerContextManager::WeakupWorker() {
       it = weakup_workers_ctx_.erase(it);
       continue;
     }
-    if (worker_ctx->GetOwner() == WorkerCtrlOwner::kWorker) {
+    if (worker_ctx->GetOwner() == WorkerContext::CtrlOwner::kWorker) {
       ++it;
       continue;
     }
     worker_ctx->GetMailbox()->Recv(worker_ctx->GetCache());
     it = weakup_workers_ctx_.erase(it);
-    worker_ctx->SetCtrlOwnerFlag(WorkerCtrlOwner::kWorker);
+    worker_ctx->SetCtrlOwnerFlag(WorkerContext::CtrlOwner::kWorker);
     worker_ctx->SetWaitMsgQueueFlag(false);
     DLOG(INFO) << "notify " << *worker_ctx << " process msg";
-    worker_ctx->GetCmdChannel()->SendToOwner(Cmd::kRunWithMsg);
+    worker_ctx->GetCmdChannel()->SendToOwner(CmdChannel::Cmd::kRunWithMsg);
   }
 }
 
@@ -187,8 +187,8 @@ void WorkerContextManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
   auto worker_ctx = Get(worker_name);
   auto worker = worker_ctx->GetWorker<Worker>();
   auto worker_type = worker->GetType();
-  if (worker_type == EventType::kWorkerTimer ||
-      worker_type == EventType::kWorkerCommon) {
+  if (worker_type == Event::Type::kWorkerTimer ||
+      worker_type == Event::Type::kWorkerCommon) {
     LOG(WARNING) << worker_name << " unsupport recv msg, drop it";
     return;
   }

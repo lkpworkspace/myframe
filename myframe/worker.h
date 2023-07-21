@@ -34,7 +34,7 @@ class Worker {
    *
    * @return:    事件类型
    */
-  virtual EventType GetType();
+  virtual Event::Type GetType();
 
   /**
   * GetConfig() - 获得配置参数
