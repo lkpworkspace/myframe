@@ -7,12 +7,6 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/app.h"
 
-#include <errno.h>
-#include <signal.h>
-#include <sys/epoll.h>
-
-#include <iostream>
-
 #include <glog/logging.h>
 
 #include "myframe/common.h"
@@ -28,6 +22,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/worker_timer.h"
 #include "myframe/worker_context_manager.h"
 #include "myframe/mod_manager.h"
+#include "myframe/poller.h"
 
 namespace myframe {
 
@@ -48,7 +43,7 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : epoll_fd_(-1)
+  : poller_(new Poller())
   , mods_(new ModManager())
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_conn_mgr_(new EventConnManager())
@@ -56,10 +51,6 @@ App::App()
 {}
 
 App::~App() {
-  if (epoll_fd_ != -1) {
-    close(epoll_fd_);
-    epoll_fd_ = -1;
-  }
   LOG(INFO) << "app deconstruct";
 }
 
@@ -71,16 +62,11 @@ bool App::Init(
   if (!quit_.load()) {
     return true;
   }
-  epoll_fd_ = epoll_create(1024);
-  if (-1 == epoll_fd_) {
-    LOG(ERROR) << strerror(errno);
-    return false;
-  }
-  LOG(INFO) << "Create epoll fd " << epoll_fd_;
 
   bool ret = true;
   lib_dir_ = lib_dir;
   warning_msg_size_.store(warning_msg_size);
+  ret &= poller_->Init();
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
   ret &= ev_conn_mgr_->Init(shared_from_this(), event_conn_size);
   ret &= StartCommonWorker(thread_pool_size);
@@ -302,7 +288,7 @@ bool App::AddWorker(
   if (!worker_ctx_mgr_->Add(worker_ctx)) {
     return false;
   }
-  if (!AddEvent(worker_ctx)) {
+  if (!poller_->Add(worker_ctx)) {
     return false;
   }
   worker_ctx->Start();
@@ -365,37 +351,6 @@ bool App::CreateActorContext(
   return true;
 }
 
-bool App::AddEvent(std::shared_ptr<Event> ev) {
-  struct epoll_event event;
-  event.data.fd = ev->GetHandle();
-  event.events = ToEpollType(ev->ListenIOType());
-  int res = 0;
-  // 如果该事件已经注册，就修改事件类型
-  res = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ev->GetHandle(), &event);
-  if (-1 == res) {
-    // 没有注册就添加至epoll
-    res = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, ev->GetHandle(), &event);
-    if (-1 == res) {
-      LOG(ERROR) << "epoll " << strerror(errno);
-      return false;
-    }
-  } else {
-    LOG(WARNING)
-      << " has already reg ev " << ev->GetHandle() << ": "
-      << strerror(errno);
-    return false;
-  }
-  return true;
-}
-
-bool App::DelEvent(std::shared_ptr<Event> ev) {
-  if (-1 == epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, ev->GetHandle(), NULL)) {
-    LOG(ERROR) << "del event " << ev->GetHandle() << ": " << strerror(errno);
-    return false;
-  }
-  return true;
-}
-
 bool App::StartCommonWorker(int worker_count) {
   bool ret = false;
   for (int i = 0; i < worker_count; ++i) {
@@ -422,28 +377,6 @@ bool App::StartTimerWorker() {
   }
   LOG(INFO) << "start timer worker " << worker->GetWorkerName();
   return true;
-}
-
-Event::IOType App::ToEventIOType(int ev) {
-  switch (ev) {
-  case EPOLLIN:
-    return Event::IOType::kIn;
-  case EPOLLOUT:
-    return Event::IOType::kOut;
-  default:
-    return Event::IOType::kNone;
-  }
-}
-
-int App::ToEpollType(const Event::IOType& type) {
-  switch (type) {
-  case Event::IOType::kIn:
-    return EPOLLIN;
-  case Event::IOType::kOut:
-    return EPOLLOUT;
-  default:
-    return EPOLLERR;
-  }
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
@@ -613,7 +546,7 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
     case CmdChannel::Cmd::kQuit:  // quit
       LOG(INFO) << *worker_ctx
                 << " quit, delete from main";
-      DelEvent(worker_ctx);
+      poller_->Del(worker_ctx);
       worker_ctx_mgr_->Del(worker_ctx);
       break;
     default:
@@ -641,7 +574,7 @@ void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
       break;
     case CmdChannel::Cmd::kQuit:  // quit
       LOG(INFO) << *worker_ctx << " quit, delete from main";
-      DelEvent(worker_ctx);
+      poller_->Del(worker_ctx);
       worker_ctx_mgr_->Del(worker_ctx);
       break;
     default:
@@ -678,7 +611,7 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
       LOG(INFO)
         << *worker_ctx
         << " quit, delete from main";
-      DelEvent(worker_ctx);
+      poller_->Del(worker_ctx);
       worker_ctx_mgr_->Del(worker_ctx);
       // FIXME: 应该将worker加入删除队列，等worker运行结束后再从队列删除
       // 否则会造成删除智能指针后，worker还没结束运行造成coredump
@@ -708,19 +641,19 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
   }
 }
 
-void App::ProcessEvent(struct epoll_event* evs, int ev_count) {
-  DLOG_IF(INFO, ev_count > 0) << "get " << ev_count << " event";
-  for (int i = 0; i < ev_count; ++i) {
+void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
+  DLOG_IF(INFO, evs.size() > 0) << "get " << evs.size() << " event";
+  for (size_t i = 0; i < evs.size(); ++i) {
     std::shared_ptr<Event> ev_obj = nullptr;
-    ev_obj = worker_ctx_mgr_->Get(evs[i].data.fd);
+    ev_obj = worker_ctx_mgr_->Get(evs[i]);
     if (ev_obj == nullptr) {
-      ev_obj = ev_conn_mgr_->Get(evs[i].data.fd);
+      ev_obj = ev_conn_mgr_->Get(evs[i]);
       if (ev_obj == nullptr) {
-        LOG(ERROR) << "can't find ev obj, handle " << evs[i].data.fd;
+        LOG(ERROR) << "can't find ev obj, handle " << evs[i];
         continue;
       }
     }
-    ev_obj->RetListenIOType(ToEventIOType(evs[i].events));
+    ev_obj->RetListenIOType(Event::IOType::kIn);
     switch (ev_obj->GetType()) {
       case Event::Type::kWorkerCommon:
         ProcessWorkerEvent(std::dynamic_pointer_cast<WorkerContext>(ev_obj));
@@ -742,31 +675,20 @@ void App::ProcessEvent(struct epoll_event* evs, int ev_count) {
 }
 
 int App::Exec() {
-  int ev_count = 0;
-  int max_ev_count = 64;
   int time_wait_ms = 1000;
-  struct epoll_event* evs = nullptr;
-  auto void_evs = malloc(sizeof(struct epoll_event) * max_ev_count);
-  evs = reinterpret_cast<struct epoll_event*>(void_evs);
+  std::vector<ev_handle_t> evs;
 
   while (worker_ctx_mgr_->WorkerSize()) {
     /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
     CheckStopWorkers();
     /// 等待事件
-    ev_count = epoll_wait(epoll_fd_, evs, max_ev_count, time_wait_ms);
-    if (0 > ev_count) {
-      LOG(ERROR) << "epoll wait error: " << strerror(errno);
-      continue;
-    }
+    poller_->Wait(&evs, time_wait_ms);
     /// 处理事件
-    ProcessEvent(evs, ev_count);
+    ProcessEvent(evs);
   }
 
   // quit App
   worker_ctx_mgr_->WaitAllWorkerQuit();
-  free(evs);
-  close(epoll_fd_);
-  epoll_fd_ = -1;
   quit_.store(true);
   LOG(INFO) << "app exit exec";
   return 0;

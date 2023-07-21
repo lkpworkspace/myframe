@@ -17,6 +17,7 @@ file(GLOB header_files
     actor.h
     event.h
     worker.h
+    mod_manager.h
     app.h
 )
 install(FILES 

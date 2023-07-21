@@ -18,11 +18,10 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/macros.h"
 #include "myframe/event.h"
 
-struct epoll_event;
-
 namespace myframe {
 
 class Msg;
+class Poller;
 class Actor;
 class ActorContext;
 class ActorContextManager;
@@ -38,6 +37,7 @@ class ModManager;
 class App final : public std::enable_shared_from_this<App> {
   friend class Actor;
   friend class ActorContext;
+  friend class EventConnManager;
 
  public:
   App();
@@ -82,9 +82,6 @@ class App final : public std::enable_shared_from_this<App> {
 
   std::unique_ptr<ModManager>& GetModManager() { return mods_; }
 
-  bool AddEvent(std::shared_ptr<Event> ev);
-  bool DelEvent(std::shared_ptr<Event> ev);
-
   int Exec();
 
   void Quit();
@@ -119,11 +116,9 @@ class App final : public std::enable_shared_from_this<App> {
   void CheckStopWorkers();
 
   /// 分发事件
-  Event::IOType ToEventIOType(int ev);
-  int ToEpollType(const Event::IOType& type);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<ActorContext> context);
-  void ProcessEvent(struct epoll_event* evs, int ev_count);
+  void ProcessEvent(const std::vector<ev_handle_t>& evs);
   void ProcessWorkerEvent(std::shared_ptr<WorkerContext>);
   void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
   void ProcessUserEvent(std::shared_ptr<WorkerContext>);
@@ -138,8 +133,8 @@ class App final : public std::enable_shared_from_this<App> {
   std::atomic_bool quit_{true};
   std::mutex dispatch_mtx_;
   std::mutex local_mtx_;
-  /// epoll文件描述符
-  int epoll_fd_;
+  /// poller
+  std::unique_ptr<Poller> poller_;
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// 句柄管理对象

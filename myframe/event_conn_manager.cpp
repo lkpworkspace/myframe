@@ -10,6 +10,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <glog/logging.h>
 
 #include "myframe/app.h"
+#include "myframe/poller.h"
 #include "myframe/event_conn.h"
 
 namespace myframe {
@@ -24,7 +25,7 @@ EventConnManager::~EventConnManager() {
   auto app = app_.lock();
   if (app != nullptr) {
     for (auto p : run_conn_) {
-      app->DelEvent(p.second);
+      app->poller_->Del(p.second);
     }
   }
   run_conn_.clear();
@@ -82,7 +83,7 @@ std::shared_ptr<EventConn> EventConnManager::Get() {
   run_conn_[addr] = conn;
   run_conn_map_[conn->GetHandle()] = addr;
   // add to epoll
-  app->AddEvent(conn);
+  app->poller_->Add(conn);
   return conn;
 }
 
@@ -94,7 +95,7 @@ void EventConnManager::Release(std::shared_ptr<EventConn> ev) {
     return;
   }
   // delete from epoll
-  app->DelEvent(ev);
+  app->poller_->Del(ev);
   // remove from run_conn
   const auto& name = ev->GetMailbox()->Addr();
   run_conn_.erase(name);
