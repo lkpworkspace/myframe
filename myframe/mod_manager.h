@@ -14,10 +14,12 @@ Author: likepeng <likepeng0418@163.com>
 #include <string>
 
 #include "myframe/macros.h"
-#include "myframe/mod_lib.h"
 
 namespace myframe {
 
+class Actor;
+class Worker;
+class SharedLibrary;
 class ModManager final {
  public:
   ModManager();
@@ -41,6 +43,8 @@ class ModManager final {
     const std::string& mod_or_class_name,
     const std::string& worker_name);
 
+  std::string GetLibName(const std::string& path) const;
+
  private:
   std::unordered_map<
       std::string, std::function<std::shared_ptr<Actor>(const std::string&)>>
@@ -50,7 +54,9 @@ class ModManager final {
       class_workers_;
   std::shared_mutex class_actor_rw_;
   std::shared_mutex class_worker_rw_;
-  ModLib lib_mods_;
+
+  std::unordered_map<std::string, std::shared_ptr<SharedLibrary>> mods_;
+  std::shared_mutex mods_rw_;
 
   DISALLOW_COPY_AND_ASSIGN(ModManager)
 };

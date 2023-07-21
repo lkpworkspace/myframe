@@ -10,6 +10,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <glog/logging.h>
 #include <jsoncpp/json/json.h>
 
+#include "myframe/shared_library.h"
 #include "myframe/actor.h"
 #include "myframe/worker.h"
 
@@ -24,7 +25,19 @@ ModManager::~ModManager() {
 }
 
 bool ModManager::LoadMod(const std::string& dl_path) {
-  return lib_mods_.LoadMod(dl_path);
+  auto dlname = GetLibName(dl_path);
+  std::unique_lock<std::shared_mutex> lk(mods_rw_);
+  if (mods_.find(dlname) != mods_.end()) {
+    DLOG(ERROR) << dlname << " has loaded";
+    return false;
+  }
+  auto lib = std::make_shared<SharedLibrary>();
+  if (!lib->Load(dl_path, SharedLibrary::Flags::kLocal)) {
+    return false;
+  }
+  mods_[dlname] = lib;
+  LOG(INFO) << "Load lib " << dl_path;
+  return true;
 }
 
 bool ModManager::RegActor(
@@ -57,9 +70,30 @@ bool ModManager::RegWorker(
 
 std::shared_ptr<Actor> ModManager::CreateActorInst(
   const std::string& mod_or_class_name, const std::string& actor_name) {
-  if (lib_mods_.IsLoad(mod_or_class_name)) {
-    DLOG(INFO) << actor_name << " actor from lib";
-    return lib_mods_.CreateActorInst(mod_or_class_name, actor_name);
+  {
+    std::shared_lock<std::shared_mutex> lk(mods_rw_);
+    if (mods_.find(mod_or_class_name) != mods_.end()) {
+      DLOG(INFO) << actor_name << " actor from lib";
+      auto lib = mods_[mod_or_class_name];
+      auto void_func = lib->GetSymbol("actor_create");
+      auto create = reinterpret_cast<actor_create_func_t>(void_func);
+      if (nullptr == create) {
+        LOG(ERROR)
+          << "Load " << mod_or_class_name << "." << actor_name
+          << " module actor_create function failed";
+        return nullptr;
+      }
+      auto actor = create(actor_name);
+      if (nullptr == actor) {
+        LOG(ERROR)
+          << "Create " << mod_or_class_name << "." << actor_name
+          << " failed";
+        return nullptr;
+      }
+      actor->SetModName(mod_or_class_name);
+      actor->SetTypeName(actor_name);
+      return actor;
+    }
   }
   std::shared_lock<std::shared_mutex> lk(class_actor_rw_);
   if (mod_or_class_name == "class" &&
@@ -75,9 +109,30 @@ std::shared_ptr<Actor> ModManager::CreateActorInst(
 
 std::shared_ptr<Worker> ModManager::CreateWorkerInst(
   const std::string& mod_or_class_name, const std::string& worker_name) {
-  if (lib_mods_.IsLoad(mod_or_class_name)) {
-    LOG(INFO) << "instance worker from lib";
-    return lib_mods_.CreateWorkerInst(mod_or_class_name, worker_name);
+  {
+    std::shared_lock<std::shared_mutex> lk(mods_rw_);
+    if (mods_.find(mod_or_class_name) != mods_.end()) {
+      LOG(INFO) << "instance worker from lib";
+      auto lib = mods_[mod_or_class_name];
+      auto void_func = lib->GetSymbol("worker_create");
+      auto create = reinterpret_cast<worker_create_func_t>(void_func);
+      if (nullptr == create) {
+        LOG(ERROR)
+          << "Load " << mod_or_class_name << "." << worker_name
+          << " module worker_create function failed";
+        return nullptr;
+      }
+      auto worker = create(worker_name);
+      if (nullptr == worker) {
+        LOG(ERROR)
+          << "Create " << mod_or_class_name << "." << worker_name
+          << " failed";
+        return nullptr;
+      }
+      worker->SetModName(mod_or_class_name);
+      worker->SetTypeName(worker_name);
+      return worker;
+    }
   }
   std::shared_lock<std::shared_mutex> lk(class_worker_rw_);
   if (mod_or_class_name == "class" &&
@@ -89,6 +144,12 @@ std::shared_ptr<Worker> ModManager::CreateWorkerInst(
     return worker;
   }
   return nullptr;
+}
+
+std::string ModManager::GetLibName(const std::string& path) const {
+  auto pos = path.find_last_of('/');
+  pos = (pos == std::string::npos) ? -1 : pos;
+  return path.substr(pos + 1);
 }
 
 }  // namespace myframe
