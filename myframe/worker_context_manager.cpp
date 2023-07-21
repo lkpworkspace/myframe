@@ -31,7 +31,7 @@ bool WorkerContextManager::Init(int warning_msg_size) {
 
 int WorkerContextManager::WorkerSize() { return cur_worker_count_.load(); }
 
-std::shared_ptr<WorkerContext> WorkerContextManager::Get(int handle) {
+std::shared_ptr<WorkerContext> WorkerContextManager::Get(ev_handle_t handle) {
   std::shared_lock<std::shared_mutex> lk(rw_);
   if (worker_ctxs_.find(handle) == worker_ctxs_.end()) {
     DLOG(WARNING) << "can't find worker, handle " << handle;
@@ -55,7 +55,7 @@ std::shared_ptr<WorkerContext> WorkerContextManager::Get(
 
 bool WorkerContextManager::Add(std::shared_ptr<WorkerContext> worker_ctx) {
   auto worker = worker_ctx->GetWorker<Worker>();
-  ev_handle_t handle = worker_ctx->GetHandle();
+  auto handle = worker_ctx->GetHandle();
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (worker_ctxs_.find(handle) != worker_ctxs_.end()) {
     LOG(ERROR) << *worker_ctx << " reg handle " << handle
@@ -70,7 +70,7 @@ bool WorkerContextManager::Add(std::shared_ptr<WorkerContext> worker_ctx) {
 
 void WorkerContextManager::Del(std::shared_ptr<WorkerContext> worker_ctx) {
   auto worker = worker_ctx->GetWorker<Worker>();
-  ev_handle_t handle = worker_ctx->GetHandle();
+  auto handle = worker_ctx->GetHandle();
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (worker_ctxs_.find(handle) == worker_ctxs_.end()) {
     return;

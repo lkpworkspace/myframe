@@ -16,6 +16,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <unordered_map>
 
 #include "myframe/macros.h"
+#include "myframe/event.h"
 
 namespace myframe {
 
@@ -30,7 +31,7 @@ class WorkerContextManager final {
 
   int WorkerSize();
 
-  std::shared_ptr<WorkerContext> Get(int fd);
+  std::shared_ptr<WorkerContext> Get(ev_handle_t);
   std::shared_ptr<WorkerContext> Get(const std::string&);
   bool Add(std::shared_ptr<WorkerContext> worker);
   void Del(std::shared_ptr<WorkerContext> worker);
@@ -66,9 +67,9 @@ class WorkerContextManager final {
   /// 停止的线程列表
   std::list<std::shared_ptr<WorkerContext>> stoped_workers_ctx_;
   /// name/handle 映射表
-  std::unordered_map<std::string, int> name_handle_map_;
+  std::unordered_map<std::string, ev_handle_t> name_handle_map_;
   /// handle/worker 映射表
-  std::unordered_map<int, std::shared_ptr<WorkerContext>> worker_ctxs_;
+  std::unordered_map<ev_handle_t, std::shared_ptr<WorkerContext>> worker_ctxs_;
 
   DISALLOW_COPY_AND_ASSIGN(WorkerContextManager)
 };

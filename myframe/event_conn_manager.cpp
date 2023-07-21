@@ -50,7 +50,7 @@ void EventConnManager::AddEventConn() {
   conn_sz_++;
 }
 
-std::shared_ptr<EventConn> EventConnManager::Get(int handle) {
+std::shared_ptr<EventConn> EventConnManager::Get(ev_handle_t handle) {
   std::lock_guard<std::mutex> g(mtx_);
   if (run_conn_map_.find(handle) == run_conn_map_.end()) {
     DLOG(WARNING) << "can't find event conn, handle " << handle;

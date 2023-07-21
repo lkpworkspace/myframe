@@ -12,6 +12,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <string>
 
 #include "myframe/macros.h"
+#include "myframe/event.h"
 
 namespace myframe {
 
@@ -29,7 +30,7 @@ class EventConnManager final {
 
   std::shared_ptr<EventConn> Get();
 
-  std::shared_ptr<EventConn> Get(int handle);
+  std::shared_ptr<EventConn> Get(ev_handle_t);
 
   void Release(std::shared_ptr<EventConn>);
 
@@ -39,7 +40,7 @@ class EventConnManager final {
 
   int conn_sz_{0};
   std::mutex mtx_;
-  std::unordered_map<int, std::string> run_conn_map_;
+  std::unordered_map<ev_handle_t, std::string> run_conn_map_;
   std::unordered_map<std::string, std::shared_ptr<EventConn>> run_conn_;
   std::list<std::shared_ptr<EventConn>> idle_conn_;
 
