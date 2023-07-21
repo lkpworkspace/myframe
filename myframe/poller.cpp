@@ -93,6 +93,10 @@ int Poller::Wait(std::vector<ev_handle_t>* evs, int timeout_ms) {
     return -1;
   }
   for (int i = 0; i < ev_count; ++i) {
+    if (evs_[i].events != EPOLLIN) {
+      LOG(WARNING) << "epoll event " << evs_[i].events << " continue";
+      continue;
+    }
     evs->push_back(evs_[i].data.fd);
   }
   return ev_count;

@@ -653,7 +653,6 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
         continue;
       }
     }
-    ev_obj->RetListenIOType(Event::IOType::kIn);
     switch (ev_obj->GetType()) {
       case Event::Type::kWorkerCommon:
         ProcessWorkerEvent(std::dynamic_pointer_cast<WorkerContext>(ev_obj));

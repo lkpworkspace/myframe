@@ -13,12 +13,6 @@ typedef int ev_handle_t;
 
 class Event : public std::enable_shared_from_this<Event> {
  public:
-  enum class IOType : int {
-    kNone,
-    kIn,
-    kOut,
-  };
-
   enum class Type : int {
     kWorkerCommon,
     kWorkerTimer,
@@ -32,14 +26,8 @@ class Event : public std::enable_shared_from_this<Event> {
   /* 事件类型 */
   virtual Type GetType() { return Type::kWorkerUser; }
 
-  /* 获得当前事件的文件描述符 */
+  /* 事件句柄 */
   virtual ev_handle_t GetHandle() const = 0;
-
-  /* 监听的是文件描述符的写事件还是读事件 */
-  virtual IOType ListenIOType() { return IOType::kIn; }
-
-  /* 返回的监听事件类型 */
-  virtual void RetListenIOType(const IOType&) {}
 };
 
 }  // namespace myframe
