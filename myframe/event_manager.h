@@ -7,6 +7,7 @@ Author: likepeng <likepeng0418@163.com>
 #pragma once
 #include <memory>
 #include <string>
+#include <mutex>
 #include <shared_mutex>
 #include <vector>
 #include <unordered_map>
