@@ -21,18 +21,17 @@ Author: likepeng <likepeng0418@163.com>
 namespace myframe {
 
 class Msg;
+class EventManager;
 class WorkerContext;
 class WorkerContextManager final {
  public:
-  WorkerContextManager();
+  WorkerContextManager(std::shared_ptr<EventManager>);
   virtual ~WorkerContextManager();
 
   bool Init(int warning_msg_size = 10);
 
   int WorkerSize();
 
-  std::shared_ptr<WorkerContext> Get(ev_handle_t);
-  std::shared_ptr<WorkerContext> Get(const std::string&);
   bool Add(std::shared_ptr<WorkerContext> worker);
   void Del(std::shared_ptr<WorkerContext> worker);
 
@@ -48,7 +47,6 @@ class WorkerContextManager final {
   void DispatchWorkerMsg(std::shared_ptr<Msg> msg);
 
   std::vector<std::string> GetAllUserWorkerAddr();
-  bool HasWorker(const std::string& name);
 
   // 停止工作线程
   void StopAllWorker();
@@ -66,10 +64,8 @@ class WorkerContextManager final {
   std::list<std::weak_ptr<WorkerContext>> weakup_workers_ctx_;
   /// 停止的线程列表
   std::list<std::shared_ptr<WorkerContext>> stoped_workers_ctx_;
-  /// name/handle 映射表
-  std::unordered_map<std::string, ev_handle_t> name_handle_map_;
-  /// handle/worker 映射表
-  std::unordered_map<ev_handle_t, std::shared_ptr<WorkerContext>> worker_ctxs_;
+  /// 事件管理对象
+  std::shared_ptr<EventManager> ev_mgr_;
 
   DISALLOW_COPY_AND_ASSIGN(WorkerContextManager)
 };

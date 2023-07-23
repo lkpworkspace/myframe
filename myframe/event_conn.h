@@ -30,7 +30,8 @@ class EventConn final : public Event {
   EventConn() = default;
 
   ev_handle_t GetHandle() const override;
-  Event::Type GetType() override;
+  Event::Type GetType() const override;
+  std::string GetName() const override;
 
   EventConn::Type GetConnType() { return conn_type_; }
 

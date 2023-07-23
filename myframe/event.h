@@ -6,6 +6,7 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <memory>
+#include <string>
 
 namespace myframe {
 
@@ -24,10 +25,15 @@ class Event : public std::enable_shared_from_this<Event> {
   virtual ~Event() {}
 
   /* 事件类型 */
-  virtual Type GetType() { return Type::kWorkerUser; }
+  virtual Type GetType() const { return Type::kWorkerUser; }
 
   /* 事件句柄 */
   virtual ev_handle_t GetHandle() const = 0;
+
+  /* 事件名称 */
+  virtual std::string GetName() const = 0;
+
+  static const ev_handle_t DEFAULT_EV_HANDLE{-1};
 };
 
 }  // namespace myframe

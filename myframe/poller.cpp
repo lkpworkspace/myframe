@@ -89,7 +89,7 @@ int Poller::Wait(std::vector<ev_handle_t>* evs, int timeout_ms) {
     static_cast<int>(max_ev_count_),
     timeout_ms);
   if (0 > ev_count) {
-    LOG(ERROR) << "epoll wait error: " << strerror(errno);
+    LOG(WARNING) << "epoll wait error: " << strerror(errno);
     return -1;
   }
   for (int i = 0; i < ev_count; ++i) {

@@ -28,8 +28,8 @@ bool ModManager::LoadMod(const std::string& dl_path) {
   auto dlname = GetLibName(dl_path);
   std::unique_lock<std::shared_mutex> lk(mods_rw_);
   if (mods_.find(dlname) != mods_.end()) {
-    DLOG(ERROR) << dlname << " has loaded";
-    return false;
+    DLOG(INFO) << dlname << " has loaded";
+    return true;
   }
   auto lib = std::make_shared<SharedLibrary>();
   if (!lib->Load(dl_path, SharedLibrary::Flags::kLocal)) {

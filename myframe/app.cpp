@@ -15,6 +15,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/actor.h"
 #include "myframe/actor_context.h"
 #include "myframe/actor_context_manager.h"
+#include "myframe/event_manager.h"
 #include "myframe/event_conn.h"
 #include "myframe/event_conn_manager.h"
 #include "myframe/worker_context.h"
@@ -32,7 +33,7 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
     return nullptr;
   }
   std::string worker_timer_name = "worker.timer.#1";
-  auto w = worker_ctx_mgr_->Get(worker_timer_name);
+  auto w = ev_mgr_->Get<WorkerContext>(worker_timer_name);
   if (w == nullptr) {
     LOG(ERROR)
       << "can't find " << worker_timer_name;
@@ -46,8 +47,9 @@ App::App()
   : poller_(new Poller())
   , mods_(new ModManager())
   , actor_ctx_mgr_(new ActorContextManager())
-  , ev_conn_mgr_(new EventConnManager())
-  , worker_ctx_mgr_(new WorkerContextManager())
+  , ev_mgr_(new EventManager())
+  , ev_conn_mgr_(new EventConnManager(ev_mgr_))
+  , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_))
 {}
 
 App::~App() {
@@ -68,7 +70,7 @@ bool App::Init(
   warning_msg_size_.store(warning_msg_size);
   ret &= poller_->Init();
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
-  ret &= ev_conn_mgr_->Init(shared_from_this(), event_conn_size);
+  ret &= ev_conn_mgr_->Init(event_conn_size);
   ret &= StartCommonWorker(thread_pool_size);
   ret &= StartTimerWorker();
 
@@ -298,8 +300,14 @@ bool App::AddWorker(
 int App::Send(
   const std::string& dst,
   std::shared_ptr<Msg> msg) {
-  auto conn = ev_conn_mgr_->Get();
+  auto conn = ev_conn_mgr_->Alloc();
+  if (conn == nullptr) {
+    LOG(ERROR) << "alloc conn event failed";
+    return -1;
+  }
+  poller_->Add(conn);
   auto ret = conn->Send(dst, msg);
+  poller_->Del(conn);
   ev_conn_mgr_->Release(conn);
   return ret;
 }
@@ -307,8 +315,14 @@ int App::Send(
 const std::shared_ptr<const Msg> App::SendRequest(
   const std::string& name,
   std::shared_ptr<Msg> msg) {
-  auto conn = ev_conn_mgr_->Get();
+  auto conn = ev_conn_mgr_->Alloc();
+  if (conn == nullptr) {
+    LOG(ERROR) << "alloc conn event failed";
+    return nullptr;
+  }
+  poller_->Add(conn);
   auto resp = conn->SendRequest(name, msg);
+  poller_->Del(conn);
   ev_conn_mgr_->Release(conn);
   return resp;
 }
@@ -412,7 +426,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
       continue;
     }
     if (name_list[0] == "worker"
-        && worker_ctx_mgr_->HasWorker(msg->GetDst())) {
+        && ev_mgr_->Has(msg->GetDst())) {
       // dispatch to user worker
       worker_ctx_mgr_->DispatchWorkerMsg(msg);
     } else if (name_list[0] == "actor"
@@ -421,7 +435,8 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
       actor_ctx_mgr_->DispatchMsg(msg);
     } else if (name_list[0] == "event") {
       if (name_list[1] == "conn") {
-        ev_conn_mgr_->Notify(msg->GetDst(), msg);
+        auto handle = ev_mgr_->ToHandle(msg->GetDst());
+        ev_conn_mgr_->Notify(handle, msg);
       } else {
         LOG(ERROR) << "Unknown msg " << *msg;
       }
@@ -590,8 +605,6 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   DLOG_IF(INFO, worker->GetActorContext() != nullptr)
       << *worker_ctx << " dispatch "
       << worker->GetActorContext()->GetActor()->GetActorName() << " msg...";
-  LOG_IF(WARNING, worker->GetActorContext() == nullptr)
-      << *worker_ctx << " no context";
   DispatchMsg(worker->GetActorContext());
 
   CmdChannel::Cmd cmd;
@@ -644,14 +657,10 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
 void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
   DLOG_IF(INFO, evs.size() > 0) << "get " << evs.size() << " event";
   for (size_t i = 0; i < evs.size(); ++i) {
-    std::shared_ptr<Event> ev_obj = nullptr;
-    ev_obj = worker_ctx_mgr_->Get(evs[i]);
+    auto ev_obj = ev_mgr_->Get<Event>(evs[i]);
     if (ev_obj == nullptr) {
-      ev_obj = ev_conn_mgr_->Get(evs[i]);
-      if (ev_obj == nullptr) {
-        LOG(ERROR) << "can't find ev obj, handle " << evs[i];
-        continue;
-      }
+      LOG(ERROR) << "can't find ev obj, handle " << evs[i];
+      continue;
     }
     switch (ev_obj->GetType()) {
       case Event::Type::kWorkerCommon:

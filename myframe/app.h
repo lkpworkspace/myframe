@@ -26,6 +26,7 @@ class Actor;
 class ActorContext;
 class ActorContextManager;
 class Event;
+class EventManager;
 class EventConn;
 class EventConnManager;
 class Worker;
@@ -36,8 +37,6 @@ class WorkerContextManager;
 class ModManager;
 class App final : public std::enable_shared_from_this<App> {
   friend class Actor;
-  friend class ActorContext;
-  friend class EventConnManager;
 
  public:
   App();
@@ -75,10 +74,6 @@ class App final : public std::enable_shared_from_this<App> {
   const std::shared_ptr<const Msg> SendRequest(
     const std::string& name,
     std::shared_ptr<Msg> msg);
-
-  std::unique_ptr<ActorContextManager>& GetActorContextManager() {
-    return actor_ctx_mgr_;
-  }
 
   std::unique_ptr<ModManager>& GetModManager() { return mods_; }
 
@@ -139,6 +134,8 @@ class App final : public std::enable_shared_from_this<App> {
   std::unique_ptr<ModManager> mods_;
   /// 句柄管理对象
   std::unique_ptr<ActorContextManager> actor_ctx_mgr_;
+  /// 事件管理对象
+  std::shared_ptr<EventManager> ev_mgr_;
   /// 与框架通信管理对象
   std::unique_ptr<EventConnManager> ev_conn_mgr_;
   /// 线程管理对象

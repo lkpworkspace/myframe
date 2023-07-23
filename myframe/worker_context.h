@@ -42,7 +42,8 @@ class WorkerContext final : public Event {
 
   /// event 相关函数
   ev_handle_t GetHandle() const override;
-  Event::Type GetType() override;
+  Event::Type GetType() const override;
+  std::string GetName() const override;
 
   Mailbox* GetMailbox();
 

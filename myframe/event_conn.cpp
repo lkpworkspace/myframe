@@ -17,7 +17,13 @@ ev_handle_t EventConn::GetHandle() const {
   return cmd_channel_.GetMainHandle();
 }
 
-Event::Type EventConn::GetType() { return Event::Type::kEventConn; }
+Event::Type EventConn::GetType() const {
+  return Event::Type::kEventConn;
+}
+
+std::string EventConn::GetName() const {
+  return mailbox_.Addr();
+}
 
 Mailbox* EventConn::GetMailbox() {
   return &mailbox_;

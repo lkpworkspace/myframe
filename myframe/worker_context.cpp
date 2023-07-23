@@ -33,8 +33,12 @@ ev_handle_t WorkerContext::GetHandle() const {
   return cmd_channel_.GetMainHandle();
 }
 
-Event::Type WorkerContext::GetType() {
+Event::Type WorkerContext::GetType() const {
   return worker_->GetType();
+}
+
+std::string WorkerContext::GetName() const {
+  return worker_->GetWorkerName();
 }
 
 void WorkerContext::Start() {
