@@ -12,6 +12,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/app.h"
 #include "myframe/actor_context.h"
 #include "myframe/worker_timer.h"
+#include "myframe/mailbox.h"
 
 namespace myframe {
 
@@ -69,6 +70,21 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
     return -1;
   }
   return timer_worker->SetTimeout(GetActorName(), timer_name, expired);
+}
+
+bool Actor::Subscribe(const std::string& name) {
+  auto ctx = ctx_.lock();
+  if (ctx == nullptr) {
+    return false;
+  }
+  if (name == GetActorName()) {
+    return false;
+  }
+  auto msg = std::make_shared<Msg>();
+  msg->SetType("SUBSCRIBE");
+  auto mailbox = ctx->GetMailbox();
+  mailbox->Send(name, msg);
+  return true;
 }
 
 void Actor::SetContext(std::shared_ptr<ActorContext> c) { ctx_ = c; }

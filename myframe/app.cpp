@@ -355,12 +355,34 @@ bool App::CreateActorContext(
 bool App::CreateActorContext(
   std::shared_ptr<Actor> mod_inst,
   const std::string& params) {
+  auto actor_name = mod_inst->GetActorName();
   auto ctx = std::make_shared<ActorContext>(shared_from_this(), mod_inst);
   if (ctx->Init(params.c_str())) {
-    LOG(ERROR) << "init " << mod_inst->GetActorName() << " fail";
+    LOG(ERROR) << "init " << actor_name << " fail";
     return false;
   }
   actor_ctx_mgr_->RegContext(ctx);
+  // 接收缓存中发给自己的消息
+  if (cache_msg_.find(actor_name) != cache_msg_.end()) {
+    auto& cache_list = cache_msg_[actor_name];
+    LOG(INFO) << actor_name
+      << " recv msg from cache, size " << cache_list.size();
+    DispatchMsg(&cache_list);
+    cache_msg_.erase(actor_name);
+  }
+  // 目的地址不存在的暂时放到缓存消息队列
+  auto send_list = ctx->GetMailbox()->GetSendList();
+  for (auto it = send_list->begin(); it != send_list->end();) {
+    if (!HasUserInst((*it)->GetDst())) {
+      LOG(WARNING) << "can't found " << (*it)->GetDst()
+        << ", cache this msg";
+      cache_msg_[(*it)->GetDst()].push_back(*it);
+      it = send_list->erase(it);
+      continue;
+    }
+    ++it;
+  }
+  // 分发目的地址已经存在的消息
   DispatchMsg(ctx);
   return true;
 }
@@ -708,6 +730,21 @@ void App::Quit() {
     return;
   }
   worker_ctx_mgr_->StopAllWorker();
+}
+
+bool App::HasUserInst(const std::string& name) {
+  if (name.substr(0, 6) == "worker") {
+    auto worker_ctx = ev_mgr_->Get<WorkerContext>(name);
+    if (worker_ctx != nullptr
+        && worker_ctx->GetType() == Event::Type::kWorkerUser) {
+      return true;
+    }
+  } else if (name.substr(0, 5) == "actor") {
+    if (actor_ctx_mgr_->HasActor(name)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace myframe

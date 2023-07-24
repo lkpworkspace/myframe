@@ -86,6 +86,17 @@ class Actor {
   int Timeout(const std::string& timer_name, int expired);
 
   /**
+   * Subscribe() - 订阅actor或者worker的消息
+   * @name: 订阅actor或者worker的名称
+   *
+   *     被订阅的组件需要处理订阅消息，消息格式：
+   *        msg->GetType() == "SUBSCRIBE" 确认是订阅消息
+   *        msg->GetSrc() 确定是订阅组件名称
+   * @return: 成功返回true,失败返回false
+   */
+  bool Subscribe(const std::string& name);
+
+  /**
    * GetApp() - 获得应用实例
    *
    *    注意：不要将返回的对象存储为成员变量或者静态变量，

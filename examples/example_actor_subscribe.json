@@ -1,0 +1,18 @@
+{
+    "type":"library",
+    "lib":"libexample_actor_subscribe.so",
+    "actor":{
+        "example_b_pub":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ],
+        "example_a_sub":[
+            {
+                "instance_name":"#1",
+                "instance_params":""
+            }
+        ]
+    }
+}
