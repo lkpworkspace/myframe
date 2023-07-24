@@ -21,15 +21,15 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-enum class WorkerCtrlOwner : int {
-  kMain,
-  kWorker,
-};
-
 class App;
 class Worker;
 class WorkerContext final : public Event {
  public:
+  enum class CtrlOwner : int {
+    kMain,
+    kWorker,
+  };
+
   WorkerContext(std::shared_ptr<App> app, std::shared_ptr<Worker> worker);
   virtual ~WorkerContext();
 
@@ -38,11 +38,12 @@ class WorkerContext final : public Event {
   void Stop();
   void Join();
   bool IsRuning() { return runing_.load(); }
-  pthread_t GetPosixThreadId() { return th_.native_handle(); }
+  std::thread::id GetThreadId() { return th_.get_id(); }
 
   /// event 相关函数
-  int GetFd() const override;
-  EventType GetType() override;
+  ev_handle_t GetHandle() const override;
+  Event::Type GetType() const override;
+  std::string GetName() const override;
 
   Mailbox* GetMailbox();
 
@@ -60,10 +61,10 @@ class WorkerContext final : public Event {
   void Cache(std::list<std::shared_ptr<Msg>>* msg_list);
 
   /// 线程交互控制flag函数
-  void SetCtrlOwnerFlag(WorkerCtrlOwner owner) {
+  void SetCtrlOwnerFlag(CtrlOwner owner) {
     ctrl_owner_ = owner;
   }
-  WorkerCtrlOwner GetOwner() const {
+  CtrlOwner GetOwner() const {
     return ctrl_owner_;
   }
   void SetWaitMsgQueueFlag(bool in_wait_msg_queue) {
@@ -76,12 +77,12 @@ class WorkerContext final : public Event {
   std::shared_ptr<App> GetApp();
 
  private:
-  static void ListenThread(std::shared_ptr<WorkerContext> w);
+  void ListenThread();
   void Initialize();
 
   /// state flag
   std::atomic_bool runing_;
-  WorkerCtrlOwner ctrl_owner_{ WorkerCtrlOwner::kWorker };
+  CtrlOwner ctrl_owner_{ CtrlOwner::kWorker };
   bool in_msg_wait_queue_{ false };
 
   /// worker

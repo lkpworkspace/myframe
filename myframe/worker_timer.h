@@ -88,8 +88,8 @@ class WorkerTimer final : public Worker {
   void Init() override;
   void Run() override;
   void Exit() override;
-  EventType GetType() override {
-    return EventType::kWorkerTimer;
+  Event::Type GetType() override {
+    return Event::Type::kWorkerTimer;
   }
 
  private:

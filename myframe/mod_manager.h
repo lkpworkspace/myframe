@@ -6,16 +6,20 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
+#include <mutex>
+#include <shared_mutex>
 #include <functional>
 #include <memory>
 #include <unordered_map>
 #include <string>
 
 #include "myframe/macros.h"
-#include "myframe/mod_lib.h"
 
 namespace myframe {
 
+class Actor;
+class Worker;
+class SharedLibrary;
 class ModManager final {
  public:
   ModManager();
@@ -39,6 +43,8 @@ class ModManager final {
     const std::string& mod_or_class_name,
     const std::string& worker_name);
 
+  std::string GetLibName(const std::string& path) const;
+
  private:
   std::unordered_map<
       std::string, std::function<std::shared_ptr<Actor>(const std::string&)>>
@@ -46,9 +52,11 @@ class ModManager final {
   std::unordered_map<
       std::string, std::function<std::shared_ptr<Worker>(const std::string&)>>
       class_workers_;
-  pthread_rwlock_t class_actor_rw_;
-  pthread_rwlock_t class_worker_rw_;
-  ModLib lib_mods_;
+  std::shared_mutex class_actor_rw_;
+  std::shared_mutex class_worker_rw_;
+
+  std::unordered_map<std::string, std::shared_ptr<SharedLibrary>> mods_;
+  std::shared_mutex mods_rw_;
 
   DISALLOW_COPY_AND_ASSIGN(ModManager)
 };

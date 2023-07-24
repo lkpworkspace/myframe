@@ -15,11 +15,6 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-enum class EventConnType : char {
-  kSendReq,
-  kSend,
-};
-
 class Msg;
 class EventConnManager;
 class EventConn final : public Event {
@@ -27,12 +22,18 @@ class EventConn final : public Event {
   friend class EventConnManager;
 
  public:
+  enum class Type : char {
+    kSendReq,
+    kSend,
+  };
+
   EventConn() = default;
 
-  int GetFd() const override;
-  EventType GetType() override;
+  ev_handle_t GetHandle() const override;
+  Event::Type GetType() const override;
+  std::string GetName() const override;
 
-  EventConnType GetConnType() { return conn_type_; }
+  EventConn::Type GetConnType() { return conn_type_; }
 
   int Send(
     const std::string& dst,
@@ -48,7 +49,7 @@ class EventConn final : public Event {
 
   CmdChannel cmd_channel_;
   Mailbox mailbox_;
-  EventConnType conn_type_{ EventConnType::kSendReq };
+  EventConn::Type conn_type_{ EventConn::Type::kSendReq };
 
   DISALLOW_COPY_AND_ASSIGN(EventConn)
 };

@@ -6,8 +6,8 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <pthread.h>
-
+#include <mutex>
+#include <shared_mutex>
 #include <atomic>
 #include <list>
 #include <vector>
@@ -16,22 +16,22 @@ Author: likepeng <likepeng0418@163.com>
 #include <unordered_map>
 
 #include "myframe/macros.h"
+#include "myframe/event.h"
 
 namespace myframe {
 
 class Msg;
+class EventManager;
 class WorkerContext;
 class WorkerContextManager final {
  public:
-  WorkerContextManager();
+  WorkerContextManager(std::shared_ptr<EventManager>);
   virtual ~WorkerContextManager();
 
   bool Init(int warning_msg_size = 10);
 
   int WorkerSize();
 
-  std::shared_ptr<WorkerContext> Get(int fd);
-  std::shared_ptr<WorkerContext> Get(const std::string&);
   bool Add(std::shared_ptr<WorkerContext> worker);
   void Del(std::shared_ptr<WorkerContext> worker);
 
@@ -47,7 +47,6 @@ class WorkerContextManager final {
   void DispatchWorkerMsg(std::shared_ptr<Msg> msg);
 
   std::vector<std::string> GetAllUserWorkerAddr();
-  bool HasWorker(const std::string& name);
 
   // 停止工作线程
   void StopAllWorker();
@@ -58,17 +57,15 @@ class WorkerContextManager final {
   /// 工作线程数(包含用户线程)
   std::atomic_int cur_worker_count_{0};
   /// 读写锁
-  pthread_rwlock_t rw_;
+  std::shared_mutex rw_;
   /// 空闲线程链表
   std::list<std::weak_ptr<WorkerContext>> idle_workers_ctx_;
   /// 有消息user线程
   std::list<std::weak_ptr<WorkerContext>> weakup_workers_ctx_;
   /// 停止的线程列表
   std::list<std::shared_ptr<WorkerContext>> stoped_workers_ctx_;
-  /// name/handle 映射表
-  std::unordered_map<std::string, int> name_handle_map_;
-  /// handle/worker 映射表
-  std::unordered_map<int, std::shared_ptr<WorkerContext>> worker_ctxs_;
+  /// 事件管理对象
+  std::shared_ptr<EventManager> ev_mgr_;
 
   DISALLOW_COPY_AND_ASSIGN(WorkerContextManager)
 };

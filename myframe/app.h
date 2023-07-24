@@ -18,15 +18,15 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/macros.h"
 #include "myframe/event.h"
 
-struct epoll_event;
-
 namespace myframe {
 
 class Msg;
+class Poller;
 class Actor;
 class ActorContext;
 class ActorContextManager;
 class Event;
+class EventManager;
 class EventConn;
 class EventConnManager;
 class Worker;
@@ -37,7 +37,6 @@ class WorkerContextManager;
 class ModManager;
 class App final : public std::enable_shared_from_this<App> {
   friend class Actor;
-  friend class ActorContext;
 
  public:
   App();
@@ -76,14 +75,7 @@ class App final : public std::enable_shared_from_this<App> {
     const std::string& name,
     std::shared_ptr<Msg> msg);
 
-  std::unique_ptr<ActorContextManager>& GetActorContextManager() {
-    return actor_ctx_mgr_;
-  }
-
   std::unique_ptr<ModManager>& GetModManager() { return mods_; }
-
-  bool AddEvent(std::shared_ptr<Event> ev);
-  bool DelEvent(std::shared_ptr<Event> ev);
 
   int Exec();
 
@@ -119,11 +111,9 @@ class App final : public std::enable_shared_from_this<App> {
   void CheckStopWorkers();
 
   /// 分发事件
-  EventIOType ToEventIOType(int ev);
-  int ToEpollType(const EventIOType& type);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<ActorContext> context);
-  void ProcessEvent(struct epoll_event* evs, int ev_count);
+  void ProcessEvent(const std::vector<ev_handle_t>& evs);
   void ProcessWorkerEvent(std::shared_ptr<WorkerContext>);
   void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
   void ProcessUserEvent(std::shared_ptr<WorkerContext>);
@@ -138,12 +128,14 @@ class App final : public std::enable_shared_from_this<App> {
   std::atomic_bool quit_{true};
   std::mutex dispatch_mtx_;
   std::mutex local_mtx_;
-  /// epoll文件描述符
-  int epoll_fd_;
+  /// poller
+  std::unique_ptr<Poller> poller_;
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// 句柄管理对象
   std::unique_ptr<ActorContextManager> actor_ctx_mgr_;
+  /// 事件管理对象
+  std::shared_ptr<EventManager> ev_mgr_;
   /// 与框架通信管理对象
   std::unique_ptr<EventConnManager> ev_conn_mgr_;
   /// 线程管理对象

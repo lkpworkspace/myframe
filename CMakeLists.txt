@@ -12,25 +12,6 @@ if (CMAKE_COMPILER_IS_GNUCC)
 endif ()
 
 ### cpp option
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-# glog option:
-#   -DNDEBUG
-#   -DDCHECK_ALWAYS_ON
-# unit test option:
-#   -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined
-set(CMAKE_C_FLAGS
-  "-fPIC -Wall -Wextra -Werror -pedantic-errors \
-  -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
-  -DNDEBUG"
-)
-set(CMAKE_CXX_FLAGS
-  "-fPIC -Wall -Wextra -Werror -pedantic-errors \
-  -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual \
-  -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override \
-  -DNDEBUG"
-)
 if (GCC_VERSION GREATER "8.0")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra-semi")
 endif ()
@@ -46,11 +27,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/bin)
 
 ### install path
-set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}")
+# set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(MYFRAME_TEST_DIR "test")
 set(MYFRAME_BIN_DIR "bin")
-set(MYFRAME_INC_DIR "inc")
+set(MYFRAME_INC_DIR "include")
 set(MYFRAME_LIB_DIR "lib")
 set(MYFRAME_LOG_DIR "log")
 set(MYFRAME_SERVICE_DIR "service")
@@ -89,10 +70,7 @@ endif()
 ### install file/dir
 install(FILES 
     "LICENSE"
-    PERMISSIONS
-    OWNER_READ
-    GROUP_READ
-    WORLD_READ
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DESTINATION .
 )
 install(DIRECTORY templates DESTINATION .)
@@ -112,8 +90,14 @@ execute_process(
   OUTPUT_VARIABLE GIT_COMMIT_ID
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+execute_process(
+  COMMAND git show -s --format=%ci HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_DATE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 install(CODE "
   file(
     WRITE ${CMAKE_INSTALL_PREFIX}/version.txt
-    \"${GIT_BRANCH}\n${GIT_COMMIT_ID}\n\")
+    \"${GIT_BRANCH}\n${GIT_COMMIT_ID}\n${GIT_COMMIT_DATE}\n\")
 ")

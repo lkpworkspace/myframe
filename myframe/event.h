@@ -6,38 +6,34 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <memory>
+#include <string>
 
 namespace myframe {
 
-enum class EventIOType : int {
-  kNone,
-  kIn,
-  kOut,
-};
-
-enum class EventType : int {
-  kWorkerCommon,
-  kWorkerTimer,
-  kWorkerUser,
-  kEventConn,
-};
+typedef int ev_handle_t;
 
 class Event : public std::enable_shared_from_this<Event> {
  public:
+  enum class Type : int {
+    kWorkerCommon,
+    kWorkerTimer,
+    kWorkerUser,
+    kEventConn,
+  };
+
   Event() = default;
   virtual ~Event() {}
 
   /* 事件类型 */
-  virtual EventType GetType() { return EventType::kWorkerUser; }
+  virtual Type GetType() const { return Type::kWorkerUser; }
 
-  /* 获得当前事件的文件描述符 */
-  virtual int GetFd() const = 0;
+  /* 事件句柄 */
+  virtual ev_handle_t GetHandle() const = 0;
 
-  /* 监听的是文件描述符的写事件还是读事件 */
-  virtual EventIOType ListenIOType() { return EventIOType::kIn; }
+  /* 事件名称 */
+  virtual std::string GetName() const = 0;
 
-  /* 返回的监听事件类型 */
-  virtual void RetListenIOType(const EventIOType&) {}
+  static const ev_handle_t DEFAULT_EV_HANDLE{-1};
 };
 
 }  // namespace myframe

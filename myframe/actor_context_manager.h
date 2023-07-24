@@ -6,9 +6,10 @@ Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <pthread.h>
 #include <stdint.h>
 
+#include <mutex>
+#include <shared_mutex>
 #include <list>
 #include <vector>
 #include <memory>
@@ -48,7 +49,7 @@ class ActorContextManager final {
   /// 待处理actor链表
   std::list<std::weak_ptr<ActorContext>> wait_queue_;
   /// 读写锁
-  pthread_rwlock_t rw_;
+  std::shared_mutex rw_;
   /// key: context name, value: context
   std::unordered_map<std::string, std::shared_ptr<ActorContext>> ctxs_;
 

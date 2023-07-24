@@ -24,23 +24,23 @@ class MyQueue final {
   MyQueue() = default;
   ~MyQueue() = default;
 
-  int GetFd0() { return cmd_channel_.GetOwnerFd(); }
-  int GetFd1() { return cmd_channel_.GetMainFd(); }
+  int GetFd0() { return cmd_channel_.GetOwnerHandle(); }
+  int GetFd1() { return cmd_channel_.GetMainHandle(); }
 
   void Push(std::shared_ptr<T> data) {
     data_ = data;
-    myframe::Cmd cmd = myframe::Cmd::kRun;
+    myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
     cmd_channel_.SendToOwner(cmd);
     cmd_channel_.RecvFromOwner(&cmd);
   }
 
   std::shared_ptr<T> Pop() {
     std::shared_ptr<T> ret = nullptr;
-    myframe::Cmd cmd = myframe::Cmd::kRun;
+    myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
     cmd_channel_.RecvFromMain(&cmd);
     ret = data_;
     data_ = nullptr;
-    cmd_channel_.SendToMain(myframe::Cmd::kIdle);
+    cmd_channel_.SendToMain(myframe::CmdChannel::Cmd::kIdle);
     return ret;
   }
 
@@ -70,13 +70,13 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     });
 
     // 通知myframe该worker可以接收来自myframe的消息
-    GetCmdChannel()->SendToMain(myframe::Cmd::kWaitForMsg);
+    GetCmdChannel()->SendToMain(myframe::CmdChannel::Cmd::kWaitForMsg);
   }
 
   void Run() override {
     auto cmd_channel = GetCmdChannel();
     struct pollfd fds[] = {
-      {cmd_channel->GetOwnerFd(), POLLIN, 0},
+      {cmd_channel->GetOwnerHandle(), POLLIN, 0},
       {queue_.GetFd0(), POLLIN, 0}};
     // 等待来自queue或者myframe的消息
     int ret = poll(fds, 2, -1);
@@ -89,14 +89,39 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
         continue;
       }
       if (i == 0) {
-        OnMainMsg();
+        myframe::CmdChannel::Cmd cmd;
+        cmd_channel->RecvFromMain(&cmd);
+        if (cmd == myframe::CmdChannel::Cmd::kRun) {
+          recv_run_flag_ = true;
+        } else if (cmd == myframe::CmdChannel::Cmd::kRunWithMsg) {
+          auto mailbox = GetMailbox();
+          while (!mailbox->RecvEmpty()) {
+            const auto& msg = mailbox->PopRecv();
+            // 接收到其它组件消息
+            LOG(INFO) << "get main " << msg->GetData();
+          }
+          cmd_channel->SendToMain(myframe::CmdChannel::Cmd::kWaitForMsg);
+        } else if (cmd == myframe::CmdChannel::Cmd::kQuit) {
+          quit_.store(true);
+          Stop();
+        }
       } else if (i == 1) {
         auto data = queue_.Pop();
-        // 可以将queue里的消息发给myfrmae的worker或actor
-        // eg: Send("actor.xx.xx", std::make_shared<Msg>(data->c_str()));
-        LOG(INFO) << "get 3rd frame: " << data->c_str();
-        cmd_channel->SendToMain(myframe::Cmd::kIdle);
+        // 接收到来自外部的消息
+        LOG(INFO) << "get 3rd frame: " << *data;
+        send_msgs_.push_back(std::make_shared<myframe::Msg>(data->c_str()));
       }
+    }
+    // 分发外部消息给程序的其它组件
+    if (recv_run_flag_ && !send_msgs_.empty()) {
+      recv_run_flag_ = false;
+      LOG(INFO) << "pub 3rd msg to main " << send_msgs_.size();
+      // auto mailbox = GetMailbox();
+      for (std::size_t i = 0; i < send_msgs_.size(); ++i) {
+        // mailbox->Send("actor.xx.xx", send_msgs_[i]);
+      }
+      send_msgs_.clear();
+      cmd_channel->SendToMain(myframe::CmdChannel::Cmd::kIdle);
     }
   }
 
@@ -106,33 +131,9 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
     }
   }
 
-  // 分发消息、处理来自myframe的消息
-  void OnMainMsg() {
-    auto cmd_channel = GetCmdChannel();
-    myframe::Cmd cmd;
-    cmd_channel->RecvFromMain(&cmd);
-    if (cmd == myframe::Cmd::kRun) {
-      // do nothing
-      return;
-    } else if (cmd == myframe::Cmd::kRunWithMsg) {
-      ProcessMainMsg();
-      cmd_channel->SendToMain(myframe::Cmd::kWaitForMsg);
-    } else if (cmd == myframe::Cmd::kQuit) {
-      quit_.store(true);
-      Stop();
-    }
-  }
-
-  void ProcessMainMsg() {
-    auto mailbox = GetMailbox();
-    while (!mailbox->RecvEmpty()) {
-      const auto& msg = mailbox->PopRecv();
-      // ...
-      LOG(INFO) << "get main " << msg->GetData();
-    }
-  }
-
  private:
+  bool recv_run_flag_{true};
+  std::vector<std::shared_ptr<myframe::Msg>> send_msgs_;
   int seq_num_{0};
   std::atomic_bool quit_{true};
   std::thread th_;

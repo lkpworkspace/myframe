@@ -6,12 +6,12 @@ import re
 import shutil
 
 def dumpUsage():
-    print("Usage: python3 ~/myframe/tools/gen_mod_proj.py --name=MOD_NAME --dir=MOD_DIR")
+    print("Usage: python3 gen_mod_proj.py --name=MOD_NAME --dir=MOD_DIR")
     print("Options:")
     print("  --name   MOD_NAME            Base module name, for example: usermod")
     print("  --dir    MOD_DIR             Base module project dirtory, for example: /home/yourname/")
     print("")
-    print("Sample: python3 ~/myframe/tools/gen_mod_proj.py --name=\"usermod\" --dir=\"/home/yourname/\"")
+    print("Sample: python3 gen_mod_proj.py --name=\"usermod\" --dir=\"/home/yourname/\"")
     print("")
 
 def checkParams(opts):
@@ -72,11 +72,11 @@ if __name__ == "__main__":
         dumpUsage()
         sys.exit(1)
     
-    proj_src_dir = ""
+    proj_src_dir = os.path.split(os.path.realpath(__file__))[0]
     proj_rename_dict = {}
     proj_modify_var_list = []
     # 设置要修改的文件
-    proj_src_dir = os.environ['HOME'] + "/myframe/templates/"
+    proj_src_dir = proj_src_dir + "/../templates/"
     proj_rename_dict[params_dict["dir"] + "template.cpp"] = params_dict["dir"] + params_dict["name"] + ".cpp"
     proj_rename_dict[params_dict["dir"] + "template.json"] = params_dict["dir"] + params_dict["name"] + ".json"
     proj_modify_var_list.append(params_dict["dir"] + "CMakeLists.txt")
@@ -95,4 +95,3 @@ if __name__ == "__main__":
         replaceFile(params_dict, v)
 
     print("Success!!!")
-    

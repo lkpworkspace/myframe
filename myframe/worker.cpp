@@ -42,10 +42,10 @@ int Worker::DispatchMsg() {
   if (channel == nullptr) {
     return -1;
   }
-  Cmd cmd = Cmd::kIdle;
+  CmdChannel::Cmd cmd = CmdChannel::Cmd::kIdle;
   channel->SendToMain(cmd);
   auto ret = channel->RecvFromMain(&cmd);
-  if (cmd == Cmd::kQuit) {
+  if (cmd == CmdChannel::Cmd::kQuit) {
     LOG(INFO) << GetWorkerName() << " recv stop msg, stoping...";
     Stop();
     return -1;
@@ -58,10 +58,10 @@ int Worker::DispatchAndWaitMsg() {
   if (channel == nullptr) {
     return -1;
   }
-  Cmd cmd = Cmd::kWaitForMsg;
+  CmdChannel::Cmd cmd = CmdChannel::Cmd::kWaitForMsg;
   channel->SendToMain(cmd);
   auto ret = channel->RecvFromMain(&cmd);
-  if (cmd == Cmd::kQuit) {
+  if (cmd == CmdChannel::Cmd::kQuit) {
     LOG(INFO) << GetWorkerName() << " recv stop msg, stoping...";
     Stop();
     return -1;
@@ -97,8 +97,8 @@ void Worker::SetContext(std::shared_ptr<WorkerContext> ctx) {
   ctx_ = ctx;
 }
 
-EventType Worker::GetType() {
-  return EventType::kWorkerUser;
+Event::Type Worker::GetType() {
+  return Event::Type::kWorkerUser;
 }
 
 std::shared_ptr<App> Worker::GetApp() {

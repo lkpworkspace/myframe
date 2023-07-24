@@ -26,8 +26,8 @@ class WorkerCommon final : public Worker {
   void Init() override;
   void Exit() override;
 
-  EventType GetType() override {
-    return EventType::kWorkerCommon;
+  Event::Type GetType() override {
+    return Event::Type::kWorkerCommon;
   }
 
   void SetActorContext(std::shared_ptr<ActorContext> context) {
