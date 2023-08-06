@@ -40,7 +40,6 @@ set(MYFRAME_CONF_DIR "conf")
 ### deps libs
 find_package(jsoncpp REQUIRED)
 find_package(gflags REQUIRED)
-find_package(GTest REQUIRED)
 
 link_libraries(
   pthread dl rt m
