@@ -5,6 +5,11 @@ aux_source_directory(. __srcs)
 
 ### lib
 add_library(${PROJECT_NAME} SHARED ${__srcs})
+target_include_directories(${PROJECT_NAME}
+    INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
 
 ### install
 file(GLOB header_files
@@ -26,7 +31,6 @@ install(FILES
     DESTINATION ${MYFRAME_INC_DIR}/${PROJECT_NAME}
 )
 install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
-    ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
-    RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
+    DESTINATION lib
+    EXPORT "${PROJECT_NAME}Targets"
 )
