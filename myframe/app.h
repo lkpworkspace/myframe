@@ -92,6 +92,7 @@ class App final : public std::enable_shared_from_this<App> {
     std::shared_ptr<Actor> inst,
     const std::string& params);
 
+  bool HasUserInst(const std::string& name);
   std::shared_ptr<WorkerTimer> GetTimerWorker();
 
   bool LoadActors(
@@ -128,6 +129,10 @@ class App final : public std::enable_shared_from_this<App> {
   std::atomic_bool quit_{true};
   std::mutex dispatch_mtx_;
   std::mutex local_mtx_;
+  /// 缓存消息列表
+  std::unordered_map<
+    std::string,
+    std::list<std::shared_ptr<Msg>>> cache_msg_;
   /// poller
   std::unique_ptr<Poller> poller_;
   /// 模块管理对象

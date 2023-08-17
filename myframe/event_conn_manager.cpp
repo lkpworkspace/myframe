@@ -70,9 +70,11 @@ void EventConnManager::Notify(
   std::shared_ptr<EventConn> ev = nullptr;
   ev = ev_mgr_->Get<EventConn>(h);
   if (ev == nullptr) {
+    LOG(ERROR) << "can't find handle " << h;
     return;
   }
   if (ev->GetConnType() == EventConn::Type::kSend) {
+    LOG(WARNING) << "event " << ev->GetName() << " need't resp msg";
     return;
   }
   // push msg to event_conn
