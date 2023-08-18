@@ -29,13 +29,7 @@ void OnShutDown(int sig) {
 int main(int argc, char** argv) {
   // 命令行参数解析
   myframe::ModuleArgument module_args(MYFRAME_CONF_DIR);
-  auto opt = module_args.ParseArgument(argc, argv);
-  if (opt == myframe::ModuleArgument::kGetHelpInfo
-      || opt == myframe::ModuleArgument::kNoArgument
-      || opt == myframe::ModuleArgument::kInvalidArgument) {
-    module_args.DisplayUsage();
-    return 0;
-  }
+  module_args.ParseArgument(argc, argv);
 
   // 初始化日志系统
   myframe::InitLog(MYFRAME_LOG_DIR, module_args.GetProcessName());

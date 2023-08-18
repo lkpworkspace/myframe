@@ -7,22 +7,16 @@ Author: likepeng <likepeng0418@163.com>
 #pragma once
 #include <string>
 #include <list>
+#include "cmdline.h"
 
 namespace myframe {
 
 class ModuleArgument final {
  public:
-  enum OptionReturnType {
-    kNoArgument,
-    kGetHelpInfo,
-    kInvalidArgument,
-    kOtherParameter,
-  };
   ModuleArgument(const std::string& sys_conf_dir);
   ~ModuleArgument() = default;
 
-  OptionReturnType ParseArgument(const int argc, char* const argv[]);
-  void DisplayUsage();
+  void ParseArgument(const int argc, char** argv);
   inline std::list<std::string> GetConfList() const { return conf_list_; }
   inline std::string GetConfDir() const { return conf_dir_; }
   inline std::string GetBinaryName() const { return binary_name_; }
@@ -44,6 +38,7 @@ class ModuleArgument final {
   std::string conf_dir_{""};
   std::string sys_conf_dir_{"conf"};
   std::list<std::string> conf_list_;
+  cmdline::parser parser_;
 };
 
 }  // namespace myframe
