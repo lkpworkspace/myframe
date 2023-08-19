@@ -33,7 +33,7 @@ jobs:
         #   -DDCHECK_ALWAYS_ON
         # unit test option:
         #   -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined
-        CXXFLAGS: ${{env.CXXFLAGS}} -DNDEBUG -fPIC -Wall -Wextra -Werror -pedantic-errors -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override
+        CXXFLAGS: ${{env.CXXFLAGS}} -DNDEBUG -Wall -Wextra -Werror -pedantic-errors -Wswitch-default -Wfloat-equal -Wshadow -Wcast-qual -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo -Wsuggest-override
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |

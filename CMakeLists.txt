@@ -11,14 +11,19 @@ if (CMAKE_COMPILER_IS_GNUCC)
   set(GCC_VERSION "${GCC_MAJOR}.${GCC_MINOR}")
 endif ()
 
+### option
+option(GENERATE_EXAMPLE "generate example library" ON)
+option(GENERATE_TEST "generate test exec" ON)
+
 ### cpp option
 if (GCC_VERSION GREATER "8.0")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra-semi")
 endif ()
 
-### option
-option(GENERATE_EXAMPLE "generate example library" ON)
-option(GENERATE_TEST "generate test exec" ON)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 ### output path
 set(MYFRAME_OUTPUT_ROOT "${CMAKE_BINARY_DIR}/output")
@@ -39,11 +44,10 @@ set(MYFRAME_CONF_DIR "conf")
 
 ### deps libs
 find_package(jsoncpp REQUIRED)
-find_package(gflags REQUIRED)
 
 link_libraries(
   pthread dl rt m
-  glog gflags
+  glog
   jsoncpp
   -Wl,-z,defs
 )
@@ -67,7 +71,7 @@ if (GENERATE_TEST)
 endif()
 
 ### install file/dir
-install(FILES 
+install(FILES
     "LICENSE"
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DESTINATION .

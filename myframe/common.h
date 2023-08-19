@@ -21,10 +21,11 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 
 #include <jsoncpp/json/json.h>
+#include "myframe/export.h"
 
 namespace myframe {
 
-class Common final {
+class MYFRAME_EXPORT Common final {
  public:
   static std::vector<std::string> GetDirFiles(const std::string& conf_path);
   static Json::Value LoadJsonFromFile(const std::string& json_file);

@@ -13,7 +13,6 @@ SET(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 #### dep 3rd lib
 FIND_PACKAGE(jsoncpp REQUIRED)
-FIND_PACKAGE(gflags REQUIRED)
 
 #### include directory
 INCLUDE_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/include)
@@ -21,7 +20,7 @@ INCLUDE_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/include)
 #### deps libs
 LINK_LIBRARIES(
     dl pthread
-    glog gflags
+    glog
     jsoncpp
     -Wl,-z,defs
 )

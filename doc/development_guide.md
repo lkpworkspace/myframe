@@ -71,11 +71,11 @@ make -C build -j "$(nproc)" install
 ### 运行组件
 ```sh
 cd ${myframe目录}/bin
-./launcher -c ${组件名}.json -p app
+./launcher -p app ${组件名}.json
 ```
 
 ### 查看运行日志
 ```sh
 cd ${myframe目录}/log
-vi ${日志}
+vi app.INFO
 ```

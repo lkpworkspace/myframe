@@ -12,6 +12,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/mailbox.h"
 
@@ -20,7 +21,7 @@ namespace myframe {
 class Msg;
 class ActorContext;
 class App;
-class Actor {
+class MYFRAME_EXPORT Actor {
   friend class App;
   friend class ActorContext;
   friend class ModLib;

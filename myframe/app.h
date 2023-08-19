@@ -17,6 +17,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/macros.h"
 #include "myframe/event.h"
+#include "myframe/export.h"
 
 namespace myframe {
 
@@ -35,7 +36,7 @@ class WorkerCommon;
 class WorkerTimer;
 class WorkerContextManager;
 class ModManager;
-class App final : public std::enable_shared_from_this<App> {
+class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   friend class Actor;
 
  public:

@@ -11,8 +11,16 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:include>
 )
 
+# export file
+include (GenerateExportHeader)
+generate_export_header (${PROJECT_NAME}
+  EXPORT_MACRO_NAME MYFRAME_EXPORT
+  EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/export.h"
+)
+
 ### install
 file(GLOB header_files
+    export.h
     macros.h
     common.h
     log.h

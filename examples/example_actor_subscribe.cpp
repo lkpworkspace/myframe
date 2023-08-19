@@ -53,7 +53,7 @@ class ExampleActorSub : public myframe::Actor {
   }
 };
 
-extern "C" std::shared_ptr<myframe::Actor> actor_create(
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
   if (actor_name == "example_b_pub") {
     return std::make_shared<ExampleActorPub>();

@@ -5,12 +5,13 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
+#include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/event.h"
 
 namespace myframe {
 
-class CmdChannel final {
+class MYFRAME_EXPORT CmdChannel final {
  public:
   enum class Cmd : char {
     kQuit = 'q',          ///< 退出

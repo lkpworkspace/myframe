@@ -8,11 +8,13 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 #include <string>
 
+#include "myframe/export.h"
+
 namespace myframe {
 
 typedef int ev_handle_t;
 
-class Event : public std::enable_shared_from_this<Event> {
+class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
  public:
   enum class Type : int {
     kWorkerCommon,
