@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/event_manager.h"
