@@ -10,7 +10,9 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-MYFRAME_EXPORT void InitLog(const std::string& log_dir, const std::string& bin_name);
+MYFRAME_EXPORT void InitLog(
+  const std::string& log_dir,
+  const std::string& bin_name);
 
 MYFRAME_EXPORT void ShutdownLog();
 
