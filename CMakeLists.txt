@@ -1,25 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(myframe VERSION 0.8.2)
 
-### gcc version
-if (CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpfullversion -dumpversion
-    OUTPUT_VARIABLE GCC_VERSION)
-  string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
-  list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
-  list(GET GCC_VERSION_COMPONENTS 1 GCC_MINOR)
-  set(GCC_VERSION "${GCC_MAJOR}.${GCC_MINOR}")
-endif ()
-
 ### option
 option(GENERATE_EXAMPLE "generate example library" ON)
 option(GENERATE_TEST "generate test exec" ON)
 
-### cpp option
-if (GCC_VERSION GREATER "8.0")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra-semi")
-endif ()
-
+### compile option
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -43,19 +29,15 @@ set(MYFRAME_SERVICE_DIR "service")
 set(MYFRAME_CONF_DIR "conf")
 
 ### deps libs
+find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
 
 link_libraries(
-  pthread dl rt m
+  Threads::Threads
+  ${CMAKE_DL_LIBS}
   glog
   jsoncpp
-  -Wl,-z,defs
 )
-if (GCC_VERSION LESS "8.0")
-  link_libraries(
-    stdc++fs
-  )
-endif ()
 
 ### include dir
 include_directories(.)

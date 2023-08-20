@@ -7,8 +7,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/actor_context.h"
 
-#include <assert.h>
-
 #include <sstream>
 
 #include <glog/logging.h>

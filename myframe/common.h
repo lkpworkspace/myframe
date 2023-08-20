@@ -13,11 +13,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #if __has_include(<filesystem>)
 #include <filesystem>
 namespace stdfs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace stdfs = std::experimental::filesystem;
 #else
-#error "no filesystem"
+#error "no filesystem header"
 #endif
 
 #include <jsoncpp/json/json.h>
