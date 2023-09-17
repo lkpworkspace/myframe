@@ -44,7 +44,7 @@ class ExampleWorkerInteractive : public myframe::Worker {
       return;
     }
     while (1) {
-      const auto& msg = mailbox->PopRecv();
+      const auto msg = mailbox->PopRecv();
       if (msg == nullptr) {
         break;
       }

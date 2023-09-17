@@ -45,7 +45,7 @@ class @template_name@Worker : public myframe::Worker {
             std::make_shared<myframe::Msg>("this is template worker req"));
     DispatchAndWaitMsg();
     while (1) {
-      const auto& msg = mailbox->PopRecv();
+      const auto msg = mailbox->PopRecv();
       if (msg == nullptr) {
         break;
       }
