@@ -36,6 +36,11 @@ class MYFRAME_EXPORT CmdChannel final {
  private:
   void CreateSockpair();
   void CloseSockpair();
+
+  bool SetSockRecvTimeout(int fd, int timeout_ms);
+  bool SetNonblockFd(int fd, bool b);
+  bool IsBlockFd(int fd);
+
   ev_handle_t sockpair_[2] {-1, -1};
 
   DISALLOW_COPY_AND_ASSIGN(CmdChannel)

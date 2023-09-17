@@ -7,27 +7,14 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/common.h"
 
-#include <string.h>
 #include <dirent.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <fstream>
 #include <sstream>
 
 namespace myframe {
-
-std::vector<std::string> Common::SplitMsgName(const std::string& name) {
-  std::vector<std::string> name_list;
-  std::string item;
-  std::stringstream ss(name);
-  while (std::getline(ss, item, '.')) {
-    name_list.push_back(item);
-  }
-  return name_list;
-}
 
 std::vector<std::string> Common::GetDirFiles(const std::string& conf_path) {
   std::vector<std::string> res;
@@ -58,38 +45,6 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
   }
   ifs.close();
   return root;
-}
-
-uint64_t Common::GetMonoTimeMs() {
-  uint64_t t;
-  struct timespec ti;
-  clock_gettime(CLOCK_MONOTONIC, &ti);
-  t = static_cast<uint64_t>(ti.tv_sec * 1000);
-  t += ti.tv_nsec / 1000000;
-  return t;
-}
-
-bool Common::SetSockRecvTimeout(int fd, int timeout_ms) {
-  struct timeval timeout = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
-  return 0 == setsockopt(
-    fd, SOL_SOCKET, SO_RCVTIMEO,
-    reinterpret_cast<const char*>(&timeout),
-    sizeof(timeout));
-}
-
-bool Common::SetNonblockFd(int fd, bool b) {
-  int flags = fcntl(fd, F_GETFL, 0);
-  if (b) {
-    flags |= O_NONBLOCK;
-  } else {
-    flags &= ~O_NONBLOCK;
-  }
-  return fcntl(fd, F_SETFL, flags) != -1;
-}
-
-bool Common::IsBlockFd(int fd) {
-  int flags = fcntl(fd, F_GETFL, 0);
-  return !(flags & O_NONBLOCK);
 }
 
 stdfs::path Common::GetWorkRoot() {
@@ -133,6 +88,16 @@ bool Common::IsAbsolutePath(const std::string& path) {
     return true;
   }
   return false;
+}
+
+std::vector<std::string> Common::SplitMsgName(const std::string& name) {
+  std::vector<std::string> name_list;
+  std::string item;
+  std::stringstream ss(name);
+  while (std::getline(ss, item, '.')) {
+    name_list.push_back(item);
+  }
+  return name_list;
 }
 
 }  // namespace myframe

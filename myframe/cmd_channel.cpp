@@ -8,6 +8,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 #include <glog/logging.h>
 
@@ -38,11 +39,11 @@ void CmdChannel::CreateSockpair() {
     LOG(ERROR) << "create sockpair failed";
     return;
   }
-  if (!Common::SetNonblockFd(sockpair_[0], false)) {
+  if (!SetNonblockFd(sockpair_[0], false)) {
     LOG(ERROR) << "set sockpair[0] block failed, " << strerror(errno);
     return;
   }
-  if (!Common::SetNonblockFd(sockpair_[1], false)) {
+  if (!SetNonblockFd(sockpair_[1], false)) {
     LOG(ERROR) << "set sockpair[1] block failed, " << strerror(errno);
     return;
   }
@@ -80,17 +81,17 @@ int CmdChannel::RecvFromOwner(Cmd* cmd) {
 int CmdChannel::RecvFromMain(Cmd* cmd, int timeout_ms) {
   if (timeout_ms < 0) {
     // block
-    if (!Common::IsBlockFd(sockpair_[0])) {
-      Common::SetNonblockFd(sockpair_[0], false);
+    if (!IsBlockFd(sockpair_[0])) {
+      SetNonblockFd(sockpair_[0], false);
     }
   } else if (timeout_ms == 0) {
     // nonblock
-    if (Common::IsBlockFd(sockpair_[0])) {
-      Common::SetNonblockFd(sockpair_[0], true);
+    if (IsBlockFd(sockpair_[0])) {
+      SetNonblockFd(sockpair_[0], true);
     }
   } else {
     // timeout
-    Common::SetSockRecvTimeout(sockpair_[0], timeout_ms);
+    SetSockRecvTimeout(sockpair_[0], timeout_ms);
   }
   char cmd_char;
   int ret = read(sockpair_[0], &cmd_char, 1);
@@ -109,6 +110,29 @@ int CmdChannel::SendToMain(const Cmd& cmd) {
     LOG(ERROR) << "write 0 cmd failed, " << strerror(errno);
   }
   return ret;
+}
+
+bool CmdChannel::SetSockRecvTimeout(int fd, int timeout_ms) {
+  struct timeval timeout = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
+  return 0 == setsockopt(
+    fd, SOL_SOCKET, SO_RCVTIMEO,
+    reinterpret_cast<const char*>(&timeout),
+    sizeof(timeout));
+}
+
+bool CmdChannel::SetNonblockFd(int fd, bool b) {
+  int flags = fcntl(fd, F_GETFL, 0);
+  if (b) {
+    flags |= O_NONBLOCK;
+  } else {
+    flags &= ~O_NONBLOCK;
+  }
+  return fcntl(fd, F_SETFL, flags) != -1;
+}
+
+bool CmdChannel::IsBlockFd(int fd) {
+  int flags = fcntl(fd, F_GETFL, 0);
+  return !(flags & O_NONBLOCK);
 }
 
 }  // namespace myframe

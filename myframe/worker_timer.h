@@ -58,6 +58,7 @@ class TimerManager final {
   void _MoveList(int level, int idx);
   void _Shift();
   void _Dispath(List* cur);
+  uint64_t GetMonoTimeMs();
 
   List tv1_[TVR_SIZE];
   List tv2_[TVN_SIZE];
