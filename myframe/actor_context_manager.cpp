@@ -76,7 +76,7 @@ bool ActorContextManager::HasActor(const std::string& name) {
 }
 
 void ActorContextManager::PrintWaitQueue() {
-  DLOG(INFO) << "cur wait queue actor:";
+  VLOG(1) << "cur wait queue actor:";
   auto it = wait_queue_.begin();
   while (it != wait_queue_.end()) {
     auto ctx = it->lock();
@@ -84,7 +84,7 @@ void ActorContextManager::PrintWaitQueue() {
       LOG(ERROR) << "context is nullptr";
       continue;
     }
-    DLOG(INFO) << "---> " << *ctx;
+    VLOG(1) << "---> " << *ctx;
     ++it;
   }
 }
@@ -115,7 +115,7 @@ std::shared_ptr<ActorContext> ActorContextManager::GetContextWithMsg() {
     }
   }
   for (std::size_t i = 0; i < in_runing_context.size(); ++i) {
-    DLOG(INFO) << in_runing_context[i]->GetActor()->GetActorName()
+    VLOG(1) << in_runing_context[i]->GetActor()->GetActorName()
                << " is runing, move to wait queue back";
     wait_queue_.push_back(in_runing_context[i]);
   }
@@ -124,7 +124,7 @@ std::shared_ptr<ActorContext> ActorContextManager::GetContextWithMsg() {
 
 void ActorContextManager::PushContext(std::shared_ptr<ActorContext> ctx) {
   if (ctx->IsInWaitQueue()) {
-    DLOG(INFO) << *ctx << " already in wait queue, return";
+    VLOG(1) << *ctx << " already in wait queue, return";
     PrintWaitQueue();
     return;
   }

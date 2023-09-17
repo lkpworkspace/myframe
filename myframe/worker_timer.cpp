@@ -178,7 +178,7 @@ int WorkerTimer::SetTimeout(
   const std::string& actor_name,
   const std::string& timer_name,
   int time) {
-  DLOG(INFO) << actor_name << " set timeout(" << timer_name
+  VLOG(1) << actor_name << " set timeout(" << timer_name
              << "): " << (time * 10) << "ms";
   return timer_mgr_.Timeout(actor_name, timer_name, time);
 }
