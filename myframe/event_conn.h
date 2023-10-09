@@ -27,7 +27,7 @@ class EventConn final : public Event {
     kSend,
   };
 
-  EventConn() = default;
+  explicit EventConn();
 
   ev_handle_t GetHandle() const override;
   Event::Type GetType() const override;
@@ -47,7 +47,7 @@ class EventConn final : public Event {
   Mailbox* GetMailbox();
   CmdChannel* GetCmdChannel();
 
-  CmdChannel cmd_channel_;
+  std::shared_ptr<CmdChannel> cmd_channel_;
   Mailbox mailbox_;
   EventConn::Type conn_type_{ EventConn::Type::kSendReq };
 

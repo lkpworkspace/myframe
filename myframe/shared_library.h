@@ -6,10 +6,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <mutex>
-#include <shared_mutex>
-#include <memory>
 #include <string>
+#include <memory>
 
 #include "myframe/macros.h"
 
@@ -32,25 +30,28 @@ class SharedLibrary {
   };
 
   SharedLibrary() = default;
-  virtual ~SharedLibrary();
+  virtual ~SharedLibrary() = default;
 
-  bool Load(const std::string& path);
-  bool Load(const std::string& path, Flags flags);
+  static std::shared_ptr<SharedLibrary> Create();
 
-  void Unload();
+  virtual bool Load(const std::string& path) = 0;
+  virtual bool Load(const std::string& path, Flags flags) = 0;
 
-  bool IsLoaded();
+  virtual void Unload() = 0;
 
-  bool HasSymbol(const std::string& name);
+  virtual bool IsLoaded() = 0;
 
-  void* GetSymbol(const std::string& name);
+  virtual bool HasSymbol(const std::string& name) = 0;
+
+  virtual void* GetSymbol(const std::string& name) = 0;
 
   inline const std::string& GetPath() const { return path_; }
 
+ protected:
+  inline void SetPath(const std::string& path) { path_ = path; }
+
  private:
-  void* handle_{ nullptr };
   std::string path_;
-  std::mutex mutex_;
 
   DISALLOW_COPY_AND_ASSIGN(SharedLibrary)
 };

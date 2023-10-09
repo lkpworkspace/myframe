@@ -20,6 +20,7 @@ generate_export_header (${PROJECT_NAME}
 
 ### install
 file(GLOB header_files
+    platform.h
     export.h
     macros.h
     common.h
@@ -27,6 +28,7 @@ file(GLOB header_files
     msg.h
     mailbox.h
     cmd_channel.h
+    poller.h
     actor.h
     event.h
     worker.h

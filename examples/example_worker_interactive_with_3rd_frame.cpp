@@ -21,32 +21,34 @@ Author: 李柯鹏 <likepeng0418@163.com>
 template <typename T>
 class MyQueue final {
  public:
-  MyQueue() = default;
+  MyQueue() {
+    cmd_channel_ = myframe::CmdChannel::Create();
+  }
   ~MyQueue() = default;
 
-  int GetFd0() { return cmd_channel_.GetOwnerHandle(); }
-  int GetFd1() { return cmd_channel_.GetMainHandle(); }
+  int GetFd0() { return cmd_channel_->GetOwnerHandle(); }
+  int GetFd1() { return cmd_channel_->GetMainHandle(); }
 
   void Push(std::shared_ptr<T> data) {
     data_ = data;
     myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
-    cmd_channel_.SendToOwner(cmd);
-    cmd_channel_.RecvFromOwner(&cmd);
+    cmd_channel_->SendToOwner(cmd);
+    cmd_channel_->RecvFromOwner(&cmd);
   }
 
   std::shared_ptr<T> Pop() {
     std::shared_ptr<T> ret = nullptr;
     myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
-    cmd_channel_.RecvFromMain(&cmd);
+    cmd_channel_->RecvFromMain(&cmd);
     ret = data_;
     data_ = nullptr;
-    cmd_channel_.SendToMain(myframe::CmdChannel::Cmd::kIdle);
+    cmd_channel_->SendToMain(myframe::CmdChannel::Cmd::kIdle);
     return ret;
   }
 
  private:
   std::shared_ptr<T> data_;
-  myframe::CmdChannel cmd_channel_;
+  std::shared_ptr<myframe::CmdChannel> cmd_channel_;
 };
 
 /**

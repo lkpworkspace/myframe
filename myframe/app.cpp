@@ -44,7 +44,7 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : poller_(new Poller())
+  : poller_(Poller::Create())
   , mods_(new ModManager())
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_mgr_(new EventManager())

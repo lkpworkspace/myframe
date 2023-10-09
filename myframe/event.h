@@ -24,7 +24,7 @@ class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
   };
 
   Event() = default;
-  virtual ~Event() {}
+  virtual ~Event() = default;
 
   /* 事件类型 */
   virtual Type GetType() const { return Type::kWorkerUser; }

@@ -31,7 +31,7 @@ bool ModManager::LoadMod(const std::string& dl_path) {
     VLOG(1) << dlname << " has loaded";
     return true;
   }
-  auto lib = std::make_shared<SharedLibrary>();
+  auto lib = SharedLibrary::Create();
   if (!lib->Load(dl_path, SharedLibrary::Flags::kLocal)) {
     return false;
   }

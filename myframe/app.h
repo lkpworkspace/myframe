@@ -135,7 +135,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
     std::string,
     std::list<std::shared_ptr<Msg>>> cache_msg_;
   /// poller
-  std::unique_ptr<Poller> poller_;
+  std::shared_ptr<Poller> poller_;
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// 句柄管理对象

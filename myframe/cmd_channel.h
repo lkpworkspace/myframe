@@ -5,13 +5,15 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
+#include <memory>
+
 #include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/event.h"
 
 namespace myframe {
 
-class MYFRAME_EXPORT CmdChannel final {
+class MYFRAME_EXPORT CmdChannel {
  public:
   enum class Cmd : char {
     kQuit = 'q',          ///< 退出
@@ -20,29 +22,21 @@ class MYFRAME_EXPORT CmdChannel final {
     kRun = 'r',           ///< 运行
     kRunWithMsg = 'm',    ///< 运行(有消息)
   };
+  CmdChannel() = default;
+  virtual ~CmdChannel() = default;
 
-  CmdChannel();
-  virtual ~CmdChannel();
+  static std::shared_ptr<CmdChannel> Create();
 
-  ev_handle_t GetOwnerHandle() const;
-  ev_handle_t GetMainHandle() const;
+  virtual ev_handle_t GetOwnerHandle() const = 0;
+  virtual ev_handle_t GetMainHandle() const = 0;
 
-  int SendToOwner(const Cmd& cmd);
-  int RecvFromOwner(Cmd* cmd);
+  virtual int SendToOwner(const Cmd& cmd) = 0;
+  virtual int RecvFromOwner(Cmd* cmd) = 0;
 
-  int SendToMain(const Cmd& cmd);
-  int RecvFromMain(Cmd* cmd, int timeout_ms = -1);
+  virtual int SendToMain(const Cmd& cmd) = 0;
+  virtual int RecvFromMain(Cmd* cmd, int timeout_ms = -1) = 0;
 
  private:
-  void CreateSockpair();
-  void CloseSockpair();
-
-  bool SetSockRecvTimeout(int fd, int timeout_ms);
-  bool SetNonblockFd(int fd, bool b);
-  bool IsBlockFd(int fd);
-
-  ev_handle_t sockpair_[2] {-1, -1};
-
   DISALLOW_COPY_AND_ASSIGN(CmdChannel)
 };
 

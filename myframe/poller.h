@@ -10,29 +10,25 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <atomic>
 #include <vector>
 
+#include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/event.h"
 
-struct epoll_event;
-
 namespace myframe {
 
-class Poller final {
+class MYFRAME_EXPORT Poller {
  public:
-  explicit Poller() = default;
-  ~Poller();
+  Poller() = default;
+  virtual ~Poller() = default;
 
-  bool Init();
-  bool Add(const std::shared_ptr<Event>&) const;
-  bool Del(const std::shared_ptr<Event>&) const;
-  int Wait(std::vector<ev_handle_t>* evs, int timeout_ms = 100);
+  static std::shared_ptr<Poller> Create();
+
+  virtual bool Init() = 0;
+  virtual bool Add(const std::shared_ptr<Event>&) const = 0;
+  virtual bool Del(const std::shared_ptr<Event>&) const = 0;
+  virtual int Wait(std::vector<ev_handle_t>* evs, int timeout_ms = 100) = 0;
 
  private:
-  std::atomic_bool init_{false};
-  int poll_fd_{-1};
-  size_t max_ev_count_{64};
-  struct epoll_event* evs_{nullptr};
-
   DISALLOW_COPY_AND_ASSIGN(Poller)
 };
 

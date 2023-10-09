@@ -23,6 +23,7 @@ WorkerContext::WorkerContext(
   : runing_(false)
   , worker_(worker)
   , app_(app) {
+  cmd_channel_ = CmdChannel::Create();
 }
 
 WorkerContext::~WorkerContext() {
@@ -30,7 +31,7 @@ WorkerContext::~WorkerContext() {
 }
 
 ev_handle_t WorkerContext::GetHandle() const {
-  return cmd_channel_.GetMainHandle();
+  return cmd_channel_->GetMainHandle();
 }
 
 Event::Type WorkerContext::GetType() const {
@@ -72,7 +73,7 @@ void WorkerContext::ListenThread() {
     worker_->Run();
   }
   worker_->Exit();
-  cmd_channel_.SendToMain(CmdChannel::Cmd::kQuit);
+  cmd_channel_->SendToMain(CmdChannel::Cmd::kQuit);
 }
 
 std::size_t WorkerContext::CacheSize() const {
@@ -96,7 +97,7 @@ Mailbox* WorkerContext::GetMailbox() {
 }
 
 CmdChannel* WorkerContext::GetCmdChannel() {
-  return &cmd_channel_;
+  return cmd_channel_.get();
 }
 
 std::shared_ptr<App> WorkerContext::GetApp() {

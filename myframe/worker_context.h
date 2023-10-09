@@ -96,7 +96,7 @@ class WorkerContext final : public Event {
   Mailbox mailbox_;
 
   /// cmd channel
-  CmdChannel cmd_channel_;
+  std::shared_ptr<CmdChannel> cmd_channel_;
 
   /// thread
   std::thread th_;
