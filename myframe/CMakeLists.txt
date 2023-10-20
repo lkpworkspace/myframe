@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+### config
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
+
 ### source
 aux_source_directory(. __srcs)
 
@@ -20,6 +23,7 @@ generate_export_header (${PROJECT_NAME}
 
 ### install
 file(GLOB header_files
+    config.h
     platform.h
     export.h
     macros.h

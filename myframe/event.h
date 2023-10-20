@@ -8,11 +8,21 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 #include <string>
 
+#include "myframe/config.h"
 #include "myframe/export.h"
+#include "myframe/platform.h"
 
 namespace myframe {
 
-typedef int ev_handle_t;
+#ifdef MYFRAME_USE_CV
+  typedef void* ev_handle_t;
+#else
+  #ifdef MYFRAME_OS_LINUX
+    typedef int ev_handle_t;
+  #else
+    typedef void* ev_handle_t;
+  #endif
+#endif
 
 class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
  public:
@@ -35,7 +45,15 @@ class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
   /* 事件名称 */
   virtual std::string GetName() const = 0;
 
-  static const ev_handle_t DEFAULT_EV_HANDLE{-1};
+#ifdef MYFRAME_USE_CV
+  static const ev_handle_t DEFAULT_EV_HANDLE;
+#else
+  #ifdef MYFRAME_OS_LINUX
+    static const ev_handle_t DEFAULT_EV_HANDLE{-1};
+  #else
+    static const ev_handle_t DEFAULT_EV_HANDLE;
+  #endif
+#endif
 };
 
 }  // namespace myframe

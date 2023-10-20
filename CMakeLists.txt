@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 project(myframe VERSION 0.8.2)
 
 ### option
-option(GENERATE_EXAMPLE "generate example library" ON)
-option(GENERATE_TEST "generate test exec" ON)
+option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
+option(GENERATE_EXAMPLE "Generate example library" ON)
+option(GENERATE_TEST "Generate test exec" ON)
 
 ### compile option
 set(CMAKE_C_VISIBILITY_PRESET hidden)

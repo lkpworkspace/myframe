@@ -30,7 +30,10 @@ class WorkerContext final : public Event {
     kWorker,
   };
 
-  WorkerContext(std::shared_ptr<App> app, std::shared_ptr<Worker> worker);
+  WorkerContext(
+    std::shared_ptr<App> app,
+    std::shared_ptr<Worker> worker,
+    std::shared_ptr<Poller> poller);
   virtual ~WorkerContext();
 
   /// thread 相关函数

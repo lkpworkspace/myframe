@@ -17,11 +17,14 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 class Msg;
+class Poller;
 class EventManager;
 class EventConn;
 class EventConnManager final {
  public:
-  EventConnManager(std::shared_ptr<EventManager>);
+  EventConnManager(
+    std::shared_ptr<EventManager>,
+    std::shared_ptr<Poller>);
   virtual ~EventConnManager();
 
   bool Init(int sz = 2);
@@ -39,6 +42,7 @@ class EventConnManager final {
   std::mutex mtx_;
   std::list<std::shared_ptr<EventConn>> idle_conn_;
   std::shared_ptr<EventManager> ev_mgr_;
+  std::shared_ptr<Poller> poller_;
 
   DISALLOW_COPY_AND_ASSIGN(EventConnManager)
 };

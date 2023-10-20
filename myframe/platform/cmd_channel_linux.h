@@ -9,6 +9,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <sys/types.h>
 #include <fcntl.h>
 
+#include <memory>
+
 #include <glog/logging.h>
 
 #include "myframe/common.h"
@@ -21,7 +23,7 @@ namespace myframe {
 
 class CmdChannelLinux final : public CmdChannel {
  public:
-  CmdChannelLinux();
+  explicit CmdChannelLinux(std::shared_ptr<Poller>);
   virtual ~CmdChannelLinux();
 
   ev_handle_t GetOwnerHandle() const override;
@@ -46,7 +48,8 @@ class CmdChannelLinux final : public CmdChannel {
   DISALLOW_COPY_AND_ASSIGN(CmdChannelLinux)
 };
 
-CmdChannelLinux::CmdChannelLinux() {
+CmdChannelLinux::CmdChannelLinux(std::shared_ptr<Poller> poller)
+  : CmdChannel(poller) {
   CreateSockpair();
 }
 

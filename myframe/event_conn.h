@@ -12,6 +12,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/event.h"
 #include "myframe/mailbox.h"
 #include "myframe/cmd_channel.h"
+#include "myframe/poller.h"
 
 namespace myframe {
 
@@ -27,7 +28,7 @@ class EventConn final : public Event {
     kSend,
   };
 
-  explicit EventConn();
+  explicit EventConn(std::shared_ptr<Poller>);
 
   ev_handle_t GetHandle() const override;
   Event::Type GetType() const override;

@@ -44,11 +44,11 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : poller_(Poller::Create())
-  , mods_(new ModManager())
+  : mods_(new ModManager())
+  , poller_(Poller::Create())
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_mgr_(new EventManager())
-  , ev_conn_mgr_(new EventConnManager(ev_mgr_))
+  , ev_conn_mgr_(new EventConnManager(ev_mgr_, poller_))
   , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_))
 {}
 
@@ -272,7 +272,7 @@ bool App::AddWorker(
   std::shared_ptr<Worker> worker,
   const Json::Value& config) {
   auto worker_ctx = std::make_shared<WorkerContext>(
-    shared_from_this(), worker);
+    shared_from_this(), worker, poller_);
   worker->SetContext(worker_ctx);
   worker->SetInstName(inst_name);
   worker->SetConfig(config);
@@ -624,7 +624,7 @@ void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
 void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   // 将actor的发送队列分发完毕
   auto worker = worker_ctx->GetWorker<WorkerCommon>();
-  DLOG_IF(INFO, worker->GetActorContext() != nullptr)
+  VLOG_IF(1, worker->GetActorContext() != nullptr)
       << *worker_ctx << " dispatch "
       << worker->GetActorContext()->GetActor()->GetActorName() << " msg...";
   DispatchMsg(worker->GetActorContext());
@@ -677,11 +677,16 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
 }
 
 void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
-  DLOG_IF(INFO, evs.size() > 0) << "get " << evs.size() << " event";
+  VLOG_IF(1, evs.size() > 0) << "get " << evs.size() << " event";
   for (size_t i = 0; i < evs.size(); ++i) {
     auto ev_obj = ev_mgr_->Get<Event>(evs[i]);
     if (ev_obj == nullptr) {
-      LOG(ERROR) << "can't find ev obj, handle " << evs[i];
+      std::stringstream ss;
+      for (size_t x = 0; x < evs.size(); ++x) {
+        ss << evs[x] << ", ";
+      }
+      LOG(WARNING) << "get evs " << ss.str();
+      LOG(WARNING) << "can't find ev obj, handle " << evs[i];
       continue;
     }
     switch (ev_obj->GetType()) {

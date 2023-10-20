@@ -12,17 +12,19 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
+#include "myframe/config.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/cmd_channel.h"
 #include "myframe/actor.h"
 #include "myframe/worker.h"
 
+#ifndef MYFRAME_USE_CV
 template <typename T>
 class MyQueue final {
  public:
   MyQueue() {
-    cmd_channel_ = myframe::CmdChannel::Create();
+    cmd_channel_ = myframe::CmdChannel::Create(nullptr);
   }
   ~MyQueue() = default;
 
@@ -164,21 +166,32 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
  private:
   int seq_num_{0};
 };
+#endif
 
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
+#ifdef MYFRAME_USE_CV
+  (void)worker_name;
+  LOG(ERROR) << "Unsupport example_worker_interactive_with_3rd_frame";
+#else
   if (worker_name == "example_worker_interactive_with_3rd_frame") {
     return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
   }
+#endif
   return nullptr;
 }
 
 /* 创建actor实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
+#ifdef MYFRAME_USE_CV
+  (void)actor_name;
+  LOG(ERROR) << "Unsupport example_actor_interactive_with_3rd_frame";
+#else
   if (actor_name == "example_actor_interactive_with_3rd_frame") {
     return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
   }
+#endif
   return nullptr;
 }

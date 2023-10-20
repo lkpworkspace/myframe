@@ -14,3 +14,4 @@ build/
 launcher/launcher_config.h
 test/performance_test_config.h
 myframe/export.h
+myframe/config.h

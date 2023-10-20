@@ -24,9 +24,10 @@ class MYFRAME_EXPORT Poller {
   static std::shared_ptr<Poller> Create();
 
   virtual bool Init() = 0;
-  virtual bool Add(const std::shared_ptr<Event>&) const = 0;
-  virtual bool Del(const std::shared_ptr<Event>&) const = 0;
+  virtual bool Add(const std::shared_ptr<Event>&) const { return true; }
+  virtual bool Del(const std::shared_ptr<Event>&) const { return true; }
   virtual int Wait(std::vector<ev_handle_t>* evs, int timeout_ms = 100) = 0;
+  virtual void Notify(ev_handle_t) {}
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Poller)

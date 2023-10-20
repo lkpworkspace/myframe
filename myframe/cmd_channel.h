@@ -10,6 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/event.h"
+#include "myframe/poller.h"
 
 namespace myframe {
 
@@ -22,10 +23,11 @@ class MYFRAME_EXPORT CmdChannel {
     kRun = 'r',           ///< 运行
     kRunWithMsg = 'm',    ///< 运行(有消息)
   };
-  CmdChannel() = default;
+  explicit CmdChannel(std::shared_ptr<Poller> poller)
+    : poller_(poller) {}
   virtual ~CmdChannel() = default;
 
-  static std::shared_ptr<CmdChannel> Create();
+  static std::shared_ptr<CmdChannel> Create(std::shared_ptr<Poller>);
 
   virtual ev_handle_t GetOwnerHandle() const = 0;
   virtual ev_handle_t GetMainHandle() const = 0;
@@ -35,6 +37,9 @@ class MYFRAME_EXPORT CmdChannel {
 
   virtual int SendToMain(const Cmd& cmd) = 0;
   virtual int RecvFromMain(Cmd* cmd, int timeout_ms = -1) = 0;
+
+ protected:
+  std::shared_ptr<Poller> poller_{nullptr};
 
  private:
   DISALLOW_COPY_AND_ASSIGN(CmdChannel)

@@ -134,10 +134,11 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   std::unordered_map<
     std::string,
     std::list<std::shared_ptr<Msg>>> cache_msg_;
-  /// poller
-  std::shared_ptr<Poller> poller_;
+
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
+  /// poller
+  std::shared_ptr<Poller> poller_;
   /// 句柄管理对象
   std::unique_ptr<ActorContextManager> actor_ctx_mgr_;
   /// 事件管理对象

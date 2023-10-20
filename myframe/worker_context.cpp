@@ -19,11 +19,12 @@ namespace myframe {
 
 WorkerContext::WorkerContext(
   std::shared_ptr<App> app,
-  std::shared_ptr<Worker> worker)
+  std::shared_ptr<Worker> worker,
+  std::shared_ptr<Poller> poller)
   : runing_(false)
   , worker_(worker)
   , app_(app) {
-  cmd_channel_ = CmdChannel::Create();
+  cmd_channel_ = CmdChannel::Create(poller);
 }
 
 WorkerContext::~WorkerContext() {

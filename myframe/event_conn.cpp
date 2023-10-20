@@ -13,8 +13,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-EventConn::EventConn() {
-  cmd_channel_ = CmdChannel::Create();
+EventConn::EventConn(std::shared_ptr<Poller> poller) {
+  cmd_channel_ = CmdChannel::Create(poller);
 }
 
 ev_handle_t EventConn::GetHandle() const {
