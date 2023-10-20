@@ -10,7 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #ifdef MYFRAME_USE_CV
 #include "myframe/platform/poller_generic.h"
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   #include "myframe/platform/poller_linux.h"
   #else
   #include "myframe/platform/poller_generic.h"
@@ -23,7 +23,7 @@ std::shared_ptr<Poller> Poller::Create() {
 #ifdef MYFRAME_USE_CV
   return std::make_shared<PollerGeneric>();
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
     return std::make_shared<PollerLinux>();
   #else
     return std::make_shared<PollerGeneric>();

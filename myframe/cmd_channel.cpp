@@ -10,7 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #ifdef MYFRAME_USE_CV
 #include "myframe/platform/cmd_channel_generic.h"
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   #include "myframe/platform/cmd_channel_linux.h"
   #else
   #include "myframe/platform/cmd_channel_generic.h"
@@ -24,7 +24,7 @@ std::shared_ptr<CmdChannel> CmdChannel::Create(
 #ifdef MYFRAME_USE_CV
   return std::make_shared<CmdChannelGeneric>(poller);
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
     return std::make_shared<CmdChannelLinux>(poller);
   #else
     return std::make_shared<CmdChannelGeneric>(poller);

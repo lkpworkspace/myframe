@@ -9,7 +9,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <string.h>
 
 #include "myframe/platform.h"
-#ifdef MYFRAME_OS_LINUX
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <dirent.h>
 #include <unistd.h>
 #else
@@ -24,7 +24,7 @@ namespace myframe {
 
 std::vector<std::string> Common::GetDirFiles(const std::string& conf_path) {
   std::vector<std::string> res;
-#ifdef MYFRAME_OS_LINUX
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   DIR* dir = opendir(conf_path.c_str());
   if (dir == nullptr) {
     return res;
@@ -58,7 +58,7 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
 }
 
 stdfs::path Common::GetWorkRoot() {
-#ifdef MYFRAME_OS_LINUX
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   char path_buf[256];
   memset(path_buf, 0, sizeof(path_buf));
   int ret = readlink("/proc/self/exe", path_buf, sizeof(path_buf));

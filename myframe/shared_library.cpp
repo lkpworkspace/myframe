@@ -7,7 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/shared_library.h"
 #include "myframe/platform.h"
 
-#ifdef MYFRAME_OS_LINUX
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include "myframe/platform/shared_library_linux.h"
 #else
 #error "Platform not supported"
@@ -16,7 +16,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 std::shared_ptr<SharedLibrary> SharedLibrary::Create() {
-#ifdef MYFRAME_OS_LINUX
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   return std::make_shared<SharedLibraryLinux>();
 #else
   return nullptr;

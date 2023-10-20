@@ -11,7 +11,7 @@ namespace myframe {
 #ifdef MYFRAME_USE_CV
   const ev_handle_t Event::DEFAULT_EV_HANDLE{nullptr};
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
     // do nothing
   #else
     const ev_handle_t Event::DEFAULT_EV_HANDLE{nullptr};

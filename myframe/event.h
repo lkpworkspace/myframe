@@ -17,7 +17,7 @@ namespace myframe {
 #ifdef MYFRAME_USE_CV
   typedef void* ev_handle_t;
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
     typedef int ev_handle_t;
   #else
     typedef void* ev_handle_t;
@@ -48,7 +48,7 @@ class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
 #ifdef MYFRAME_USE_CV
   static const ev_handle_t DEFAULT_EV_HANDLE;
 #else
-  #ifdef MYFRAME_OS_LINUX
+  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
     static const ev_handle_t DEFAULT_EV_HANDLE{-1};
   #else
     static const ev_handle_t DEFAULT_EV_HANDLE;
