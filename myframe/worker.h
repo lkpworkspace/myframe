@@ -128,6 +128,7 @@ class MYFRAME_EXPORT Worker {
 
 }  // namespace myframe
 
+template class std::shared_ptr<myframe::Worker>;
 extern "C" {
 typedef std::shared_ptr<myframe::Worker> (*worker_create_func_t)(
     const std::string&);

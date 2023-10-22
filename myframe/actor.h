@@ -128,6 +128,7 @@ class MYFRAME_EXPORT Actor {
 
 }  // namespace myframe
 
+template class std::shared_ptr<myframe::Actor>;
 extern "C" {
 typedef std::shared_ptr<myframe::Actor> (*actor_create_func_t)(
     const std::string&);

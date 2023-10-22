@@ -167,7 +167,7 @@ void WorkerTimer::Run() {
     DispatchMsg();
     cur_us_ = 0;
   }
-  usleep(sleep_us_);
+  std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
   cur_us_ += sleep_us_;
 }
 

@@ -4,7 +4,9 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <poll.h>
+#endif
 
 #include <chrono>
 #include <thread>
@@ -19,7 +21,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/actor.h"
 #include "myframe/worker.h"
 
-#ifndef MYFRAME_USE_CV
+#if (defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
+    && !defined(MYFRAME_USE_CV)
 template <typename T>
 class MyQueue final {
  public:
@@ -171,7 +174,8 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
-#ifdef MYFRAME_USE_CV
+#if !(defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
+    || defined(MYFRAME_USE_CV)
   (void)worker_name;
   LOG(ERROR) << "Unsupport example_worker_interactive_with_3rd_frame";
 #else
@@ -185,7 +189,8 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
 /* 创建actor实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-#ifdef MYFRAME_USE_CV
+#if !(defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
+    || defined(MYFRAME_USE_CV)
   (void)actor_name;
   LOG(ERROR) << "Unsupport example_actor_interactive_with_3rd_frame";
 #else
