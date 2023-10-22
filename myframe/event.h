@@ -14,14 +14,21 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-#ifdef MYFRAME_USE_CV
-  typedef void* ev_handle_t;
-#else
-  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-    typedef int ev_handle_t;
-  #else
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  #ifdef MYFRAME_USE_CV
     typedef void* ev_handle_t;
+  #else
+    typedef int ev_handle_t;
   #endif
+#elif defined(MYFRAME_OS_WINDOWS)
+  #ifdef MYFRAME_USE_CV
+    typedef void* ev_handle_t;
+  #else
+    #error "Windows support conditional variables only,"
+      " set MYFRAME_USE_CV to enable"
+  #endif
+#else
+#error "Unsupported platform"
 #endif
 
 class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
@@ -45,14 +52,21 @@ class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
   /* 事件名称 */
   virtual std::string GetName() const = 0;
 
-#ifdef MYFRAME_USE_CV
-  static const ev_handle_t DEFAULT_EV_HANDLE;
-#else
-  #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-    static const ev_handle_t DEFAULT_EV_HANDLE{-1};
-  #else
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  #ifdef MYFRAME_USE_CV
     static const ev_handle_t DEFAULT_EV_HANDLE;
+  #else
+    static const ev_handle_t DEFAULT_EV_HANDLE{-1};
   #endif
+#elif defined(MYFRAME_OS_WINDOWS)
+  #ifdef MYFRAME_USE_CV
+    static const ev_handle_t DEFAULT_EV_HANDLE;
+  #else
+    #error "Windows support conditional variables only,"
+      " set MYFRAME_USE_CV to enable"
+  #endif
+#else
+#error "Unsupported platform"
 #endif
 };
 
