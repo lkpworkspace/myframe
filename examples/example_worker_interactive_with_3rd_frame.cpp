@@ -4,6 +4,8 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+#include "myframe/config.h"
+#include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <poll.h>
 #endif
@@ -14,7 +16,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/config.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/cmd_channel.h"
