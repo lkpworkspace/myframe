@@ -8,6 +8,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/worker_timer.h"
 
 #include <chrono>
+#include <thread>
 
 #include <glog/logging.h>
 
