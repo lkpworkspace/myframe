@@ -8,7 +8,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 
 #include <glog/logging.h>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include "myframe/shared_library.h"
 #include "myframe/actor.h"

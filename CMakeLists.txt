@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.8.2)
+project(myframe VERSION 0.8.3)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
@@ -43,12 +43,13 @@ set(MYFRAME_CONF_DIR "conf")
 ### deps libs
 find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
+find_package(glog REQUIRED)
 
 link_libraries(
   Threads::Threads
   ${CMAKE_DL_LIBS}
-  glog
-  jsoncpp
+  glog::glog
+  jsoncpp_lib
 )
 
 ### include dir
@@ -108,8 +109,8 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
 # generate the version file for the config file
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-  VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}"
-  COMPATIBILITY AnyNewerVersion
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY SameMajorVersion
 )
 
 # install the configuration file
