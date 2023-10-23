@@ -1,24 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.8.1)
-
-### gcc version
-if (CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpfullversion -dumpversion
-    OUTPUT_VARIABLE GCC_VERSION)
-  string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
-  list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
-  list(GET GCC_VERSION_COMPONENTS 1 GCC_MINOR)
-  set(GCC_VERSION "${GCC_MAJOR}.${GCC_MINOR}")
-endif ()
-
-### cpp option
-if (GCC_VERSION GREATER "8.0")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra-semi")
-endif ()
+project(myframe VERSION 0.8.2)
 
 ### option
-option(GENERATE_EXAMPLE "generate example library" ON)
-option(GENERATE_TEST "generate test exec" ON)
+option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
+option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
+option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
+
+### compile option
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+if (CMAKE_CXX_STANDARD_REQUIRED)
+  message(STATUS "Set cxx standard ${CMAKE_CXX_STANDARD}")
+else()
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_STANDARD 17)
+  message(STATUS "Set default cxx standard 17")
+endif()
 
 ### output path
 set(MYFRAME_OUTPUT_ROOT "${CMAKE_BINARY_DIR}/output")
@@ -27,9 +26,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYFRAME_OUTPUT_ROOT}/bin)
 
 ### install path
-# set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}")
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/${CMAKE_PROJECT_NAME}" CACHE PATH "myframe default install prefix" FORCE)
+  message(STATUS "Set default install prefix $ENV{HOME}/${CMAKE_PROJECT_NAME}")
+else()
+  message(STATUS "Set install prefix ${CMAKE_INSTALL_PREFIX}")
+endif()
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-set(MYFRAME_TEST_DIR "test")
 set(MYFRAME_BIN_DIR "bin")
 set(MYFRAME_INC_DIR "include")
 set(MYFRAME_LIB_DIR "lib")
@@ -38,20 +41,15 @@ set(MYFRAME_SERVICE_DIR "service")
 set(MYFRAME_CONF_DIR "conf")
 
 ### deps libs
+find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
-find_package(gflags REQUIRED)
 
 link_libraries(
-  pthread dl rt m
-  glog gflags
+  Threads::Threads
+  ${CMAKE_DL_LIBS}
+  glog
   jsoncpp
-  -Wl,-z,defs
 )
-if (GCC_VERSION LESS "8.0")
-  link_libraries(
-    stdc++fs
-  )
-endif ()
 
 ### include dir
 include_directories(.)
@@ -59,15 +57,15 @@ include_directories(.)
 ### sub directory
 add_subdirectory(myframe)
 add_subdirectory(launcher)
-if (GENERATE_EXAMPLE)
+if (MYFRAME_GENERATE_EXAMPLE)
     add_subdirectory(examples)
 endif()
-if (GENERATE_TEST)
+if (MYFRAME_GENERATE_TEST)
     add_subdirectory(test)
 endif()
 
 ### install file/dir
-install(FILES 
+install(FILES
     "LICENSE"
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DESTINATION .

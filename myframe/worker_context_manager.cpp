@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/worker_context_manager.h"
@@ -143,7 +143,7 @@ void WorkerContextManager::WeakupWorker() {
     it = weakup_workers_ctx_.erase(it);
     worker_ctx->SetCtrlOwnerFlag(WorkerContext::CtrlOwner::kWorker);
     worker_ctx->SetWaitMsgQueueFlag(false);
-    DLOG(INFO) << "notify " << *worker_ctx << " process msg";
+    VLOG(1) << "notify " << *worker_ctx << " process msg";
     worker_ctx->GetCmdChannel()->SendToOwner(CmdChannel::Cmd::kRunWithMsg);
   }
 }
@@ -169,7 +169,7 @@ void WorkerContextManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
       << *worker_ctx << " has " << worker_ctx->CacheSize()
       << " msg not process!!!";
   if (worker_ctx->IsInWaitMsgQueue()) {
-    DLOG(INFO) << *worker_ctx << " already in wait queue, return";
+    VLOG(1) << *worker_ctx << " already in wait queue, return";
     return;
   }
   worker_ctx->SetWaitMsgQueueFlag(true);

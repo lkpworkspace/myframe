@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include <glog/logging.h>
@@ -32,7 +32,7 @@ class ExampleActorHelloWorld : public myframe::Actor {
 };
 
 /* 创建actor模块实例函数 */
-extern "C" std::shared_ptr<myframe::Actor> actor_create(
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
   if (actor_name == "example") {
     return std::make_shared<ExampleActorHelloWorld>();

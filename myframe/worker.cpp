@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/worker.h"
 
@@ -39,9 +39,6 @@ void Worker::Stop() {
 
 int Worker::DispatchMsg() {
   auto channel = GetCmdChannel();
-  if (channel == nullptr) {
-    return -1;
-  }
   CmdChannel::Cmd cmd = CmdChannel::Cmd::kIdle;
   channel->SendToMain(cmd);
   auto ret = channel->RecvFromMain(&cmd);
@@ -55,9 +52,6 @@ int Worker::DispatchMsg() {
 
 int Worker::DispatchAndWaitMsg() {
   auto channel = GetCmdChannel();
-  if (channel == nullptr) {
-    return -1;
-  }
   CmdChannel::Cmd cmd = CmdChannel::Cmd::kWaitForMsg;
   channel->SendToMain(cmd);
   auto ret = channel->RecvFromMain(&cmd);
@@ -79,9 +73,8 @@ Mailbox* Worker::GetMailbox() {
 
 CmdChannel* Worker::GetCmdChannel() {
   auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
-    return nullptr;
-  }
+  LOG_IF(FATAL, ctx == nullptr)
+    << "worker ctx is nullptr";
   return ctx->GetCmdChannel();
 }
 

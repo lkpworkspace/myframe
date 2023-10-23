@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/log.h"
@@ -30,7 +30,7 @@ void InitLog(const std::string& log_dir, const std::string& bin_name) {
   FLAGS_stop_logging_if_full_disk = true;
 
   auto full_log_dir = Common::GetAbsolutePath(log_dir);
-  std::string dst_str = full_log_dir + bin_name;
+  std::string dst_str = (full_log_dir / bin_name).string();
   google::SetLogDestination(google::ERROR, "");
   google::SetLogDestination(google::WARNING, "");
   google::SetLogDestination(google::FATAL, "");

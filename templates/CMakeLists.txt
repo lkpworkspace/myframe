@@ -1,48 +1,47 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
-PROJECT(@template_name@)
+cmake_minimum_required(VERSION 3.10)
+project(@template_name@)
 
-#### compile setting
-SET(CMAKE_CXX_STANDARD 17)
-SET(CMAKE_CXX_STANDARD_REQUIRED YES)
-SET(CMAKE_CXX_FLAGS "-fPIC -Wall -Wextra -Werror")
+#### compile option
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #### path setting
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-SET(MYFRAME_INSTALL_SERVICE_DIR ${CMAKE_INSTALL_PREFIX}/service)
-SET(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(MYFRAME_INSTALL_SERVICE_DIR ${CMAKE_INSTALL_PREFIX}/service)
+set(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 #### dep 3rd lib
-FIND_PACKAGE(jsoncpp REQUIRED)
-FIND_PACKAGE(gflags REQUIRED)
+find_package(Threads REQUIRED)
+find_package(jsoncpp REQUIRED)
 
 #### include directory
-INCLUDE_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/include)
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
 
 #### deps libs
-LINK_LIBRARIES(
-    dl pthread
-    glog gflags
+link_libraries(
+    Threads::Threads
+    glog
     jsoncpp
-    -Wl,-z,defs
 )
-LINK_DIRECTORIES(${MYFRAME_INSTALL_LIB_DIR})
+link_directories(${MYFRAME_INSTALL_LIB_DIR})
 
 #### lib
-ADD_LIBRARY(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} SHARED
     ${PROJECT_NAME}.cpp
 )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME}
     myframe
 )
 
 #### install
-INSTALL(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
 )
-FILE(GLOB conf_files "*.json")
-INSTALL(FILES 
+file(GLOB conf_files "*.json")
+install(FILES
     ${conf_files}
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DESTINATION ${MYFRAME_INSTALL_SERVICE_DIR}

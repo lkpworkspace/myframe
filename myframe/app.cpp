@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/app.h"
@@ -44,11 +44,11 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : poller_(new Poller())
-  , mods_(new ModManager())
+  : mods_(new ModManager())
+  , poller_(Poller::Create())
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_mgr_(new EventManager())
-  , ev_conn_mgr_(new EventConnManager(ev_mgr_))
+  , ev_conn_mgr_(new EventConnManager(ev_mgr_, poller_))
   , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_))
 {}
 
@@ -135,8 +135,9 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
     }
     lib_name = service["lib"].asString();
     auto lib_dir = Common::GetAbsolutePath(lib_dir_);
-    if (!mods_->LoadMod(lib_dir + lib_name)) {
-      LOG(ERROR) << "load lib " << (lib_dir + lib_name) << " failed, skip";
+    if (!mods_->LoadMod((lib_dir / lib_name).string())) {
+      LOG(ERROR) << "load lib "
+        << (lib_dir / lib_name).string() << " failed, skip";
       return false;
     }
   }
@@ -272,7 +273,7 @@ bool App::AddWorker(
   std::shared_ptr<Worker> worker,
   const Json::Value& config) {
   auto worker_ctx = std::make_shared<WorkerContext>(
-    shared_from_this(), worker);
+    shared_from_this(), worker, poller_);
   worker->SetContext(worker_ctx);
   worker->SetInstName(inst_name);
   worker->SetConfig(config);
@@ -426,7 +427,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
   }
   std::lock_guard<std::mutex> lock(dispatch_mtx_);
   for (auto& msg : (*msg_list)) {
-    DLOG(INFO) << *msg;
+    VLOG(1) << *msg;
     /// 处理框架消息
     if (msg->GetDst() == MAIN_ADDR) {
       ProcessMain(msg);
@@ -480,14 +481,14 @@ void App::DispatchMsg(std::shared_ptr<ActorContext> context) {
   if (nullptr == context) {
     return;
   }
-  DLOG(INFO) << context->GetActor()->GetActorName() << " dispatch msg...";
+  VLOG(1) << context->GetActor()->GetActorName() << " dispatch msg...";
   context->SetRuningFlag(false);
   auto msg_list = context->GetMailbox()->GetSendList();
   DispatchMsg(msg_list);
 }
 
 void App::CheckStopWorkers() {
-  DLOG(INFO) << "check stop worker";
+  VLOG(1) << "check stop worker";
   worker_ctx_mgr_->WeakupWorker();
 
   LOG_IF(INFO, worker_ctx_mgr_->IdleWorkerSize() == 0)
@@ -496,10 +497,10 @@ void App::CheckStopWorkers() {
   std::shared_ptr<WorkerContext> worker_ctx = nullptr;
   while ((worker_ctx = worker_ctx_mgr_->FrontIdleWorker()) != nullptr) {
     if (nullptr == (actor_ctx = actor_ctx_mgr_->GetContextWithMsg())) {
-      DLOG(INFO) << "no actor need process, waiting...";
+      VLOG(1) << "no actor need process, waiting...";
       break;
     }
-    DLOG(INFO)
+    VLOG(1)
       << actor_ctx->GetActor()->GetActorName()
       << " dispatch msg to "
       << *worker_ctx;
@@ -509,9 +510,9 @@ void App::CheckStopWorkers() {
         msg_list->size() > warning_msg_size_.load())
           << actor_ctx->GetActor()->GetActorName()
           << " recv msg size too many: " << msg_list->size();
-      DLOG(INFO) << "run " << actor_ctx->GetActor()->GetActorName();
+      VLOG(1) << "run " << actor_ctx->GetActor()->GetActorName();
       worker_ctx->GetMailbox()->Recv(msg_list);
-      DLOG(INFO) << actor_ctx->GetActor()->GetActorName()
+      VLOG(1) << actor_ctx->GetActor()->GetActorName()
         << " has " << worker_ctx->GetMailbox()->RecvSize()
         << " msg need process";
       worker_ctx_mgr_->PopFrontIdleWorker();
@@ -569,7 +570,7 @@ void App::GetAllUserModAddr(std::string* info) {
 
 void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   // 将定时器线程的发送队列分发完毕
-  DLOG(INFO) << *worker_ctx << " dispatch msg...";
+  VLOG(1) << *worker_ctx << " dispatch msg...";
   DispatchMsg(worker_ctx->GetMailbox()->GetSendList());
 
   CmdChannel::Cmd cmd;
@@ -577,7 +578,7 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
     case CmdChannel::Cmd::kIdle:  // idle
-      DLOG(INFO) << *worker_ctx << " run again";
+      VLOG(1) << *worker_ctx << " run again";
       cmd_channel->SendToOwner(CmdChannel::Cmd::kRun);
       break;
     case CmdChannel::Cmd::kQuit:  // quit
@@ -594,7 +595,7 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
 
 void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   // 将用户线程的发送队列分发完毕
-  DLOG(INFO) << *worker_ctx << " dispatch msg...";
+  VLOG(1) << *worker_ctx << " dispatch msg...";
   DispatchMsg(worker_ctx->GetMailbox()->GetSendList());
 
   CmdChannel::Cmd cmd;
@@ -602,11 +603,11 @@ void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   cmd_channel->RecvFromOwner(&cmd);
   switch (cmd) {
     case CmdChannel::Cmd::kIdle:  // idle
-      DLOG(INFO) << *worker_ctx << " run again";
+      VLOG(1) << *worker_ctx << " run again";
       cmd_channel->SendToOwner(CmdChannel::Cmd::kRun);
       break;
     case CmdChannel::Cmd::kWaitForMsg:
-      DLOG(INFO) << *worker_ctx << " wait for msg...";
+      VLOG(1) << *worker_ctx << " wait for msg...";
       worker_ctx_mgr_->PushWaitWorker(worker_ctx);
       break;
     case CmdChannel::Cmd::kQuit:  // quit
@@ -624,7 +625,7 @@ void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
 void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   // 将actor的发送队列分发完毕
   auto worker = worker_ctx->GetWorker<WorkerCommon>();
-  DLOG_IF(INFO, worker->GetActorContext() != nullptr)
+  VLOG_IF(1, worker->GetActorContext() != nullptr)
       << *worker_ctx << " dispatch "
       << worker->GetActorContext()->GetActor()->GetActorName() << " msg...";
   DispatchMsg(worker->GetActorContext());
@@ -636,7 +637,7 @@ void App::ProcessWorkerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
     case CmdChannel::Cmd::kIdle:  // idle
       // 将工作线程中的actor状态设置为全局状态
       // 将线程加入空闲队列
-      DLOG(INFO)
+      VLOG(1)
         << *worker_ctx
         << " idle, push to idle queue";
       worker->Idle();
@@ -677,11 +678,16 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
 }
 
 void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
-  DLOG_IF(INFO, evs.size() > 0) << "get " << evs.size() << " event";
+  VLOG_IF(1, evs.size() > 0) << "get " << evs.size() << " event";
   for (size_t i = 0; i < evs.size(); ++i) {
     auto ev_obj = ev_mgr_->Get<Event>(evs[i]);
     if (ev_obj == nullptr) {
-      LOG(ERROR) << "can't find ev obj, handle " << evs[i];
+      std::stringstream ss;
+      for (size_t x = 0; x < evs.size(); ++x) {
+        ss << evs[x] << ", ";
+      }
+      LOG(WARNING) << "get evs " << ss.str();
+      LOG(WARNING) << "can't find ev obj, handle " << evs[i];
       continue;
     }
     switch (ev_obj->GetType()) {

@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <atomic>
@@ -17,6 +17,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include "myframe/macros.h"
 #include "myframe/event.h"
+#include "myframe/export.h"
 
 namespace myframe {
 
@@ -35,7 +36,7 @@ class WorkerCommon;
 class WorkerTimer;
 class WorkerContextManager;
 class ModManager;
-class App final : public std::enable_shared_from_this<App> {
+class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   friend class Actor;
 
  public:
@@ -133,10 +134,11 @@ class App final : public std::enable_shared_from_this<App> {
   std::unordered_map<
     std::string,
     std::list<std::shared_ptr<Msg>>> cache_msg_;
-  /// poller
-  std::unique_ptr<Poller> poller_;
+
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
+  /// poller
+  std::shared_ptr<Poller> poller_;
   /// 句柄管理对象
   std::unique_ptr<ActorContextManager> actor_ctx_mgr_;
   /// 事件管理对象

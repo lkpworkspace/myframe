@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
@@ -12,6 +12,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/mailbox.h"
 
@@ -20,7 +21,7 @@ namespace myframe {
 class Msg;
 class ActorContext;
 class App;
-class Actor {
+class MYFRAME_EXPORT Actor {
   friend class App;
   friend class ActorContext;
   friend class ModLib;
@@ -127,6 +128,7 @@ class Actor {
 
 }  // namespace myframe
 
+template class std::shared_ptr<myframe::Actor>;
 extern "C" {
 typedef std::shared_ptr<myframe::Actor> (*actor_create_func_t)(
     const std::string&);

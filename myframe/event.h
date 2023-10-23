@@ -1,18 +1,37 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <memory>
 #include <string>
 
+#include "myframe/config.h"
+#include "myframe/export.h"
+#include "myframe/platform.h"
+
 namespace myframe {
 
-typedef int ev_handle_t;
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  #ifdef MYFRAME_USE_CV
+    typedef void* ev_handle_t;
+  #else
+    typedef int ev_handle_t;
+  #endif
+#elif defined(MYFRAME_OS_WINDOWS)
+  #ifdef MYFRAME_USE_CV
+    typedef void* ev_handle_t;
+  #else
+    #error "Windows support conditional variables only,"
+      " set MYFRAME_USE_CV to enable"
+  #endif
+#else
+#error "Unsupported platform"
+#endif
 
-class Event : public std::enable_shared_from_this<Event> {
+class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
  public:
   enum class Type : int {
     kWorkerCommon,
@@ -22,7 +41,7 @@ class Event : public std::enable_shared_from_this<Event> {
   };
 
   Event() = default;
-  virtual ~Event() {}
+  virtual ~Event() = default;
 
   /* 事件类型 */
   virtual Type GetType() const { return Type::kWorkerUser; }
@@ -33,7 +52,22 @@ class Event : public std::enable_shared_from_this<Event> {
   /* 事件名称 */
   virtual std::string GetName() const = 0;
 
-  static const ev_handle_t DEFAULT_EV_HANDLE{-1};
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  #ifdef MYFRAME_USE_CV
+    static const ev_handle_t DEFAULT_EV_HANDLE;
+  #else
+    static const ev_handle_t DEFAULT_EV_HANDLE{-1};
+  #endif
+#elif defined(MYFRAME_OS_WINDOWS)
+  #ifdef MYFRAME_USE_CV
+    static const ev_handle_t DEFAULT_EV_HANDLE;
+  #else
+    #error "Windows support conditional variables only,"
+      " set MYFRAME_USE_CV to enable"
+  #endif
+#else
+#error "Unsupported platform"
+#endif
 };
 
 }  // namespace myframe

@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
@@ -30,7 +30,10 @@ class WorkerContext final : public Event {
     kWorker,
   };
 
-  WorkerContext(std::shared_ptr<App> app, std::shared_ptr<Worker> worker);
+  WorkerContext(
+    std::shared_ptr<App> app,
+    std::shared_ptr<Worker> worker,
+    std::shared_ptr<Poller> poller);
   virtual ~WorkerContext();
 
   /// thread 相关函数
@@ -96,7 +99,7 @@ class WorkerContext final : public Event {
   Mailbox mailbox_;
 
   /// cmd channel
-  CmdChannel cmd_channel_;
+  std::shared_ptr<CmdChannel> cmd_channel_;
 
   /// thread
   std::thread th_;

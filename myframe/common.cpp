@@ -1,47 +1,33 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
-
 #include "myframe/common.h"
 
 #include <string.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
+
+#include "myframe/platform.h"
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <unistd.h>
+#else
+#error "Platform not supported"
+#endif
 
 #include <fstream>
 #include <sstream>
 
 namespace myframe {
 
-std::vector<std::string> Common::SplitMsgName(const std::string& name) {
-  std::vector<std::string> name_list;
-  std::string item;
-  std::stringstream ss(name);
-  while (std::getline(ss, item, '.')) {
-    name_list.push_back(item);
-  }
-  return name_list;
-}
-
-std::vector<std::string> Common::GetDirFiles(const std::string& conf_path) {
-  std::vector<std::string> res;
-  DIR* dir = opendir(conf_path.c_str());
-  if (dir == nullptr) {
-    return res;
-  }
-  struct dirent* entry = nullptr;
-  while (nullptr != (entry = readdir(dir))) {
-    if (entry->d_type == DT_REG) {
-      res.emplace_back(conf_path + entry->d_name);
+std::vector<stdfs::path> Common::GetDirFiles(const std::string& conf_path) {
+  std::vector<stdfs::path> res;
+  stdfs::path path(conf_path);
+  for (auto const& dir_entry : stdfs::directory_iterator{path}) {
+    if (dir_entry.is_regular_file()) {
+      res.emplace_back(dir_entry.path());
     }
   }
-  closedir(dir);
   return res;
 }
 
@@ -60,39 +46,8 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
   return root;
 }
 
-uint64_t Common::GetMonoTimeMs() {
-  uint64_t t;
-  struct timespec ti;
-  clock_gettime(CLOCK_MONOTONIC, &ti);
-  t = static_cast<uint64_t>(ti.tv_sec * 1000);
-  t += ti.tv_nsec / 1000000;
-  return t;
-}
-
-bool Common::SetSockRecvTimeout(int fd, int timeout_ms) {
-  struct timeval timeout = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
-  return 0 == setsockopt(
-    fd, SOL_SOCKET, SO_RCVTIMEO,
-    reinterpret_cast<const char*>(&timeout),
-    sizeof(timeout));
-}
-
-bool Common::SetNonblockFd(int fd, bool b) {
-  int flags = fcntl(fd, F_GETFL, 0);
-  if (b) {
-    flags |= O_NONBLOCK;
-  } else {
-    flags &= ~O_NONBLOCK;
-  }
-  return fcntl(fd, F_SETFL, flags) != -1;
-}
-
-bool Common::IsBlockFd(int fd) {
-  int flags = fcntl(fd, F_GETFL, 0);
-  return !(flags & O_NONBLOCK);
-}
-
 stdfs::path Common::GetWorkRoot() {
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   char path_buf[256];
   memset(path_buf, 0, sizeof(path_buf));
   int ret = readlink("/proc/self/exe", path_buf, sizeof(path_buf));
@@ -110,20 +65,21 @@ stdfs::path Common::GetWorkRoot() {
     }
   }
   return p;
+#else
+  #error "Platform not supported"
+#endif
 }
 
-std::string Common::GetAbsolutePath(const std::string& flag_path) {
+stdfs::path Common::GetAbsolutePath(const std::string& flag_path) {
   stdfs::path p(flag_path);
   if (p.is_absolute()) {
     return flag_path;
   }
-  p += "/";
   auto root = GetWorkRoot();
   if (root.empty()) {
     return flag_path;
   }
-  root += "/";
-  root += p;
+  root /= p;
   return root;
 }
 
@@ -133,6 +89,16 @@ bool Common::IsAbsolutePath(const std::string& path) {
     return true;
   }
   return false;
+}
+
+std::vector<std::string> Common::SplitMsgName(const std::string& name) {
+  std::vector<std::string> name_list;
+  std::string item;
+  std::stringstream ss(name);
+  while (std::getline(ss, item, '.')) {
+    name_list.push_back(item);
+  }
+  return name_list;
 }
 
 }  // namespace myframe

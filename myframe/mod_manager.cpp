@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/mod_manager.h"
@@ -28,10 +28,10 @@ bool ModManager::LoadMod(const std::string& dl_path) {
   auto dlname = GetLibName(dl_path);
   std::unique_lock<std::shared_mutex> lk(mods_rw_);
   if (mods_.find(dlname) != mods_.end()) {
-    DLOG(INFO) << dlname << " has loaded";
+    VLOG(1) << dlname << " has loaded";
     return true;
   }
-  auto lib = std::make_shared<SharedLibrary>();
+  auto lib = SharedLibrary::Create();
   if (!lib->Load(dl_path, SharedLibrary::Flags::kLocal)) {
     return false;
   }
@@ -73,7 +73,7 @@ std::shared_ptr<Actor> ModManager::CreateActorInst(
   {
     std::shared_lock<std::shared_mutex> lk(mods_rw_);
     if (mods_.find(mod_or_class_name) != mods_.end()) {
-      DLOG(INFO) << actor_name << " actor from lib";
+      VLOG(1) << actor_name << " actor from lib";
       auto lib = mods_[mod_or_class_name];
       auto void_func = lib->GetSymbol("actor_create");
       auto create = reinterpret_cast<actor_create_func_t>(void_func);
@@ -98,7 +98,7 @@ std::shared_ptr<Actor> ModManager::CreateActorInst(
   std::shared_lock<std::shared_mutex> lk(class_actor_rw_);
   if (mod_or_class_name == "class" &&
       class_actors_.find(actor_name) != class_actors_.end()) {
-    DLOG(INFO) << actor_name << " actor from reg class";
+    VLOG(1) << actor_name << " actor from reg class";
     auto actor = class_actors_[actor_name](actor_name);
     actor->SetModName(mod_or_class_name);
     actor->SetTypeName(actor_name);

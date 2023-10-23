@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include <algorithm>
 #include <numeric>
@@ -86,9 +86,9 @@ std::atomic_bool FullSpeed20ActorTransTest::is_send_{false};
 
 int main() {
   auto lib_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
+      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
   auto log_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
+      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
 
   myframe::InitLog(log_dir, "performance_trans20_fullspeed_test");
 

@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <memory>
@@ -10,6 +10,7 @@ Author: likepeng <likepeng0418@163.com>
 
 #include <jsoncpp/json/json.h>
 
+#include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/mailbox.h"
 #include "myframe/cmd_channel.h"
@@ -19,7 +20,7 @@ namespace myframe {
 
 class App;
 class WorkerContext;
-class Worker {
+class MYFRAME_EXPORT Worker {
   friend class App;
   friend class ModLib;
   friend class ModManager;
@@ -127,6 +128,7 @@ class Worker {
 
 }  // namespace myframe
 
+template class std::shared_ptr<myframe::Worker>;
 extern "C" {
 typedef std::shared_ptr<myframe::Worker> (*worker_create_func_t)(
     const std::string&);

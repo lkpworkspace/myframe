@@ -1,81 +1,26 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
-
 #include "myframe/shared_library.h"
+#include "myframe/platform.h"
 
-#include <dlfcn.h>
-
-#include <glog/logging.h>
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+#include "myframe/platform/shared_library_linux.h"
+#else
+#error "Platform not supported"
+#endif
 
 namespace myframe {
 
-SharedLibrary::~SharedLibrary() {
-  Unload();
-}
-
-bool SharedLibrary::Load(const std::string& path) {
-  return Load(path, Flags::kGlobal);
-}
-
-bool SharedLibrary::Load(
-    const std::string& path,
-    Flags flags) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (handle_ != nullptr) {
-    return false;
-  }
-  int real_flag = RTLD_NOW;
-  if (static_cast<int>(flags) & static_cast<int>(Flags::kLocal)) {
-    real_flag |= RTLD_LOCAL;
-  } else {
-    real_flag |= RTLD_GLOBAL;
-  }
-  handle_ = dlopen(path.c_str(), real_flag);
-  if (handle_ == nullptr) {
-    LOG(ERROR) << "Open dll " << path << " failed, " << dlerror();
-    return false;
-  }
-  path_ = path;
-  return true;
-}
-
-void SharedLibrary::Unload() {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (handle_ == nullptr) {
-    return;
-  }
-  if (dlclose(handle_)) {
-    LOG(ERROR) << "lib " << path_ << " close failed, " << dlerror();
-  }
-  handle_ = nullptr;
-}
-
-bool SharedLibrary::IsLoaded() {
-  std::lock_guard<std::mutex> lock(mutex_);
-  return handle_ != nullptr;
-}
-
-bool SharedLibrary::HasSymbol(const std::string& name) {
-  return GetSymbol(name) != nullptr;
-}
-
-void* SharedLibrary::GetSymbol(const std::string& name) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (handle_ == nullptr) {
-    return nullptr;
-  }
-
-  void* result = dlsym(handle_, name.c_str());
-  if (result == nullptr) {
-    LOG(ERROR) << "lib " << path_
-      << " has no symbol " << name << ", " << dlerror();
-    return nullptr;
-  }
-  return result;
+std::shared_ptr<SharedLibrary> SharedLibrary::Create() {
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  return std::make_shared<SharedLibraryLinux>();
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace myframe

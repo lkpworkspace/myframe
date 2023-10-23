@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include <memory>
 #include <chrono>
@@ -45,7 +45,7 @@ class @template_name@Worker : public myframe::Worker {
             std::make_shared<myframe::Msg>("this is template worker req"));
     DispatchAndWaitMsg();
     while (1) {
-      const auto& msg = mailbox->PopRecv();
+      const auto msg = mailbox->PopRecv();
       if (msg == nullptr) {
         break;
       }

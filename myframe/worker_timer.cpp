@@ -1,14 +1,14 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/worker_timer.h"
 
-#include <sys/socket.h>
-#include <sys/types.h>
+#include <chrono>
+#include <thread>
 
 #include <glog/logging.h>
 
@@ -18,13 +18,18 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
+uint64_t TimerManager::GetMonoTimeMs() {
+  auto now = std::chrono::steady_clock::now();
+  return now.time_since_epoch().count() / 1e6;
+}
+
 TimerManager::TimerManager() {
   tv_[0] = tv2_;
   tv_[1] = tv3_;
   tv_[2] = tv4_;
   tv_[3] = tv5_;
 
-  cur_point_ = Common::GetMonoTimeMs() / 10;
+  cur_point_ = GetMonoTimeMs() / 10;
 }
 
 TimerManager::~TimerManager() {}
@@ -48,8 +53,9 @@ void TimerManager::_AddTimerNode(Timer* node) {
   }
 }
 
-int TimerManager::Timeout(const std::string& actor_name,
-                            const std::string& timer_name, int time) {
+int TimerManager::Timeout(
+    const std::string& actor_name,
+    const std::string& timer_name, int time) {
   if (time <= 0) return -1;
   Timer* timer = new Timer();
   timer->actor_name_ = actor_name;
@@ -138,7 +144,7 @@ void TimerManager::_Updatetime() {
   mtx_.unlock();
 }
 std::list<std::shared_ptr<Msg>>* TimerManager::Updatetime() {
-  uint64_t cp = Common::GetMonoTimeMs() / MY_RESOLUTION_MS;
+  uint64_t cp = GetMonoTimeMs() / MY_RESOLUTION_MS;
   if (cp < cur_point_) {
     LOG(ERROR) << "Future time: " << cp << ":" << cur_point_;
     cur_point_ = cp;
@@ -162,7 +168,7 @@ void WorkerTimer::Run() {
     DispatchMsg();
     cur_us_ = 0;
   }
-  usleep(sleep_us_);
+  std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
   cur_us_ += sleep_us_;
 }
 
@@ -178,7 +184,7 @@ int WorkerTimer::SetTimeout(
   const std::string& actor_name,
   const std::string& timer_name,
   int time) {
-  DLOG(INFO) << actor_name << " set timeout(" << timer_name
+  VLOG(1) << actor_name << " set timeout(" << timer_name
              << "): " << (time * 10) << "ms";
   return timer_mgr_.Timeout(actor_name, timer_name, time);
 }

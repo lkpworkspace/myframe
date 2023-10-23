@@ -1,56 +1,37 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "module_argument.h"
-#include <getopt.h>
 #include <unistd.h>
 #include <iostream>
-#include "myframe/common.h"
 
 namespace myframe {
 
 ModuleArgument::ModuleArgument(
     const std::string& sys_conf_dir) {
   sys_conf_dir_ = myframe::Common::GetAbsolutePath(sys_conf_dir);
+  parser_.add<std::string>("process_name", 'p',
+    "The name of this launcher process, "
+    "and it is also the name of log, "
+    "default value is launcher_${PID}\n",
+    false, "");
+  parser_.add<std::string>("sys_conf", 's',
+    "framework config file",
+    false, "");
+  parser_.add<std::string>("dir", 'd',
+    "module config dir",
+    false, "");
+  parser_.footer("module_config_file ...");
 }
 
-void ModuleArgument::DisplayUsage() {
-  std::cout
-    << "Usage: \n    " << binary_name_ << " [OPTION]...\n"
-    << "Description: \n"
-    << "    -h, --help : help infomation \n"
-    << "    -s, --sys_conf=${CONFIG_FILE} : framework config file \n"
-    << "    -c, --conf=${CONFIG_FILE} : module config file\n"
-    << "    -d, --dir=${CONFIG_DIR} : module config dir\n"
-    << "    -p, --process_name=${PROCESS_NAME}: "
-        "The name of this launcher process, and it "
-        "is also the name of log, default value is launcher_${PID}\n"
-    << "Example:\n"
-    << "    " << binary_name_ << " -h\n"
-    << "    " << binary_name_ << " -c module1.json -c module2.json\n"
-    << "    " << binary_name_ << " -c module1.json -c module2.json "
-        "-p process_name\n"
-    << "    " << binary_name_ << " -s sys.json -c module1.json "
-        "-p process_name\n"
-    << "    " << binary_name_ << " -d service_dir -p process_name\n";
-}
-
-ModuleArgument::OptionReturnType ModuleArgument::ParseArgument(
-  const int argc, char* const argv[]) {
+void ModuleArgument::ParseArgument(
+  const int argc, char** argv) {
   const std::string binary_name(argv[0]);
   binary_name_ = binary_name.substr(binary_name.find_last_of("/") + 1);
   process_name_ = binary_name_ + "_" + std::to_string(getpid());
-  const std::string short_opts = "hc:d:p:s:";
-  static const struct option long_opts[] = {
-    {"help", no_argument, nullptr, 'h'},
-    {"conf", required_argument, nullptr, 'c'},
-    {"conf_dir", required_argument, nullptr, 'd'},
-    {"process_name", required_argument, nullptr, 'p'},
-    {"sys_conf", required_argument, nullptr, 's'},
-    {NULL, no_argument, nullptr, 0}};
 
   // log command for info
   std::string cmd("");
@@ -60,45 +41,30 @@ ModuleArgument::OptionReturnType ModuleArgument::ParseArgument(
   }
   cmd_ = cmd;
 
-  OptionReturnType ret = kNoArgument;
-  bool parsing_next_opt = true;
-  int long_index = 0;
-  do {
-    int opt = getopt_long(
-      argc, argv, short_opts.c_str(), long_opts, &long_index);
-    if (opt == -1) {
-      break;
-    }
-    switch (opt) {
-      case 's':
-        if (!ParseSysConf(optarg)) {
-          parsing_next_opt = false;
-          ret = kInvalidArgument;
-        }
-        break;
-      case 'c':
-        conf_list_.emplace_back(optarg);
-        ret = kOtherParameter;
-        break;
-      case 'd':
-        conf_dir_ = optarg;
-        ret = kOtherParameter;
-        break;
-      case 'p':
-        process_name_ = optarg;
-        ret = kOtherParameter;
-        break;
-      case 'h':
-        parsing_next_opt = false;
-        ret = kGetHelpInfo;
-        break;
-      default:
-        ret = kInvalidArgument;
-        break;
-    }
-  } while (parsing_next_opt);
+  // check args
+  parser_.parse_check(argc, argv);
 
-  return ret;
+  auto process_name = parser_.get<std::string>("process_name");
+  if (!process_name.empty()) {
+    process_name_ = process_name;
+  }
+
+  auto sys_conf = parser_.get<std::string>("sys_conf");
+  if (!sys_conf.empty()) {
+    if (!ParseSysConf(sys_conf)) {
+      std::cerr << "parse sys conf failed!!" << std::endl;
+      exit(-1);
+    }
+  }
+
+  auto dir = parser_.get<std::string>("dir");
+  if (!dir.empty()) {
+    conf_dir_ = dir;
+  }
+
+  for (size_t i = 0; i < parser_.rest().size(); i++) {
+    conf_list_.emplace_back(parser_.rest()[i]);
+  }
 }
 
 bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
@@ -106,7 +72,7 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
   if (Common::IsAbsolutePath(sys_conf)) {
     full_sys_conf = sys_conf;
   } else {
-    full_sys_conf = sys_conf_dir_ + sys_conf;
+    full_sys_conf = (sys_conf_dir_ / sys_conf).string();
   }
   auto root = Common::LoadJsonFromFile(full_sys_conf);
   if (root.isNull()

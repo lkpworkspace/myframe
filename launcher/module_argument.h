@@ -1,28 +1,23 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <string>
 #include <list>
+#include "cmdline.h"
+#include "myframe/common.h"
 
 namespace myframe {
 
 class ModuleArgument final {
  public:
-  enum OptionReturnType {
-    kNoArgument,
-    kGetHelpInfo,
-    kInvalidArgument,
-    kOtherParameter,
-  };
   ModuleArgument(const std::string& sys_conf_dir);
   ~ModuleArgument() = default;
 
-  OptionReturnType ParseArgument(const int argc, char* const argv[]);
-  void DisplayUsage();
+  void ParseArgument(const int argc, char** argv);
   inline std::list<std::string> GetConfList() const { return conf_list_; }
   inline std::string GetConfDir() const { return conf_dir_; }
   inline std::string GetBinaryName() const { return binary_name_; }
@@ -38,12 +33,13 @@ class ModuleArgument final {
   int thread_poll_size_{4};
   int conn_event_size_{2};
   int warning_msg_size_{10};
-  std::string cmd_{""};
-  std::string binary_name_{""};
-  std::string process_name_{""};
-  std::string conf_dir_{""};
-  std::string sys_conf_dir_{"conf"};
+  std::string cmd_;
+  std::string binary_name_;
+  std::string process_name_;
+  std::string conf_dir_;
+  stdfs::path sys_conf_dir_;
   std::list<std::string> conf_list_;
+  cmdline::parser parser_;
 };
 
 }  // namespace myframe

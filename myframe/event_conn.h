@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <memory>
@@ -12,6 +12,7 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/event.h"
 #include "myframe/mailbox.h"
 #include "myframe/cmd_channel.h"
+#include "myframe/poller.h"
 
 namespace myframe {
 
@@ -27,7 +28,7 @@ class EventConn final : public Event {
     kSend,
   };
 
-  EventConn() = default;
+  explicit EventConn(std::shared_ptr<Poller>);
 
   ev_handle_t GetHandle() const override;
   Event::Type GetType() const override;
@@ -47,7 +48,7 @@ class EventConn final : public Event {
   Mailbox* GetMailbox();
   CmdChannel* GetCmdChannel();
 
-  CmdChannel cmd_channel_;
+  std::shared_ptr<CmdChannel> cmd_channel_;
   Mailbox mailbox_;
   EventConn::Type conn_type_{ EventConn::Type::kSendReq };
 

@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include <chrono>
 #include <thread>
@@ -61,7 +61,7 @@ class ExampleWorkerTransObj : public myframe::Worker {
 };
 
 /* 创建actor实例函数 */
-extern "C" std::shared_ptr<myframe::Actor> actor_create(
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
   if (actor_name == "example_actor_trans_obj") {
     return std::make_shared<ExampleActorTransObj>();
@@ -70,7 +70,7 @@ extern "C" std::shared_ptr<myframe::Actor> actor_create(
 }
 
 /* 创建worker实例函数 */
-extern "C" std::shared_ptr<myframe::Worker> worker_create(
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
   if (worker_name == "example_worker_trans_obj") {
     return std::make_shared<ExampleWorkerTransObj>();

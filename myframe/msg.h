@@ -1,14 +1,16 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
 #include <iostream>
 #include <any>
 #include <string>
+
+#include "myframe/export.h"
 
 namespace myframe {
 
@@ -28,7 +30,7 @@ const char* const MAIN_ADDR = "main";
  */
 const char* const MAIN_CMD_ALL_USER_MOD_ADDR = "kAllUserModAddr";
 
-class Msg final {
+class MYFRAME_EXPORT Msg final {
  public:
   Msg() = default;
   Msg(const char* data);
@@ -87,6 +89,6 @@ class Msg final {
   std::any any_data_;
 };
 
-std::ostream& operator<<(std::ostream& out, const Msg& msg);
+MYFRAME_EXPORT std::ostream& operator<<(std::ostream& out, const Msg& msg);
 
 }  // namespace myframe

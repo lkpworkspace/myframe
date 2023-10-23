@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <string>
@@ -10,10 +10,12 @@ Author: likepeng <likepeng0418@163.com>
 #include <memory>
 #include <any>
 
+#include "myframe/export.h"
+
 namespace myframe {
 
 class Msg;
-class Mailbox final {
+class MYFRAME_EXPORT Mailbox final {
   friend class ActorContext;
   friend class WorkerContext;
   friend class EventConnManager;
@@ -56,6 +58,7 @@ class Mailbox final {
   std::list<std::shared_ptr<Msg>> send_;
 };
 
-std::ostream& operator<<(std::ostream& out, const Mailbox& mailbox);
+MYFRAME_EXPORT std::ostream& operator<<(
+  std::ostream& out, const Mailbox& mailbox);
 
 }  // namespace myframe

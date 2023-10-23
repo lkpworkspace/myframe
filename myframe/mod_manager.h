@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
@@ -13,6 +13,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <unordered_map>
 #include <string>
 
+#include "myframe/export.h"
 #include "myframe/macros.h"
 
 namespace myframe {
@@ -20,7 +21,7 @@ namespace myframe {
 class Actor;
 class Worker;
 class SharedLibrary;
-class ModManager final {
+class MYFRAME_EXPORT ModManager final {
  public:
   ModManager();
   virtual ~ModManager();

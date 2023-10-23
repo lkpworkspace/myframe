@@ -1,10 +1,14 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+#include "myframe/config.h"
+#include "myframe/platform.h"
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <poll.h>
+#endif
 
 #include <chrono>
 #include <thread>
@@ -18,35 +22,39 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/actor.h"
 #include "myframe/worker.h"
 
+#if (defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
+    && !defined(MYFRAME_USE_CV)
 template <typename T>
 class MyQueue final {
  public:
-  MyQueue() = default;
+  MyQueue() {
+    cmd_channel_ = myframe::CmdChannel::Create(nullptr);
+  }
   ~MyQueue() = default;
 
-  int GetFd0() { return cmd_channel_.GetOwnerHandle(); }
-  int GetFd1() { return cmd_channel_.GetMainHandle(); }
+  int GetFd0() { return cmd_channel_->GetOwnerHandle(); }
+  int GetFd1() { return cmd_channel_->GetMainHandle(); }
 
   void Push(std::shared_ptr<T> data) {
     data_ = data;
     myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
-    cmd_channel_.SendToOwner(cmd);
-    cmd_channel_.RecvFromOwner(&cmd);
+    cmd_channel_->SendToOwner(cmd);
+    cmd_channel_->RecvFromOwner(&cmd);
   }
 
   std::shared_ptr<T> Pop() {
     std::shared_ptr<T> ret = nullptr;
     myframe::CmdChannel::Cmd cmd = myframe::CmdChannel::Cmd::kRun;
-    cmd_channel_.RecvFromMain(&cmd);
+    cmd_channel_->RecvFromMain(&cmd);
     ret = data_;
     data_ = nullptr;
-    cmd_channel_.SendToMain(myframe::CmdChannel::Cmd::kIdle);
+    cmd_channel_->SendToMain(myframe::CmdChannel::Cmd::kIdle);
     return ret;
   }
 
  private:
   std::shared_ptr<T> data_;
-  myframe::CmdChannel cmd_channel_;
+  std::shared_ptr<myframe::CmdChannel> cmd_channel_;
 };
 
 /**
@@ -96,7 +104,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
         } else if (cmd == myframe::CmdChannel::Cmd::kRunWithMsg) {
           auto mailbox = GetMailbox();
           while (!mailbox->RecvEmpty()) {
-            const auto& msg = mailbox->PopRecv();
+            const auto msg = mailbox->PopRecv();
             // 接收到其它组件消息
             LOG(INFO) << "get main " << msg->GetData();
           }
@@ -162,21 +170,34 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
  private:
   int seq_num_{0};
 };
+#endif
 
 /* 创建worker实例函数 */
-extern "C" std::shared_ptr<myframe::Worker> worker_create(
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
+#if !(defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
+    || defined(MYFRAME_USE_CV)
+  (void)worker_name;
+  LOG(ERROR) << "Unsupport example_worker_interactive_with_3rd_frame";
+#else
   if (worker_name == "example_worker_interactive_with_3rd_frame") {
     return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
   }
+#endif
   return nullptr;
 }
 
 /* 创建actor实例函数 */
-extern "C" std::shared_ptr<myframe::Actor> actor_create(
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
+#if !(defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
+    || defined(MYFRAME_USE_CV)
+  (void)actor_name;
+  LOG(ERROR) << "Unsupport example_actor_interactive_with_3rd_frame";
+#else
   if (actor_name == "example_actor_interactive_with_3rd_frame") {
     return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
   }
+#endif
   return nullptr;
 }

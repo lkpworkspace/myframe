@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/event_conn_manager.h"
@@ -14,8 +14,11 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-EventConnManager::EventConnManager(std::shared_ptr<EventManager> ev_mgr)
+EventConnManager::EventConnManager(
+  std::shared_ptr<EventManager> ev_mgr,
+  std::shared_ptr<Poller> poller)
   : ev_mgr_(ev_mgr) {
+  poller_ = poller;
   LOG(INFO) << "EventConnManager create";
 }
 
@@ -32,7 +35,7 @@ bool EventConnManager::Init(int sz) {
 }
 
 void EventConnManager::AddEventConn() {
-  auto conn = std::make_shared<EventConn>();
+  auto conn = std::make_shared<EventConn>(poller_);
   std::string name = "event.conn." + std::to_string(conn_sz_);
   conn->GetMailbox()->SetAddr(name);
   idle_conn_.emplace_back(conn);

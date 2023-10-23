@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2019, 李柯鹏
 All rights reserved.
 
-Author: likepeng <likepeng0418@163.com>
+Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/worker_context.h"
 
@@ -19,10 +19,12 @@ namespace myframe {
 
 WorkerContext::WorkerContext(
   std::shared_ptr<App> app,
-  std::shared_ptr<Worker> worker)
+  std::shared_ptr<Worker> worker,
+  std::shared_ptr<Poller> poller)
   : runing_(false)
   , worker_(worker)
   , app_(app) {
+  cmd_channel_ = CmdChannel::Create(poller);
 }
 
 WorkerContext::~WorkerContext() {
@@ -30,7 +32,7 @@ WorkerContext::~WorkerContext() {
 }
 
 ev_handle_t WorkerContext::GetHandle() const {
-  return cmd_channel_.GetMainHandle();
+  return cmd_channel_->GetMainHandle();
 }
 
 Event::Type WorkerContext::GetType() const {
@@ -72,7 +74,7 @@ void WorkerContext::ListenThread() {
     worker_->Run();
   }
   worker_->Exit();
-  cmd_channel_.SendToMain(CmdChannel::Cmd::kQuit);
+  cmd_channel_->SendToMain(CmdChannel::Cmd::kQuit);
 }
 
 std::size_t WorkerContext::CacheSize() const {
@@ -96,7 +98,7 @@ Mailbox* WorkerContext::GetMailbox() {
 }
 
 CmdChannel* WorkerContext::GetCmdChannel() {
-  return &cmd_channel_;
+  return cmd_channel_.get();
 }
 
 std::shared_ptr<App> WorkerContext::GetApp() {

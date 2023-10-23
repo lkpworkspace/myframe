@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
+add_compile_definitions(${PROJECT_NAME}_EXPORTS)
+
 ### actor
 add_library(example_actor_helloworld SHARED example_actor_helloworld.cpp)
 target_link_libraries(example_actor_helloworld ${PROJECT_NAME})
