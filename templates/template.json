@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"lib@template_name@.so",
+    "lib":"@template_name@",
     "actor":{
         "@template_name@":[
             {

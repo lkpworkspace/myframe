@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_actor_helloworld.so",
+    "lib":"example_actor_helloworld",
     "actor":{
         "example":[
             {

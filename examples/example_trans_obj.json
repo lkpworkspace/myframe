@@ -1,6 +1,6 @@
 {
   "type":"library",
-  "lib":"libexample_trans_obj.so",
+  "lib":"example_trans_obj",
   "actor":{
       "example_actor_trans_obj":[
           {

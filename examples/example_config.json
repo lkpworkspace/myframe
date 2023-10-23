@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_config.so",
+    "lib":"example_config",
     "actor":{
         "example_actor_config":[
             {

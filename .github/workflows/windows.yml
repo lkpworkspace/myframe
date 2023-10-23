@@ -1,0 +1,137 @@
+name: Windows
+
+on: [push, pull_request]
+
+jobs:
+  build-msvc:
+    name: ${{matrix.msvc}}-${{matrix.arch}}-C++${{matrix.std}}-${{matrix.build_type}}
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: powershell
+    env:
+      CL: /MP
+      CXXFLAGS: /permissive-
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: [Win32, x64]
+        build_type: [Release]
+        msvc: [VS-16-2019, VS-17-2022]
+        std: [17]
+        include:
+          - msvc: VS-16-2019
+            os: windows-2019
+            generator: 'Visual Studio 16 2019'
+          - msvc: VS-17-2022
+            os: windows-2022
+            generator: 'Visual Studio 17 2022'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache jsoncpp
+        id: cache-jsoncpp
+        uses: actions/cache@v2
+        with:
+          path: jsoncpp/
+          key: ${{runner.os}}-jsoncpp-1.9.5-${{matrix.arch}}-${{matrix.build_type}}
+
+      - name: Download jsoncpp
+        if: steps.cache-jsoncpp.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.5.zip", "jsoncpp-1.9.5.zip")
+          Expand-Archive jsoncpp-1.9.5.zip .
+
+      - name: Build jsoncpp
+        if: steps.cache-jsoncpp.outputs.cache-hit != 'true'
+        run: |
+          cmake -S jsoncpp-1.9.5 -B build-jsoncpp `
+                -A ${{matrix.arch}} `
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/jsoncpp `
+                -DBUILD_OBJECT_LIBS=OFF `
+                -DJSONCPP_WITH_TESTS=OFF `
+                -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF `
+                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
+          cmake --build build-jsoncpp `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Cache gflags
+        id: cache-gflags
+        uses: actions/cache@v2
+        with:
+          path: gflags/
+          key: ${{runner.os}}-gflags-2.2.2-${{matrix.arch}}-${{matrix.build_type}}
+
+      - name: Download gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.zip", "v2.2.2.zip")
+          Expand-Archive v2.2.2.zip .
+
+      - name: Build gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          cmake -S gflags-2.2.2 -B build-gflags `
+                -A ${{matrix.arch}} `
+                -DBUILD_SHARED_LIBS=ON `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags
+          cmake --build build-gflags `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Cache glog
+        id: cache-glog
+        uses: actions/cache@v2
+        with:
+            path: glog/
+            key: ${{runner.os}}-glog-0.6.0-${{matrix.arch}}-${{matrix.build_type}}
+
+      - name: Download glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+            (New-Object System.Net.WebClient).DownloadFile("https://github.com/google/glog/archive/refs/tags/v0.6.0.zip", "glog-0.6.0.zip")
+            Expand-Archive glog-0.6.0.zip .
+
+      - name: Build glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+            cmake -S glog-0.6.0 -B build-glog `
+                -A ${{matrix.arch}} `
+                -DBUILD_SHARED_LIBS=ON `
+                -DWITH_GTEST=OFF `
+                -DWITH_PKGCONFIG=OFF `
+                -DCMAKE_PREFIX_PATH="${{github.workspace}}/gflags" `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/glog
+            cmake --build build-glog `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Configure
+        run: |
+          cmake -S . -B build_${{matrix.build_type}} `
+                -A ${{matrix.arch}} `
+                -DMYFRAME_USE_CV=ON `
+                -DBUILD_SHARED_LIBS=ON `
+                -DCMAKE_CXX_EXTENSIONS=OFF `
+                -DCMAKE_CXX_STANDARD=${{matrix.std}} `
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON `
+                -DCMAKE_EXE_LINKER_FLAGS='/NOIMPLIB' `
+                -DCMAKE_EXE_LINKER_FLAGS_RELEASE='/INCREMENTAL:NO /DEBUG' `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/myframe `
+                -DCMAKE_PREFIX_PATH="${{github.workspace}}/jsoncpp;${{github.workspace}}/glog" `
+                -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' `
+                -G "${{matrix.generator}}" `
+                -Werror
+
+      - name: Build
+        run: cmake --build build_${{matrix.build_type}} `
+                   --config ${{matrix.build_type}}
+
+      - name: Install
+        run: |
+          cmake --build build_${{matrix.build_type}} `
+                --config ${{matrix.build_type}} `
+                --target install

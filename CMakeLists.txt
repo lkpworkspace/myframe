@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.8.4)
+project(myframe VERSION 0.9.0)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
@@ -87,6 +87,7 @@ if (MYFRAME_INSTALL_DEPS)
 if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.21")
   install(IMPORTED_RUNTIME_ARTIFACTS jsoncpp_lib)
   install(IMPORTED_RUNTIME_ARTIFACTS glog::glog)
+  install(IMPORTED_RUNTIME_ARTIFACTS gflags)
 endif()
 endif()
 
@@ -117,7 +118,7 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
   VERSION "${PROJECT_VERSION}"
-  COMPATIBILITY SameMajorVersion
+  COMPATIBILITY SameMinorVersion
 )
 
 # install the configuration file

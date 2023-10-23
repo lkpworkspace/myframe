@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_actor_timer.so",
+    "lib":"example_actor_timer",
     "actor":{
         "example_actor_timer":[
             {

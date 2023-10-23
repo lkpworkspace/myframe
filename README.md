@@ -9,16 +9,23 @@ worker自驱动，可以通过消息与actor交互;
 适用于构建中大型项目.  
 
 ## 开发/运行环境
-操作系统: Ubuntu 18.04+  
-开发语言：C++17
+| C++ 标准支持   |
+| -------------- |
+| C++17          |
+| C++20          |
+
+| 操作系统支持   |
+| -------------- |
+| Windows |
+| Linux |
 
 ## 构建
-参考 [github ci](.github/workflows/linux.yml)
+* [github ci linux](.github/workflows/linux.yml)
+* [github ci windows](.github/workflows/windows.yml)
 
 ## 运行所有的example
 ```sh
-cd ~/myframe/bin
-./launcher -p app
+path/to/myframe/bin/launcher -p app
 ```
 
 ### Hello,World 示例
@@ -60,11 +67,11 @@ extern "C" std::shared_ptr<Actor> actor_create(const std::string& actor_name) {
 
 ```
 
-### actor配置文件
+### Hello,World 配置文件
 ```json
 {
   "type":"library",
-  "lib":"libdemo.so",
+  "lib":"demo",
   "actor":{
     "demo":[
       {

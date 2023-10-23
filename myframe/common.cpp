@@ -11,6 +11,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <unistd.h>
+#elif defined(MYFRAME_OS_WINDOWS)
+#include <Windows.h>
 #else
 #error "Platform not supported"
 #endif
@@ -47,13 +49,21 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
 }
 
 stdfs::path Common::GetWorkRoot() {
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   char path_buf[256];
   memset(path_buf, 0, sizeof(path_buf));
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
   int ret = readlink("/proc/self/exe", path_buf, sizeof(path_buf));
   if (ret == -1) {
     return "";
   }
+#elif defined(MYFRAME_OS_WINDOWS)
+  auto ret = GetModuleFileName(NULL, path_buf, sizeof(path_buf));
+  if (ret == 0) {
+    return "";
+  }
+#else
+  #error "Platform not supported"
+#endif
   if (static_cast<std::size_t>(ret) >= sizeof(path_buf)) {
     path_buf[sizeof(path_buf) - 1] = '\0';
   }
@@ -65,9 +75,6 @@ stdfs::path Common::GetWorkRoot() {
     }
   }
   return p;
-#else
-  #error "Platform not supported"
-#endif
 }
 
 stdfs::path Common::GetAbsolutePath(const std::string& flag_path) {

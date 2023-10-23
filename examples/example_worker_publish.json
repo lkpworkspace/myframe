@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_worker_publish.so",
+    "lib":"example_worker_publish",
     "worker":{
         "example_worker_publish":[
             {
