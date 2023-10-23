@@ -17,7 +17,7 @@ namespace stdfs = std::filesystem;
 #error "no filesystem header"
 #endif
 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 #include "myframe/export.h"
 
 namespace myframe {

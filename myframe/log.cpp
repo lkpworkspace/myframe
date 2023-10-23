@@ -14,7 +14,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/common.h"
 
-static void signal_handler(const char *data, int size) {
+static void signal_handler(const char *data, size_t size) {
   std::string str = std::string(data, size);
   std::cerr << str;
   LOG(ERROR) << "\n" << str;
