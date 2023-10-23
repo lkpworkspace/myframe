@@ -10,7 +10,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-#include <dirent.h>
 #include <unistd.h>
 #else
 #error "Platform not supported"
@@ -19,26 +18,16 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <fstream>
 #include <sstream>
 
-
 namespace myframe {
 
-std::vector<std::string> Common::GetDirFiles(const std::string& conf_path) {
-  std::vector<std::string> res;
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-  DIR* dir = opendir(conf_path.c_str());
-  if (dir == nullptr) {
-    return res;
-  }
-  struct dirent* entry = nullptr;
-  while (nullptr != (entry = readdir(dir))) {
-    if (entry->d_type == DT_REG) {
-      res.emplace_back(conf_path + entry->d_name);
+std::vector<stdfs::path> Common::GetDirFiles(const std::string& conf_path) {
+  std::vector<stdfs::path> res;
+  stdfs::path path(conf_path);
+  for (auto const& dir_entry : stdfs::directory_iterator{path}) {
+    if (dir_entry.is_regular_file()) {
+      res.emplace_back(dir_entry.path());
     }
   }
-  closedir(dir);
-#else
-  #error "Platform not supported"
-#endif
   return res;
 }
 
@@ -81,18 +70,16 @@ stdfs::path Common::GetWorkRoot() {
 #endif
 }
 
-std::string Common::GetAbsolutePath(const std::string& flag_path) {
+stdfs::path Common::GetAbsolutePath(const std::string& flag_path) {
   stdfs::path p(flag_path);
   if (p.is_absolute()) {
     return flag_path;
   }
-  p += "/";
   auto root = GetWorkRoot();
   if (root.empty()) {
     return flag_path;
   }
-  root += "/";
-  root += p;
+  root /= p;
   return root;
 }
 

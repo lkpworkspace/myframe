@@ -8,6 +8,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <string>
 #include <list>
 #include "cmdline.h"
+#include "myframe/common.h"
 
 namespace myframe {
 
@@ -32,11 +33,11 @@ class ModuleArgument final {
   int thread_poll_size_{4};
   int conn_event_size_{2};
   int warning_msg_size_{10};
-  std::string cmd_{""};
-  std::string binary_name_{""};
-  std::string process_name_{""};
-  std::string conf_dir_{""};
-  std::string sys_conf_dir_{"conf"};
+  std::string cmd_;
+  std::string binary_name_;
+  std::string process_name_;
+  std::string conf_dir_;
+  stdfs::path sys_conf_dir_;
   std::list<std::string> conf_list_;
   cmdline::parser parser_;
 };

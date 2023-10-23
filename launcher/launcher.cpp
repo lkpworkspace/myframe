@@ -34,21 +34,21 @@ int main(int argc, char** argv) {
   // 初始化日志系统
   myframe::InitLog(MYFRAME_LOG_DIR, module_args.GetProcessName());
   LOG(INFO) << "launch command: " << module_args.GetCmd();
-  std::string root_dir = myframe::Common::GetWorkRoot();
+  auto root_dir = myframe::Common::GetWorkRoot();
   auto lib_dir = myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
   auto service_dir = myframe::Common::GetAbsolutePath(MYFRAME_SERVICE_DIR);
   auto log_dir = myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
   auto conf_dir = myframe::Common::GetAbsolutePath(MYFRAME_CONF_DIR);
-  LOG(INFO) << "root dir: " << root_dir;
-  LOG(INFO) << "default lib dir: " << lib_dir;
-  LOG(INFO) << "default service dir: " << service_dir;
-  LOG(INFO) << "default log dir: " << log_dir;
-  LOG(INFO) << "default conf dir: " << conf_dir;
+  LOG(INFO) << "root dir: " << root_dir.string();
+  LOG(INFO) << "default lib dir: " << lib_dir.string();
+  LOG(INFO) << "default service dir: " << service_dir.string();
+  LOG(INFO) << "default log dir: " << log_dir.string();
+  LOG(INFO) << "default conf dir: " << conf_dir.string();
 
   // 初始化并启动线程
   g_app = std::make_shared<myframe::App>();
   if (false == g_app->Init(
-    lib_dir,
+    lib_dir.string(),
     module_args.GetThreadPoolSize(),
     module_args.GetConnEventSize(),
     module_args.GetWarningMsgSize())) {
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
       if (myframe::Common::IsAbsolutePath(conf)) {
         abs_conf_file = conf;
       } else {
-        abs_conf_file = service_dir + conf;
+        abs_conf_file = (service_dir / conf).string();
       }
       if (!g_app->LoadServiceFromFile(abs_conf_file)) {
         LOG(ERROR) << "Load " << abs_conf_file << " failed, exit";
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
        if (myframe::Common::IsAbsolutePath(module_args.GetConfDir())) {
         abs_service_dir = module_args.GetConfDir();
       } else {
-        abs_service_dir = root_dir + "/" + module_args.GetConfDir() + "/";
+        abs_service_dir = (root_dir / module_args.GetConfDir()).string();
       }
     } else {
       abs_service_dir = service_dir;

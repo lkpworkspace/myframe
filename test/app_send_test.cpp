@@ -44,9 +44,9 @@ class EchoActorTest : public myframe::Actor {
 
 int main() {
   auto lib_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
+      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
   auto log_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
+      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
 
   myframe::InitLog(log_dir, "app_send_test");
 

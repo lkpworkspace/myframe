@@ -7,7 +7,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "module_argument.h"
 #include <unistd.h>
 #include <iostream>
-#include "myframe/common.h"
 
 namespace myframe {
 
@@ -73,7 +72,7 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
   if (Common::IsAbsolutePath(sys_conf)) {
     full_sys_conf = sys_conf;
   } else {
-    full_sys_conf = sys_conf_dir_ + sys_conf;
+    full_sys_conf = (sys_conf_dir_ / sys_conf).string();
   }
   auto root = Common::LoadJsonFromFile(full_sys_conf);
   if (root.isNull()

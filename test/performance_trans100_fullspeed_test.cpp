@@ -87,9 +87,9 @@ std::atomic_bool FullSpeed100ActorTransTest::is_send_{false};
 
 int main() {
   auto lib_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
+      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
   auto log_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
+      myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
 
   myframe::InitLog(log_dir, "performance_trans100_fullspeed_test");
 

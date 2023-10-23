@@ -24,11 +24,11 @@ namespace myframe {
 
 class MYFRAME_EXPORT Common final {
  public:
-  static std::vector<std::string> GetDirFiles(const std::string& conf_path);
+  static std::vector<stdfs::path> GetDirFiles(const std::string& conf_path);
   static Json::Value LoadJsonFromFile(const std::string& json_file);
 
   static stdfs::path GetWorkRoot();
-  static std::string GetAbsolutePath(const std::string& flag_path);
+  static stdfs::path GetAbsolutePath(const std::string& flag_path);
   static bool IsAbsolutePath(const std::string& path);
 
   template <typename T>
