@@ -7,6 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 #include <glog/logging.h>
 
@@ -24,11 +25,12 @@ class @template_name@Actor : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     /* 获得文本消息， 打印 源地址 目的地址 消息内容*/
-    LOG(INFO) << *msg;
+    LOG(INFO) << *msg << ": " << msg->GetData();
+    std::cout << *msg << ": " << msg->GetData() << std::endl;
     /* 回复消息 */
     auto mailbox = GetMailbox();
     mailbox->Send(msg->GetSrc(),
-      std::make_shared<myframe::Msg>("this is actor resp"));
+      std::make_shared<myframe::Msg>("this is template actor resp"));
   }
 };
 
@@ -50,6 +52,7 @@ class @template_name@Worker : public myframe::Worker {
         break;
       }
       LOG(INFO) << *msg << ": " << msg->GetData();
+      std::cout << *msg << ": " << msg->GetData() << std::endl;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
