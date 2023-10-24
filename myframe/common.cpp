@@ -34,13 +34,13 @@ std::vector<stdfs::path> Common::GetDirFiles(const std::string& conf_path) {
 Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
   std::ifstream ifs(json_file);
   if (!ifs.is_open()) {
-    return Json::Value::null;
+    return Json::Value::nullSingleton();
   }
   Json::Value root;
   Json::Reader reader(Json::Features::strictMode());
   if (!reader.parse(ifs, root)) {
     ifs.close();
-    return Json::Value::null;
+    return Json::Value::nullSingleton();
   }
   ifs.close();
   return root;

@@ -120,7 +120,7 @@ class MYFRAME_EXPORT Actor {
   std::string mod_name_;
   std::string actor_name_;
   std::string instance_name_;
-  Json::Value config_{ Json::Value::null };
+  Json::Value config_;
   std::weak_ptr<ActorContext> ctx_;
 
   DISALLOW_COPY_AND_ASSIGN(Actor)
