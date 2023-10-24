@@ -134,10 +134,9 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
       return false;
     }
     lib_name = service["lib"].asString();
-    auto lib_dir = Common::GetAbsolutePath(lib_dir_);
-    if (!mods_->LoadMod((lib_dir / lib_name).string())) {
+    if (!mods_->LoadMod((lib_dir_ / lib_name).string())) {
       LOG(ERROR) << "load lib "
-        << (lib_dir / lib_name).string() << " failed, skip";
+        << (lib_dir_ / lib_name).string() << " failed, skip";
       return false;
     }
   }

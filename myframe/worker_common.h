@@ -8,7 +8,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #pragma once
 #include <memory>
 
-#include "myframe/common.h"
 #include "myframe/worker.h"
 
 namespace myframe {

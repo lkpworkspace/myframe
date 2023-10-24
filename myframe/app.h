@@ -12,12 +12,15 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include <json/json.h>
 
 #include "myframe/macros.h"
 #include "myframe/event.h"
 #include "myframe/export.h"
+
+namespace stdfs = std::filesystem;
 
 namespace myframe {
 
@@ -123,7 +126,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   void ProcessMain(std::shared_ptr<Msg>);
   void GetAllUserModAddr(std::string* info);
 
-  std::string lib_dir_;
+  stdfs::path lib_dir_;
   /// node地址
   std::string node_addr_;
   std::atomic<std::size_t> warning_msg_size_{10};

@@ -11,8 +11,9 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 ModuleArgument::ModuleArgument(
-    const std::string& sys_conf_dir) {
-  sys_conf_dir_ = myframe::Common::GetAbsolutePath(sys_conf_dir);
+    const std::string& default_sys_conf_dir) {
+  default_sys_conf_dir_ = myframe::Common::GetAbsolutePath(
+    default_sys_conf_dir);
   parser_.add<std::string>("process_name", 'p',
     "The name of this launcher process, "
     "and it is also the name of log, "
@@ -23,6 +24,12 @@ ModuleArgument::ModuleArgument(
     false, "");
   parser_.add<std::string>("dir", 'd',
     "module config dir",
+    false, "");
+  parser_.add<std::string>("log_dir", 0,
+    "framework log dir",
+    false, "");
+  parser_.add<std::string>("lib_dir", 0,
+    "framework lib dir",
     false, "");
   parser_.footer("module_config_file ...");
 }
@@ -65,6 +72,16 @@ void ModuleArgument::ParseArgument(
   for (size_t i = 0; i < parser_.rest().size(); i++) {
     conf_list_.emplace_back(parser_.rest()[i]);
   }
+
+  auto log_dir = parser_.get<std::string>("log_dir");
+  if (!log_dir.empty()) {
+    log_dir_ = log_dir;
+  }
+
+  auto lib_dir = parser_.get<std::string>("lib_dir");
+  if (!lib_dir.empty()) {
+    lib_dir_ = lib_dir;
+  }
 }
 
 bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
@@ -72,7 +89,7 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
   if (Common::IsAbsolutePath(sys_conf)) {
     full_sys_conf = sys_conf;
   } else {
-    full_sys_conf = (sys_conf_dir_ / sys_conf).string();
+    full_sys_conf = (default_sys_conf_dir_ / sys_conf).string();
   }
   auto root = Common::LoadJsonFromFile(full_sys_conf);
   if (root.isNull()
@@ -96,6 +113,18 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
       && root["warning_msg_size"].asInt() > 0
       && root["warning_msg_size"].asInt() < 1024) {
     warning_msg_size_ = root["warning_msg_size"].asInt();
+  }
+  if (root.isMember("log_dir")
+      && root["log_dir"].isString()) {
+    log_dir_ = root["log_dir"].asString();
+  }
+  if (root.isMember("lib_dir")
+      && root["lib_dir"].isString()) {
+    lib_dir_ = root["lib_dir"].asString();
+  }
+  if (root.isMember("service_dir")
+      && root["service_dir"].isString()) {
+    conf_dir_ = root["service_dir"].asString();
   }
   return true;
 }
