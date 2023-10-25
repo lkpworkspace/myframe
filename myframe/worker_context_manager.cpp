@@ -9,7 +9,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/worker_context.h"

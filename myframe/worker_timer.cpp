@@ -12,7 +12,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
-#include "myframe/common.h"
 #include "myframe/actor.h"
 #include "myframe/app.h"
 

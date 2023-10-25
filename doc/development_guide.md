@@ -64,18 +64,21 @@ python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_n
 
 ### 组件工程构建安装
 ```sh
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=${myframe目录}
+cmake -S . -B build \
+  -DCMAKE_INSTALL_PREFIX="/path/to/myframe" \
+  -DCMAKE_PREFIX_PATH="/path/to/jsoncpp;/path/to/glog"
+
 make -C build -j "$(nproc)" install
 ```
 
 ### 运行组件
 ```sh
-cd ${myframe目录}/bin
+cd /path/to/myframe/bin
 ./launcher -p app ${组件名}.json
 ```
 
 ### 查看运行日志
 ```sh
-cd ${myframe目录}/log
+cd /path/to/myframe/log
 vi app.INFO
 ```

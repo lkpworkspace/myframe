@@ -14,6 +14,7 @@ set(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 #### dep 3rd lib
 find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
+find_package(glog REQUIRED)
 
 #### include directory
 include_directories(${CMAKE_INSTALL_PREFIX}/include)
@@ -21,8 +22,8 @@ include_directories(${CMAKE_INSTALL_PREFIX}/include)
 #### deps libs
 link_libraries(
     Threads::Threads
-    glog
-    jsoncpp
+    glog::glog
+    jsoncpp_lib
 )
 link_directories(${MYFRAME_INSTALL_LIB_DIR})
 

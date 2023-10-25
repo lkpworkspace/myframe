@@ -31,14 +31,38 @@ int main(int argc, char** argv) {
   myframe::ModuleArgument module_args(MYFRAME_CONF_DIR);
   module_args.ParseArgument(argc, argv);
 
-  // 初始化日志系统
-  myframe::InitLog(MYFRAME_LOG_DIR, module_args.GetProcessName());
-  LOG(INFO) << "launch command: " << module_args.GetCmd();
+  // 初始化日志和参数
   auto root_dir = myframe::Common::GetWorkRoot();
-  auto lib_dir = myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR);
-  auto service_dir = myframe::Common::GetAbsolutePath(MYFRAME_SERVICE_DIR);
-  auto log_dir = myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR);
-  auto conf_dir = myframe::Common::GetAbsolutePath(MYFRAME_CONF_DIR);
+  stdfs::path log_dir;
+  stdfs::path lib_dir;
+  stdfs::path service_dir;
+  stdfs::path conf_dir;
+
+  if (module_args.GetLogDir().empty()) {
+    log_dir = MYFRAME_LOG_DIR;
+  } else {
+    log_dir = module_args.GetLogDir();
+  }
+  log_dir = myframe::Common::GetAbsolutePath(log_dir.string());
+  myframe::InitLog(log_dir, module_args.GetProcessName());
+  LOG(INFO) << "launch command: " << module_args.GetCmd();
+
+  if (module_args.GetLibDir().empty()) {
+    lib_dir = MYFRAME_LIB_DIR;
+  } else {
+    lib_dir = module_args.GetLibDir();
+  }
+  lib_dir = myframe::Common::GetAbsolutePath(lib_dir.string());
+
+  if (module_args.GetConfDir().empty()) {
+    service_dir = MYFRAME_SERVICE_DIR;
+  } else {
+    service_dir = module_args.GetConfDir();
+  }
+  service_dir = myframe::Common::GetAbsolutePath(service_dir.string());
+
+  conf_dir = myframe::Common::GetAbsolutePath(MYFRAME_CONF_DIR);
+
   LOG(INFO) << "root dir: " << root_dir.string();
   LOG(INFO) << "default lib dir: " << lib_dir.string();
   LOG(INFO) << "default service dir: " << service_dir.string();
@@ -73,18 +97,9 @@ int main(int argc, char** argv) {
       }
     }
   } else {
-    std::string abs_service_dir;
-    if (!module_args.GetConfDir().empty()) {
-       if (myframe::Common::IsAbsolutePath(module_args.GetConfDir())) {
-        abs_service_dir = module_args.GetConfDir();
-      } else {
-        abs_service_dir = (root_dir / module_args.GetConfDir()).string();
-      }
-    } else {
-      abs_service_dir = service_dir;
-    }
-    if (g_app->LoadServiceFromDir(abs_service_dir) <= 0) {
-      LOG(ERROR) << "Load service from " << abs_service_dir << " failed, exit";
+    if (g_app->LoadServiceFromDir(service_dir.string()) <= 0) {
+      LOG(ERROR) << "Load service from " << service_dir.string()
+        << " failed, exit";
       g_app->Quit();
     }
   }

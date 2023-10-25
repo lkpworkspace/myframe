@@ -119,7 +119,7 @@ class MYFRAME_EXPORT Worker {
   std::string mod_name_;
   std::string worker_name_;
   std::string inst_name_;
-  Json::Value config_{ Json::Value::null };
+  Json::Value config_;
 
   std::weak_ptr<WorkerContext> ctx_;
 

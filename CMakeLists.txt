@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.8.3)
+project(myframe VERSION 0.8.4)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
+option(MYFRAME_INSTALL_DEPS "Install deps" ON)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
 
@@ -82,6 +83,12 @@ install(CODE "
     \"${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}\"
   )
 ")
+if (MYFRAME_INSTALL_DEPS)
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.21")
+  install(IMPORTED_RUNTIME_ARTIFACTS jsoncpp_lib)
+  install(IMPORTED_RUNTIME_ARTIFACTS glog::glog)
+endif()
+endif()
 
 ### package
 include(InstallRequiredSystemLibraries)
