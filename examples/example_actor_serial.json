@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_actor_serial.so",
+    "lib":"example_actor_serial",
     "actor":{
         "example_serial1":[
             {

@@ -16,7 +16,7 @@
   ```json
   {
     "type": "library",
-    "lib": "libHello.so",
+    "lib": "Hello",
     "actor": {
       "HelloActor": [
         {
@@ -40,7 +40,9 @@
   }
   ```
   - "type":"library": 服务通过库的形式提供
-  - "lib":"libHello.so": 需要加载的库名称是libHello.so
+  - "lib":"Hello": 需要加载的库名称
+    - 可以写简略库名，比如 Hello
+    - 也可以写库的全名，比如libHello.so, Hello,dll
   - 创建1个actor实例，名称是 actor.HelloActor.1
   - 创建1个worker实例，名称是 worker.HelloReceiver.1
   - 创建1个worker实例，名称是 worker.HelloSender.1
@@ -52,7 +54,7 @@
 
 ### 创建组件工程
 ```sh
-python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_name"
+python3 path/to/myframe/tools/gen_mod_proj.py --dir="path/to/proj_dir/" --name="mod_name"
 ```
 
 ### 组件工程目录说明
@@ -64,21 +66,16 @@ python3 ~/myframe/tools/gen_mod_proj.py --dir="/path/to/proj_dir/" --name="mod_n
 
 ### 组件工程构建安装
 ```sh
-cmake -S . -B build \
-  -DCMAKE_INSTALL_PREFIX="/path/to/myframe" \
-  -DCMAKE_PREFIX_PATH="/path/to/jsoncpp;/path/to/glog"
-
-make -C build -j "$(nproc)" install
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX="path/to/myframe" -DCMAKE_PREFIX_PATH="path/to/jsoncpp;path/to/glog"
+cmake --build build --config Release --target install
 ```
 
 ### 运行组件
 ```sh
-cd /path/to/myframe/bin
-./launcher -p app ${组件名}.json
+/path/to/myframe/bin/launcher -p app ${组件名}.json
 ```
 
-### 查看运行日志
+### 日志文件
 ```sh
-cd /path/to/myframe/log
-vi app.INFO
+path/to/myframe/log/app.INFO
 ```

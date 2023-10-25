@@ -6,6 +6,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 
+#define MYFRAME_BIN_DIR "@MYFRAME_BIN_DIR@"
 #define MYFRAME_LIB_DIR "@MYFRAME_LIB_DIR@"
 #define MYFRAME_LOG_DIR "@MYFRAME_LOG_DIR@"
 #define MYFRAME_SERVICE_DIR "@MYFRAME_SERVICE_DIR@"

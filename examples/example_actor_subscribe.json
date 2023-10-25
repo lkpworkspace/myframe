@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_actor_subscribe.so",
+    "lib":"example_actor_subscribe",
     "actor":{
         "example_b_pub":[
             {

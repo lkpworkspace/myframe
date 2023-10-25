@@ -6,6 +6,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/mod_manager.h"
+#include <filesystem>
 
 #include <glog/logging.h>
 #include <json/json.h>
@@ -13,6 +14,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/shared_library.h"
 #include "myframe/actor.h"
 #include "myframe/worker.h"
+
+namespace stdfs = std::filesystem;
 
 namespace myframe {
 
@@ -25,7 +28,7 @@ ModManager::~ModManager() {
 }
 
 bool ModManager::LoadMod(const std::string& dl_path) {
-  auto dlname = GetLibName(dl_path);
+  auto dlname = stdfs::path(dl_path).filename().string();
   std::unique_lock<std::shared_mutex> lk(mods_rw_);
   if (mods_.find(dlname) != mods_.end()) {
     VLOG(1) << dlname << " has loaded";
@@ -144,12 +147,6 @@ std::shared_ptr<Worker> ModManager::CreateWorkerInst(
     return worker;
   }
   return nullptr;
-}
-
-std::string ModManager::GetLibName(const std::string& path) const {
-  auto pos = path.find_last_of('/');
-  pos = (pos == std::string::npos) ? -1 : pos;
-  return path.substr(pos + 1);
 }
 
 }  // namespace myframe

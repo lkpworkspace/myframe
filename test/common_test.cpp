@@ -16,7 +16,7 @@ int main() {
   auto lib_path = myframe::Common::GetAbsolutePath("lib");
   LOG(INFO) << "lib path is " << lib_path.string();
 
-  auto root_files = myframe::Common::GetDirFiles(root);
+  auto root_files = myframe::Common::GetDirFiles(root.string());
   LOG(INFO) << "root dir files:";
   for (size_t i = 0; i < root_files.size(); ++i) {
     LOG(INFO) << "  " << root_files[i].string();

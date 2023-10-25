@@ -44,8 +44,6 @@ class MYFRAME_EXPORT ModManager final {
     const std::string& mod_or_class_name,
     const std::string& worker_name);
 
-  std::string GetLibName(const std::string& path) const;
-
  private:
   std::unordered_map<
       std::string, std::function<std::shared_ptr<Actor>(const std::string&)>>

@@ -1,6 +1,6 @@
 {
   "type":"library",
-  "lib":"libexample_worker_quit.so",
+  "lib":"example_worker_quit",
   "worker":{
       "example_worker_quit":[
           {

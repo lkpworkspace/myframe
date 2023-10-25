@@ -10,6 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
+#include "myframe/platform.h"
 #include "myframe/common.h"
 #include "myframe/log.h"
 #include "myframe/app.h"
@@ -48,7 +49,11 @@ int main(int argc, char** argv) {
   LOG(INFO) << "launch command: " << module_args.GetCmd();
 
   if (module_args.GetLibDir().empty()) {
+  #if defined(MYFRAME_OS_WINDOWS)
+    lib_dir = MYFRAME_BIN_DIR;
+  #else
     lib_dir = MYFRAME_LIB_DIR;
+  #endif
   } else {
     lib_dir = module_args.GetLibDir();
   }

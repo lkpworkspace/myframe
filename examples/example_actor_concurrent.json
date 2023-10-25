@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_actor_concurrent.so",
+    "lib":"example_actor_concurrent",
     "actor":{
         "example_actor_concurrent_trigger":[
             {

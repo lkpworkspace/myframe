@@ -107,6 +107,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
     const std::string& mod_name,
     const std::string& worker_name,
     const Json::Value& worker_list);
+  std::string GetLibName(const std::string& name);
 
   /// worker
   bool StartCommonWorker(int worker_count);

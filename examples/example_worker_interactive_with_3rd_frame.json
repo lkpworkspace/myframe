@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_worker_interactive_with_3rd_frame.so",
+    "lib":"example_worker_interactive_with_3rd_frame",
     "actor":{
         "example_actor_interactive_with_3rd_frame":[
             {

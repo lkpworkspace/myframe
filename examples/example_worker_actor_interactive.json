@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_worker_actor_interactive.so",
+    "lib":"example_worker_actor_interactive",
     "actor":{
         "example_actor_interactive":[
             {

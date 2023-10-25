@@ -7,8 +7,11 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/app.h"
 
+#include <regex>
+
 #include <glog/logging.h>
 
+#include "myframe/platform.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/mailbox.h"
@@ -91,8 +94,8 @@ int App::LoadServiceFromDir(const std::string& path) {
   }
   int load_service_cnt = 0;
   for (const auto& it : service_list) {
-    if (!LoadServiceFromFile(it)) {
-      LOG(ERROR) << "Load " << it << " failed";
+    if (!LoadServiceFromFile(it.string())) {
+      LOG(ERROR) << "Load " << it.string() << " failed";
       return -1;
     }
     load_service_cnt++;
@@ -134,6 +137,7 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
       return false;
     }
     lib_name = service["lib"].asString();
+    lib_name = GetLibName(lib_name);
     if (!mods_->LoadMod((lib_dir_ / lib_name).string())) {
       LOG(ERROR) << "load lib "
         << (lib_dir_ / lib_name).string() << " failed, skip";
@@ -750,6 +754,21 @@ bool App::HasUserInst(const std::string& name) {
     }
   }
   return false;
+}
+
+// 支持配置文件中的动态库的简略写法,比如:
+//   libdemo.so 可以简写成 demo
+//   demo.dll 可以简写成 demo
+std::string App::GetLibName(const std::string& name) {
+  std::regex lib_regex(".*\\.(dll|so|dylib)$");
+  if (std::regex_match(name, lib_regex)) {
+    return name;
+  }
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  return "lib" + name + ".so";
+#elif defined(MYFRAME_OS_WINDOWS)
+  return name + ".dll";
+#endif
 }
 
 }  // namespace myframe

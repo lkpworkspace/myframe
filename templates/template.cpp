@@ -1,8 +1,8 @@
 /****************************************************************************
-Copyright (c) 2019, 李柯鹏
+Copyright (c) 2019, likepeng
 All rights reserved.
 
-Author: 李柯鹏 <likepeng0418@163.com>
+Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
 #include <memory>
 #include <chrono>
@@ -11,23 +11,23 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <glog/logging.h>
 
+#include "myframe/export.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/worker.h"
 
 class @template_name@Actor : public myframe::Actor {
  public:
-  /* actor模块加载完毕后调用 */
   int Init(const char* param) override {
     (void)param;
     return 0;
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    /* 获得文本消息， 打印 源地址 目的地址 消息内容*/
+    /* print recv msg */
     LOG(INFO) << *msg << ": " << msg->GetData();
     std::cout << *msg << ": " << msg->GetData() << std::endl;
-    /* 回复消息 */
+    /* resp msg */
     auto mailbox = GetMailbox();
     mailbox->Send(msg->GetSrc(),
       std::make_shared<myframe::Msg>("this is template actor resp"));
@@ -39,9 +39,8 @@ class @template_name@Worker : public myframe::Worker {
   @template_name@Worker() {}
   virtual ~@template_name@Worker() {}
 
-  /* 框架会循环调用该函数 */
   void Run() override {
-    /* 给 actor.@template_name@ 发送消息，并接收回复消息 */
+    /* send msg to actor.@template_name@ and recv resps msg */
     auto mailbox = GetMailbox();
     mailbox->Send("actor.@template_name@.@template_name@1",
             std::make_shared<myframe::Msg>("this is template worker req"));
@@ -58,8 +57,8 @@ class @template_name@Worker : public myframe::Worker {
   }
 };
 
-/* 创建actor实例函数 */
-extern "C" std::shared_ptr<myframe::Actor> actor_create(
+/* create actor instance */
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
   if (actor_name == "@template_name@") {
     return std::make_shared<@template_name@Actor>();
@@ -67,8 +66,8 @@ extern "C" std::shared_ptr<myframe::Actor> actor_create(
   return nullptr;
 }
 
-/* 创建worker实例函数 */
-extern "C" std::shared_ptr<myframe::Worker> worker_create(
+/* create worker instance */
+extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
   if (worker_name == "@template_name@") {
     return std::make_shared<@template_name@Worker>();

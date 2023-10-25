@@ -5,7 +5,12 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "module_argument.h"
+#include "myframe/platform.h"
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <unistd.h>
+#elif defined(MYFRAME_OS_WINDOWS)
+#include <process.h>
+#endif
 #include <iostream>
 
 namespace myframe {
@@ -36,8 +41,7 @@ ModuleArgument::ModuleArgument(
 
 void ModuleArgument::ParseArgument(
   const int argc, char** argv) {
-  const std::string binary_name(argv[0]);
-  binary_name_ = binary_name.substr(binary_name.find_last_of("/") + 1);
+  binary_name_ = stdfs::path(argv[0]).filename().string();
   process_name_ = binary_name_ + "_" + std::to_string(getpid());
 
   // log command for info

@@ -1,6 +1,6 @@
 {
     "type":"library",
-    "lib":"libexample_worker_talk.so",
+    "lib":"example_worker_talk",
     "worker":{
         "example_worker_talk":[
             {
