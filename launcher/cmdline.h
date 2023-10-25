@@ -108,10 +108,9 @@ Target lexical_cast(const Source &arg) {
 #if !defined(MYFRAME_OS_WINDOWS)
 #include <cxxabi.h>
 
-static inline std::string demangle(const std::string &name)
-{
-  int status=0;
-  char *p=abi::__cxa_demangle(name.c_str(), 0, 0, &status);
+static inline std::string demangle(const std::string &name) {
+  int status = 0;
+  char *p = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
   std::string ret(p);
   free(p);
   return ret;
@@ -120,10 +119,9 @@ static inline std::string demangle(const std::string &name)
 #else
 #include <windows.h>
 #include <Dbghelp.h>
-#pragma comment(lib,"dbghelp.lib")
+#pragma comment(lib, "dbghelp.lib")
 
-static inline std::string demangle(const std::string &name)
-{
+static inline std::string demangle(const std::string &name) {
   TCHAR szUndecorateName[256];
   memset(szUndecorateName, 0, 256);
   UnDecorateSymbolName(name.c_str(), szUndecorateName, 256, 0);
