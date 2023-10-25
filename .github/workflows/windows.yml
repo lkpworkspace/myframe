@@ -121,7 +121,7 @@ jobs:
                 -DCMAKE_EXE_LINKER_FLAGS='/NOIMPLIB' `
                 -DCMAKE_EXE_LINKER_FLAGS_RELEASE='/INCREMENTAL:NO /DEBUG' `
                 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/myframe `
-                -DCMAKE_PREFIX_PATH="${{github.workspace}}/jsoncpp;${{github.workspace}}/glog" `
+                -DCMAKE_PREFIX_PATH="${{github.workspace}}/jsoncpp;${{github.workspace}}/glog;${{github.workspace}}/gflags" `
                 -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' `
                 -G "${{matrix.generator}}" `
                 -Werror
