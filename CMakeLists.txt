@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.9.0)
+project(myframe VERSION 0.9.1)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)

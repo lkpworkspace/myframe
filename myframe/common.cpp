@@ -13,12 +13,16 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <unistd.h>
 #elif defined(MYFRAME_OS_WINDOWS)
 #include <Windows.h>
+#elif defined(MYFRAME_OS_MACOSX)
+#include <mach-o/dyld.h>
 #else
 #error "Platform not supported"
 #endif
 
 #include <fstream>
 #include <sstream>
+
+#define MYFRAME_MAX_PATH 256
 
 namespace myframe {
 
@@ -49,23 +53,29 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
 }
 
 stdfs::path Common::GetWorkRoot() {
-  char path_buf[256];
-  memset(path_buf, 0, sizeof(path_buf));
+  char path_buf[MYFRAME_MAX_PATH];
+  memset(path_buf, 0, MYFRAME_MAX_PATH);
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-  int ret = readlink("/proc/self/exe", path_buf, sizeof(path_buf));
+  int ret = readlink("/proc/self/exe", path_buf, MYFRAME_MAX_PATH);
   if (ret == -1) {
     return "";
   }
 #elif defined(MYFRAME_OS_WINDOWS)
-  auto ret = GetModuleFileName(NULL, path_buf, sizeof(path_buf));
+  auto ret = GetModuleFileName(NULL, path_buf, MYFRAME_MAX_PATH);
   if (ret == 0) {
+    return "";
+  }
+#elif defined(MYFRAME_OS_MACOSX)
+  uint32_t ret_path_buf_size = MYFRAME_MAX_PATH;
+  auto ret = ::_NSGetExecutablePath(path_buf, &ret_path_buf_size);
+  if (ret == -1) {
     return "";
   }
 #else
   #error "Platform not supported"
 #endif
-  if (static_cast<std::size_t>(ret) >= sizeof(path_buf)) {
-    path_buf[sizeof(path_buf) - 1] = '\0';
+  if (static_cast<std::size_t>(ret) >= MYFRAME_MAX_PATH) {
+    path_buf[MYFRAME_MAX_PATH - 1] = '\0';
   }
   stdfs::path p(path_buf);
   if (p.has_parent_path()) {

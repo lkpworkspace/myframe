@@ -13,11 +13,11 @@ Author: 李柯鹏 <likepeng0418@163.com>
   #else
     #include "myframe/platform/poller_linux.h"
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     #include "myframe/platform/poller_generic.h"
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else
@@ -33,11 +33,11 @@ std::shared_ptr<Poller> Poller::Create() {
   #else
     return std::make_shared<PollerLinux>();
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     return std::make_shared<PollerGeneric>();
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else

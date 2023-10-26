@@ -128,7 +128,10 @@ class MYFRAME_EXPORT Worker {
 
 }  // namespace myframe
 
+#include "myframe/platform.h"
+#if defined(MYFRAME_OS_WINDOWS)
 template class std::shared_ptr<myframe::Worker>;
+#endif
 extern "C" {
 typedef std::shared_ptr<myframe::Worker> (*worker_create_func_t)(
     const std::string&);

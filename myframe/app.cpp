@@ -768,6 +768,8 @@ std::string App::GetLibName(const std::string& name) {
   return "lib" + name + ".so";
 #elif defined(MYFRAME_OS_WINDOWS)
   return name + ".dll";
+#elif defined(MYFRAME_OS_MACOSX)
+  return "lib" + name + ".dylib";
 #endif
 }
 

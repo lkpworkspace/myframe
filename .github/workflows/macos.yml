@@ -1,0 +1,118 @@
+name: macOS
+
+on: [push, pull_request]
+
+jobs:
+  build-macos:
+    name: AppleClang-C++${{matrix.std}}-${{matrix.build_type}}
+    runs-on: macos-12
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: true
+      matrix:
+        std: [17, 20]
+        include:
+          - generator: Ninja
+          - build_type: Debug
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dependencies
+        run: |
+          brew install ninja
+
+      - name: Cache jsoncpp
+        id: cache-jsoncpp
+        uses: actions/cache@v3
+        with:
+          path: jsoncpp/
+          key: ${{runner.os}}-jsoncpp-1.9.5
+
+      - name: Download jsoncpp
+        shell: bash
+        if: steps.cache-jsoncpp.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.5.tar.gz
+          tar xvf 1.9.5.tar.gz
+
+      - name: Build jsoncpp
+        if: steps.cache-jsoncpp.outputs.cache-hit != 'true'
+        run: |
+          cmake -S jsoncpp-1.9.5 -B build-jsoncpp \
+            -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/jsoncpp \
+            -DBUILD_OBJECT_LIBS=OFF \
+            -DJSONCPP_WITH_TESTS=OFF \
+            -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF \
+            -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF \
+            -G "${{matrix.generator}}"
+          cmake --build build-jsoncpp --target install
+
+      - name: Cache gflags
+        id: cache-gflags
+        uses: actions/cache@v3
+        with:
+          path: gflags/
+          key: ${{runner.os}}-gflags-2.2.2
+
+      - name: Download gflags
+        shell: bash
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.tar.gz
+          tar xvf v2.2.2.tar.gz
+
+      - name: Build gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          cmake -S gflags-2.2.2 -B build-gflags \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags \
+            -G "${{matrix.generator}}"
+          cmake --build build-gflags --target install
+
+      - name: Cache glog
+        id: cache-glog
+        uses: actions/cache@v3
+        with:
+          path: glog/
+          key: ${{runner.os}}-glog-0.6.0
+
+      - name: Download glog
+        shell: bash
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/google/glog/archive/refs/tags/v0.6.0.tar.gz
+          tar xvf v0.6.0.tar.gz
+
+      - name: Build glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+          cmake -S glog-0.6.0 -B build-glog \
+            -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+            -DWITH_PKGCONFIG=OFF \
+            -DWITH_GTEST=OFF \
+            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/glog \
+            -DCMAKE_PREFIX_PATH="${{github.workspace}}/gflags" \
+            -G "${{matrix.generator}}"
+          cmake --build build-glog --target install
+
+      - name: Configure
+        run: |
+          cmake -S . -B build_${{matrix.build_type}} \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_CXX_STANDARD=${{matrix.std}} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DMYFRAME_USE_CV=ON \
+            -DCMAKE_PREFIX_PATH="${{github.workspace}}/jsoncpp;${{github.workspace}}/glog;${{github.workspace}}/gflags" \
+            -G "${{matrix.generator}}"
+
+      - name: Build
+        run: |
+          cmake --build build_${{matrix.build_type}} \
+                --config ${{matrix.build_type}}

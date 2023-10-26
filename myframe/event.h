@@ -20,11 +20,11 @@ namespace myframe {
   #else
     typedef int ev_handle_t;
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     typedef void* ev_handle_t;
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else
@@ -58,11 +58,11 @@ class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
   #else
     static const ev_handle_t DEFAULT_EV_HANDLE{-1};
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     static const ev_handle_t DEFAULT_EV_HANDLE;
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else
