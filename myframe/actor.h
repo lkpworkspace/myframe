@@ -129,7 +129,7 @@ class MYFRAME_EXPORT Actor {
 }  // namespace myframe
 
 #include "myframe/platform.h"
-#if defined(MYFRAME_PLATFORM_WINDOWS)
+#if defined(MYFRAME_OS_WINDOWS)
 template class std::shared_ptr<myframe::Actor>;
 #endif
 extern "C" {
