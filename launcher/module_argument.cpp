@@ -6,7 +6,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "module_argument.h"
 #include "myframe/platform.h"
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID) \
+    || defined(MYFRAME_OS_MACOSX)
 #include <unistd.h>
 #elif defined(MYFRAME_OS_WINDOWS)
 #include <process.h>

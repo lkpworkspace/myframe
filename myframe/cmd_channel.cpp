@@ -13,11 +13,11 @@ Author: 李柯鹏 <likepeng0418@163.com>
   #else
     #include "myframe/platform/cmd_channel_linux.h"
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     #include "myframe/platform/cmd_channel_generic.h"
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else
@@ -34,11 +34,11 @@ std::shared_ptr<CmdChannel> CmdChannel::Create(
   #else
     return std::make_shared<CmdChannelLinux>(poller);
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     return std::make_shared<CmdChannelGeneric>(poller);
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else

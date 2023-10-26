@@ -12,11 +12,11 @@ namespace myframe {
   #ifdef MYFRAME_USE_CV
     const ev_handle_t Event::DEFAULT_EV_HANDLE{nullptr};
   #endif
-#elif defined(MYFRAME_OS_WINDOWS)
+#elif defined(MYFRAME_OS_WINDOWS) || defined(MYFRAME_OS_MACOSX)
   #ifdef MYFRAME_USE_CV
     const ev_handle_t Event::DEFAULT_EV_HANDLE{nullptr};
   #else
-    #error "Windows support conditional variables only,"
+    #error "Support conditional variables only,"
       " set MYFRAME_USE_CV to enable"
   #endif
 #else

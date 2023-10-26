@@ -7,7 +7,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/shared_library.h"
 #include "myframe/platform.h"
 
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID) \
+    || defined(MYFRAME_OS_MACOSX)
 #include "myframe/platform/shared_library_linux.h"
 #elif defined(MYFRAME_OS_WINDOWS)
 #include "myframe/platform/shared_library_win.h"
@@ -18,7 +19,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 std::shared_ptr<SharedLibrary> SharedLibrary::Create() {
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID) \
+    || defined(MYFRAME_OS_MACOSX)
   return std::make_shared<SharedLibraryLinux>();
 #elif defined(MYFRAME_OS_WINDOWS)
   return std::make_shared<SharedLibraryWin>();

@@ -66,9 +66,9 @@ class lexical_cast_t<Target, Source, true>{
 };
 
 template <typename Source>
-class lexical_cast_t<std::string, Source, false> {
+class lexical_cast_t<::std::string, Source, false> {
  public:
-  static std::string cast(const Source &arg) {
+  static ::std::string cast(const Source &arg) {
     std::ostringstream ss;
     ss << arg;
     return ss.str();
@@ -76,9 +76,9 @@ class lexical_cast_t<std::string, Source, false> {
 };
 
 template <typename Target>
-class lexical_cast_t<Target, std::string, false> {
+class lexical_cast_t<Target, ::std::string, false> {
  public:
-  static Target cast(const std::string &arg) {
+  static Target cast(const ::std::string &arg) {
     Target ret;
     std::istringstream ss(arg);
     if (!(ss >> ret && ss.eof()))
@@ -108,10 +108,10 @@ Target lexical_cast(const Source &arg) {
 #if !defined(MYFRAME_OS_WINDOWS)
 #include <cxxabi.h>
 
-static inline std::string demangle(const std::string &name) {
+static inline ::std::string demangle(const ::std::string &name) {
   int status = 0;
   char *p = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
-  std::string ret(p);
+  ::std::string ret(p);
   free(p);
   return ret;
 }
@@ -121,7 +121,7 @@ static inline std::string demangle(const std::string &name) {
 #include <Dbghelp.h>
 #pragma comment(lib, "dbghelp.lib")
 
-static inline std::string demangle(const std::string &name) {
+static inline ::std::string demangle(const ::std::string &name) {
   TCHAR szUndecorateName[256];
   memset(szUndecorateName, 0, 256);
   UnDecorateSymbolName(name.c_str(), szUndecorateName, 256, 0);
@@ -130,17 +130,17 @@ static inline std::string demangle(const std::string &name) {
 #endif
 
 template <class T>
-std::string readable_typename() {
+::std::string readable_typename() {
   return demangle(typeid(T).name());
 }
 
 template <class T>
-std::string default_value(T def) {
-  return detail::lexical_cast<std::string>(def);
+::std::string default_value(T def) {
+  return detail::lexical_cast<::std::string>(def);
 }
 
 template <>
-inline std::string readable_typename<std::string>() {
+inline ::std::string readable_typename<::std::string>() {
   return "string";
 }
 
@@ -150,16 +150,16 @@ inline std::string readable_typename<std::string>() {
 
 class cmdline_error : public std::exception {
  public:
-  explicit cmdline_error(const std::string &msg) : msg_(msg) {}
+  explicit cmdline_error(const ::std::string &msg) : msg_(msg) {}
   ~cmdline_error() throw() {}
   const char *what() const throw() override { return msg_.c_str(); }
  private:
-  std::string msg_;
+  ::std::string msg_;
 };
 
 template <class T>
 struct default_reader{
-  T operator()(const std::string &str){
+  T operator()(const ::std::string &str){
     return detail::lexical_cast<T>(str);
   }
 };
@@ -167,7 +167,7 @@ struct default_reader{
 template <class T>
 struct range_reader {
   range_reader(const T &low, const T &high): low_(low), high_(high) {}
-  T operator()(const std::string &s) const {
+  T operator()(const ::std::string &s) const {
     T ret = default_reader<T>()(s);
     if (!(ret >= low_ && ret <= high_))
       throw cmdline::cmdline_error("range_error");
@@ -184,7 +184,7 @@ range_reader<T> range(const T &low, const T &high) {
 
 template <class T>
 struct oneof_reader{
-  T operator()(const std::string &s) {
+  T operator()(const ::std::string &s) {
     T ret = default_reader<T>()(s);
     if (std::find(alt.begin(), alt.end(), ret) == alt.end())
       throw cmdline_error("");
@@ -318,14 +318,14 @@ class parser {
   parser() {
   }
   ~parser() {
-    for (std::map<std::string, option_base*>::iterator p = options.begin();
+    for (std::map<::std::string, option_base*>::iterator p = options.begin();
          p != options.end(); p++)
       delete p->second;
   }
 
-  void add(const std::string &name,
+  void add(const ::std::string &name,
            char short_name = 0,
-           const std::string &desc = "") {
+           const ::std::string &desc = "") {
     if (options.count(name))
       throw cmdline_error("multiple definition: " + name);
     options[name] = new option_without_value(name, short_name, desc);
@@ -333,18 +333,18 @@ class parser {
   }
 
   template <class T>
-  void add(const std::string &name,
+  void add(const ::std::string &name,
            char short_name = 0,
-           const std::string &desc = "",
+           const ::std::string &desc = "",
            bool need = true,
            const T def = T()) {
     add(name, short_name, desc, need, def, default_reader<T>());
   }
 
   template <class T, class F>
-  void add(const std::string &name,
+  void add(const ::std::string &name,
            char short_name = 0,
-           const std::string &desc = "",
+           const ::std::string &desc = "",
            bool need = true,
            const T def = T(),
            F reader = F()) {
@@ -355,22 +355,22 @@ class parser {
     ordered.push_back(options[name]);
   }
 
-  void footer(const std::string &f) {
+  void footer(const ::std::string &f) {
     ftr = f;
   }
 
-  void set_program_name(const std::string &name) {
+  void set_program_name(const ::std::string &name) {
     prog_name = name;
   }
 
-  bool exist(const std::string &name) const {
+  bool exist(const ::std::string &name) const {
     if (options.count(name) == 0)
       throw cmdline_error("there is no flag: --"+name);
     return options.find(name)->second->has_set();
   }
 
   template <class T>
-  const T &get(const std::string &name) const {
+  const T &get(const ::std::string &name) const {
     if (options.count(name) == 0)
       throw cmdline_error("there is no flag: --" + name);
     const option_with_value<T> *p = dynamic_cast<const option_with_value<T>*>(
@@ -379,16 +379,16 @@ class parser {
     return p->get();
   }
 
-  const std::vector<std::string> &rest() const {
+  const std::vector<::std::string> &rest() const {
     return others;
   }
 
-  bool parse(const std::string &arg) {
-    std::vector<std::string> args;
+  bool parse(const ::std::string &arg) {
+    std::vector<::std::string> args;
 
-    std::string buf;
+    ::std::string buf;
     bool in_quote = false;
-    for (std::string::size_type i = 0; i < arg.length(); i++) {
+    for (::std::string::size_type i = 0; i < arg.length(); i++) {
       if (arg[i] == '\"') {
         in_quote = !in_quote;
         continue;
@@ -425,7 +425,7 @@ class parser {
     return parse(args);
   }
 
-  bool parse(const std::vector<std::string> &args) {
+  bool parse(const std::vector<::std::string> &args) {
     int argc = static_cast<int>(args.size());
     std::vector<const char*> argv(argc);
 
@@ -446,8 +446,8 @@ class parser {
     if (prog_name == "")
       prog_name = argv[0];
 
-    std::map<char, std::string> lookup;
-    for (std::map<std::string, option_base*>::iterator p = options.begin();
+    std::map<char, ::std::string> lookup;
+    for (std::map<::std::string, option_base*>::iterator p = options.begin();
          p != options.end(); p++) {
       if (p->first.length() == 0) continue;
       char initial = p->second->short_name();
@@ -455,7 +455,7 @@ class parser {
         if (lookup.count(initial) > 0) {
           lookup[initial] = "";
           errors.push_back(
-            std::string("short option '") + initial + "' is ambiguous");
+            ::std::string("short option '") + initial + "' is ambiguous");
           return false;
         } else {
           lookup[initial] = p->first;
@@ -467,11 +467,11 @@ class parser {
       if (strncmp(argv[i], "--", 2) == 0) {
         const char *p = strchr(argv[i] + 2, '=');
         if (p) {
-          std::string name(argv[i] + 2, p);
-          std::string val(p + 1);
+          ::std::string name(argv[i] + 2, p);
+          ::std::string val(p + 1);
           set_option(name, val);
         } else {
-          std::string name(argv[i] + 2);
+          ::std::string name(argv[i] + 2);
           if (options.count(name) == 0) {
             errors.push_back("undefined option: --" + name);
             continue;
@@ -495,23 +495,23 @@ class parser {
           last = argv[i][j];
           if (lookup.count(argv[i][j-1]) == 0) {
             errors.push_back(
-              std::string("undefined short option: -") + argv[i][j-1]);
+              ::std::string("undefined short option: -") + argv[i][j-1]);
             continue;
           }
           if (lookup[argv[i][j-1]] == "") {
             errors.push_back(
-              std::string("ambiguous short option: -") + argv[i][j-1]);
+              ::std::string("ambiguous short option: -") + argv[i][j-1]);
             continue;
           }
           set_option(lookup[argv[i][j-1]]);
         }
 
         if (lookup.count(last) == 0) {
-          errors.push_back(std::string("undefined short option: -") + last);
+          errors.push_back(::std::string("undefined short option: -") + last);
           continue;
         }
         if (lookup[last] == "") {
-          errors.push_back(std::string("ambiguous short option: -") + last);
+          errors.push_back(::std::string("ambiguous short option: -") + last);
           continue;
         }
 
@@ -526,21 +526,21 @@ class parser {
       }
     }
 
-    for (std::map<std::string, option_base*>::iterator p = options.begin();
+    for (std::map<::std::string, option_base*>::iterator p = options.begin();
          p != options.end(); p++)
       if (!p->second->valid())
-        errors.push_back("need option: --"+std::string(p->first));
+        errors.push_back("need option: --"+::std::string(p->first));
 
     return errors.size() == 0;
   }
 
-  void parse_check(const std::string &arg) {
+  void parse_check(const ::std::string &arg) {
     if (!options.count("help"))
       add("help", '?', "print this message");
     check(0, parse(arg));
   }
 
-  void parse_check(const std::vector<std::string> &args) {
+  void parse_check(const std::vector<::std::string> &args) {
     if (!options.count("help"))
       add("help", '?', "print this message");
     check(args.size(), parse(args));
@@ -552,18 +552,18 @@ class parser {
     check(argc, parse(argc, argv));
   }
 
-  std::string error() const {
+  ::std::string error() const {
     return errors.size() > 0 ? errors[0] : "";
   }
 
-  std::string error_full() const {
+  ::std::string error_full() const {
     std::ostringstream oss;
     for (size_t i = 0; i < errors.size(); i++)
       oss << errors[i] << std::endl;
     return oss.str();
   }
 
-  std::string usage() const {
+  ::std::string usage() const {
     std::ostringstream oss;
     oss << "usage: " << prog_name << " ";
     for (size_t i = 0; i < ordered.size(); i++) {
@@ -606,7 +606,7 @@ class parser {
     }
   }
 
-  void set_option(const std::string &name) {
+  void set_option(const ::std::string &name) {
     if (options.count(name) == 0) {
       errors.push_back("undefined option: --"+name);
       return;
@@ -617,7 +617,7 @@ class parser {
     }
   }
 
-  void set_option(const std::string &name, const std::string &value) {
+  void set_option(const ::std::string &name, const ::std::string &value) {
     if (options.count(name) == 0) {
       errors.push_back("undefined option: --"+name);
       return;
@@ -634,22 +634,22 @@ class parser {
 
     virtual bool has_value() const = 0;
     virtual bool set() = 0;
-    virtual bool set(const std::string &value) = 0;
+    virtual bool set(const ::std::string &value) = 0;
     virtual bool has_set() const = 0;
     virtual bool valid() const = 0;
     virtual bool must() const = 0;
 
-    virtual const std::string &name() const = 0;
+    virtual const ::std::string &name() const = 0;
     virtual char short_name() const = 0;
-    virtual const std::string &description() const = 0;
-    virtual std::string short_description() const = 0;
+    virtual const ::std::string &description() const = 0;
+    virtual ::std::string short_description() const = 0;
   };
 
   class option_without_value : public option_base {
    public:
-    option_without_value(const std::string &name,
+    option_without_value(const ::std::string &name,
                          char short_name,
-                         const std::string &desc)
+                         const ::std::string &desc)
       :nam_(name), snam_(short_name), desc_(desc), has_(false) {
     }
     ~option_without_value() {}
@@ -661,7 +661,7 @@ class parser {
       return true;
     }
 
-    bool set(const std::string &) override {
+    bool set(const ::std::string &) override {
       return false;
     }
 
@@ -677,7 +677,7 @@ class parser {
       return false;
     }
 
-    const std::string &name() const override {
+    const ::std::string &name() const override {
       return nam_;
     }
 
@@ -685,29 +685,29 @@ class parser {
       return snam_;
     }
 
-    const std::string &description() const override {
+    const ::std::string &description() const override {
       return desc_;
     }
 
-    std::string short_description() const override {
+    ::std::string short_description() const override {
       return "--"+nam_;
     }
 
    private:
-    std::string nam_;
+    ::std::string nam_;
     char snam_;
-    std::string desc_;
+    ::std::string desc_;
     bool has_;
   };
 
   template <class T>
   class option_with_value : public option_base {
    public:
-    option_with_value(const std::string &name,
+    option_with_value(const ::std::string &name,
                       char short_name,
                       bool need,
                       const T &def,
-                      const std::string &desc)
+                      const ::std::string &desc)
       : nam(name), snam(short_name), need_(need), has(false)
       , def_(def), actual(def) {
       this->desc_ = full_description(desc);
@@ -724,7 +724,7 @@ class parser {
       return false;
     }
 
-    bool set(const std::string &value) override {
+    bool set(const ::std::string &value) override {
       try {
         actual = read(value);
         has = true;
@@ -748,7 +748,7 @@ class parser {
       return need_;
     }
 
-    const std::string &name() const override {
+    const ::std::string &name() const override {
       return nam;
     }
 
@@ -756,28 +756,28 @@ class parser {
       return snam;
     }
 
-    const std::string &description() const override {
+    const ::std::string &description() const override {
       return desc_;
     }
 
-    std::string short_description() const override {
+    ::std::string short_description() const override {
       return "--"+nam+"="+detail::readable_typename<T>();
     }
 
    protected:
-    std::string full_description(const std::string &desc) {
+    ::std::string full_description(const ::std::string &desc) {
       return
         desc+" ("+detail::readable_typename<T>()+
         (need_?"":" [="+detail::default_value<T>(def_)+"]")
         +")";
     }
 
-    virtual T read(const std::string &s) = 0;
+    virtual T read(const ::std::string &s) = 0;
 
-    std::string nam;
+    ::std::string nam;
     char snam;
     bool need_;
-    std::string desc_;
+    ::std::string desc_;
 
     bool has;
     T def_;
@@ -787,32 +787,32 @@ class parser {
   template <class T, class F>
   class option_with_value_with_reader : public option_with_value<T> {
    public:
-    option_with_value_with_reader(const std::string &name,
+    option_with_value_with_reader(const ::std::string &name,
                                   char short_name,
                                   bool need,
                                   const T def,
-                                  const std::string &desc,
+                                  const ::std::string &desc,
                                   F reader)
       : option_with_value<T>(name, short_name, need, def, desc)
       , reader_(reader) {
     }
 
    private:
-    T read(const std::string &s) override {
+    T read(const ::std::string &s) override {
       return reader_(s);
     }
 
     F reader_;
   };
 
-  std::map<std::string, option_base*> options;
+  std::map<::std::string, option_base*> options;
   std::vector<option_base*> ordered;
-  std::string ftr;
+  ::std::string ftr;
 
-  std::string prog_name;
-  std::vector<std::string> others;
+  ::std::string prog_name;
+  std::vector<::std::string> others;
 
-  std::vector<std::string> errors;
+  std::vector<::std::string> errors;
 };
 
 }  // namespace cmdline
