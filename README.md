@@ -16,12 +16,14 @@ worker自驱动，可以通过消息与actor交互;
 
 | 操作系统支持   |
 | -------------- |
-| Windows |
 | Linux |
+| Windows |
+| macOS |
 
 ## 构建
 * [github ci linux](.github/workflows/linux.yml)
 * [github ci windows](.github/workflows/windows.yml)
+* [github ci macOS](.github/workflows/macos.yml)
 
 ## 运行所有的example
 ```sh
