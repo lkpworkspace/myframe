@@ -13,6 +13,8 @@ add_library(example_actor_concurrent SHARED example_actor_concurrent.cpp)
 target_link_libraries(example_actor_concurrent ${PROJECT_NAME})
 add_library(example_actor_subscribe SHARED example_actor_subscribe.cpp)
 target_link_libraries(example_actor_subscribe ${PROJECT_NAME})
+add_library(example_node SHARED example_node.cpp)
+target_link_libraries(example_node ${PROJECT_NAME})
 
 ### worker
 add_library(example_worker_publish SHARED example_worker_publish.cpp)
@@ -44,6 +46,7 @@ INSTALL(TARGETS
     example_actor_serial
     example_actor_concurrent
     example_actor_subscribe
+    example_node
     example_worker_actor_interactive 
     example_worker_publish
     example_worker_talk 

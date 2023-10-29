@@ -29,7 +29,9 @@ class ActorContextManager final {
   /* 注册actor */
   bool RegContext(std::shared_ptr<ActorContext> ctx);
 
-  void DispatchMsg(std::shared_ptr<Msg> msg);
+  void DispatchMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst = "");
 
   /* 获得一个待处理的actor */
   std::shared_ptr<ActorContext> GetContextWithMsg();

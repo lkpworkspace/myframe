@@ -1,0 +1,21 @@
+{
+  "type":"library",
+  "lib":"example_node",
+  "actor":{
+      "node":[
+          {
+              "instance_name":"#1"
+          }
+      ],
+      "node_pub":[
+          {
+              "instance_name":"#1"
+          }
+      ],
+      "node_sub":[
+          {
+              "instance_name":"#1"
+          }
+      ]
+  }
+}

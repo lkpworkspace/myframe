@@ -147,8 +147,10 @@ void WorkerContextManager::WeakupWorker() {
   }
 }
 
-void WorkerContextManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
-  std::string worker_name = msg->GetDst();
+void WorkerContextManager::DispatchWorkerMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst) {
+  std::string worker_name = dst.empty() ? msg->GetDst() : dst;
   if (!ev_mgr_->Has(worker_name)) {
     LOG(ERROR) << "can't find worker " << worker_name << ", drop msg: from "
                << msg->GetSrc() << " to " << msg->GetDst();

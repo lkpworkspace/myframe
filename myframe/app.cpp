@@ -281,7 +281,7 @@ bool App::AddWorker(
   worker->SetInstName(inst_name);
   worker->SetConfig(config);
   if (worker->GetTypeName() == "node") {
-    std::lock_guard<std::mutex> lock(local_mtx_);
+    std::lock_guard<std::recursive_mutex> lock(local_mtx_);
     if (node_addr_.empty()) {
       LOG(INFO) << "create node " << worker->GetWorkerName();
       node_addr_ = worker->GetWorkerName();
@@ -357,22 +357,37 @@ bool App::CreateActorContext(
 }
 
 bool App::CreateActorContext(
-  std::shared_ptr<Actor> mod_inst,
-  const std::string& params) {
+    std::shared_ptr<Actor> mod_inst,
+    const std::string& params) {
   auto actor_name = mod_inst->GetActorName();
+  if (mod_inst->GetTypeName() == "node") {
+    std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+    if (node_addr_.empty()) {
+      LOG(INFO) << "create node " << actor_name;
+      node_addr_ = actor_name;
+    } else {
+      LOG(ERROR) << "has more than one node instance, "
+        << node_addr_ << " and " << actor_name;
+      return false;
+    }
+  }
   auto ctx = std::make_shared<ActorContext>(shared_from_this(), mod_inst);
   if (ctx->Init(params.c_str())) {
     LOG(ERROR) << "init " << actor_name << " fail";
     return false;
   }
   actor_ctx_mgr_->RegContext(ctx);
+  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
   // 接收缓存中发给自己的消息
-  if (cache_msg_.find(actor_name) != cache_msg_.end()) {
-    auto& cache_list = cache_msg_[actor_name];
-    LOG(INFO) << actor_name
-      << " recv msg from cache, size " << cache_list.size();
-    DispatchMsg(&cache_list);
-    cache_msg_.erase(actor_name);
+  for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
+    if (it->msg->GetDst() == actor_name) {
+      LOG(INFO) << actor_name
+        << " recv msg from cache " << *(it->msg);
+      DispatchMsg(it->msg);
+      it = cache_msgs_.erase(it);
+      continue;
+    }
+    ++it;
   }
   // 目的地址不存在的暂时放到缓存消息队列
   auto send_list = ctx->GetMailbox()->GetSendList();
@@ -380,7 +395,7 @@ bool App::CreateActorContext(
     if (!HasUserInst((*it)->GetDst())) {
       LOG(WARNING) << "can't found " << (*it)->GetDst()
         << ", cache this msg";
-      cache_msg_[(*it)->GetDst()].push_back(*it);
+      cache_msgs_.emplace_back(0, *it);
       it = send_list->erase(it);
       continue;
     }
@@ -423,60 +438,52 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
   LOG_IF(WARNING,
       msg_list->size() > warning_msg_size_.load())
     << " dispatch msg too many";
-  std::string node_addr;
-  {
-    std::lock_guard<std::mutex> lock(local_mtx_);
-    node_addr = node_addr_;
-  }
-  std::lock_guard<std::mutex> lock(dispatch_mtx_);
   for (auto& msg : (*msg_list)) {
-    VLOG(1) << *msg;
-    /// 处理框架消息
-    if (msg->GetDst() == MAIN_ADDR) {
-      ProcessMain(msg);
-      continue;
-    }
-    /// 转换来自其它框架的消息
-    if (!node_addr.empty() && msg->GetSrc() == node_addr) {
-      // FIXME: 不支持进程间/机器间转发event.conn消息
-      if (msg->GetDesc().substr(0, 10) == "event.conn") {
-        continue;
-      }
-      msg->SetSrc(msg->GetDesc());
-      msg->SetDesc(node_addr);
-    }
-    /// 消息分发
-    auto name_list = Common::SplitMsgName(msg->GetDst());
-    if (name_list.size() < 2) {
-      LOG(ERROR) << "Unknown msg " << *msg;
-      continue;
-    }
-    if (name_list[0] == "worker"
-        && ev_mgr_->Has(msg->GetDst())) {
-      // dispatch to user worker
-      worker_ctx_mgr_->DispatchWorkerMsg(msg);
-    } else if (name_list[0] == "actor"
-               && actor_ctx_mgr_->HasActor(msg->GetDst())) {
-      // dispatch to actor
-      actor_ctx_mgr_->DispatchMsg(msg);
-    } else if (name_list[0] == "event") {
-      if (name_list[1] == "conn") {
-        auto handle = ev_mgr_->ToHandle(msg->GetDst());
-        ev_conn_mgr_->Notify(handle, msg);
-      } else {
-        LOG(ERROR) << "Unknown msg " << *msg;
-      }
-    } else {
-      if (!node_addr.empty()) {
-        msg->SetDesc(msg->GetDst());
-        msg->SetDst(node_addr);
-        worker_ctx_mgr_->DispatchWorkerMsg(msg);
-      } else {
-        LOG(ERROR) << "Unknown msg " << *msg;
-      }
-    }
+    DispatchMsg(msg);
   }
   msg_list->clear();
+}
+
+void App::DispatchMsg(std::shared_ptr<Msg> msg) {
+  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+  VLOG(1) << *msg;
+  /// 处理框架消息
+  if (msg->GetDst() == MAIN_ADDR) {
+    ProcessMain(msg);
+    return;
+  }
+  /// 消息分发
+  auto name_list = Common::SplitMsgName(msg->GetDst());
+  if (name_list.size() < 2) {
+    LOG(ERROR) << "Unknown msg " << *msg;
+    return;
+  }
+  if (name_list[0] == "worker"
+      && ev_mgr_->Has(msg->GetDst())) {
+    // dispatch to user worker
+    worker_ctx_mgr_->DispatchWorkerMsg(msg);
+  } else if (name_list[0] == "actor"
+      && actor_ctx_mgr_->HasActor(msg->GetDst())) {
+    // dispatch to actor
+    actor_ctx_mgr_->DispatchMsg(msg);
+  } else if (name_list[0] == "event") {
+    if (name_list[1] == "conn") {
+      auto handle = ev_mgr_->ToHandle(msg->GetDst());
+      ev_conn_mgr_->Notify(handle, msg);
+    } else {
+      LOG(ERROR) << "Unknown msg " << *msg;
+    }
+  } else if (!node_addr_.empty()) {
+    if (node_addr_.substr(0, 5) == "actor") {
+      actor_ctx_mgr_->DispatchMsg(msg, node_addr_);
+    } else if (node_addr_.substr(0, 6) == "worker") {
+      worker_ctx_mgr_->DispatchWorkerMsg(msg, node_addr_);
+    } else {
+      LOG(ERROR) << "Unknown msg " << *msg;
+    }
+  } else {
+    LOG(ERROR) << "Unknown msg " << *msg;
+  }
 }
 
 // 将获得的消息分发给其他actor
@@ -681,7 +688,7 @@ void App::ProcessEventConn(std::shared_ptr<EventConn> ev) {
 }
 
 void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
-  VLOG_IF(1, evs.size() > 0) << "get " << evs.size() << " event";
+  VLOG(1) << "get " << evs.size() << " event";
   for (size_t i = 0; i < evs.size(); ++i) {
     auto ev_obj = ev_mgr_->Get<Event>(evs[i]);
     if (ev_obj == nullptr) {
@@ -713,8 +720,22 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
   }
 }
 
+void App::ProcessCacheMsg() {
+  for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
+    if (it->search_count >= default_search_count_) {
+      VLOG(1) << *(it->msg) << " search count: " << it->search_count
+        << ", dispatch it";
+      DispatchMsg(it->msg);
+      it = cache_msgs_.erase(it);
+    } else {
+      it->search_count++;
+      ++it;
+    }
+  }
+}
+
 int App::Exec() {
-  int time_wait_ms = 1000;
+  int time_wait_ms = 100;
   std::vector<ev_handle_t> evs;
 
   while (worker_ctx_mgr_->WorkerSize()) {
@@ -722,6 +743,8 @@ int App::Exec() {
     CheckStopWorkers();
     /// 等待事件
     poller_->Wait(&evs, time_wait_ms);
+    /// 处理缓存消息
+    ProcessCacheMsg();
     /// 处理事件
     ProcessEvent(evs);
   }
