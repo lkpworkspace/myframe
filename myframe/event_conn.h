@@ -36,12 +36,9 @@ class EventConn final : public Event {
 
   EventConn::Type GetConnType() { return conn_type_; }
 
-  int Send(
-    const std::string& dst,
-    std::shared_ptr<Msg> msg);
+  int Send(std::shared_ptr<Msg> msg);
 
   const std::shared_ptr<const Msg> SendRequest(
-    const std::string& dst,
     std::shared_ptr<Msg> req);
 
  private:

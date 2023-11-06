@@ -301,23 +301,20 @@ bool App::AddWorker(
   return true;
 }
 
-int App::Send(
-  const std::string& dst,
-  std::shared_ptr<Msg> msg) {
+int App::Send(std::shared_ptr<Msg> msg) {
   auto conn = ev_conn_mgr_->Alloc();
   if (conn == nullptr) {
     LOG(ERROR) << "alloc conn event failed";
     return -1;
   }
   poller_->Add(conn);
-  auto ret = conn->Send(dst, msg);
+  auto ret = conn->Send(msg);
   poller_->Del(conn);
   ev_conn_mgr_->Release(conn);
   return ret;
 }
 
 const std::shared_ptr<const Msg> App::SendRequest(
-  const std::string& name,
   std::shared_ptr<Msg> msg) {
   auto conn = ev_conn_mgr_->Alloc();
   if (conn == nullptr) {
@@ -325,7 +322,7 @@ const std::shared_ptr<const Msg> App::SendRequest(
     return nullptr;
   }
   poller_->Add(conn);
-  auto resp = conn->SendRequest(name, msg);
+  auto resp = conn->SendRequest(msg);
   poller_->Del(conn);
   ev_conn_mgr_->Release(conn);
   return resp;
