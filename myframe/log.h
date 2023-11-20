@@ -7,6 +7,9 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #pragma once
 #include <string>
 #include <filesystem>
+
+#include <glog/logging.h>
+
 #include "myframe/export.h"
 
 namespace stdfs = std::filesystem;

@@ -7,8 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/event_conn_manager.h"
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/event_conn.h"
 #include "myframe/event_manager.h"
 

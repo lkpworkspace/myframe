@@ -14,8 +14,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <thread>
 #include <atomic>
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/cmd_channel.h"

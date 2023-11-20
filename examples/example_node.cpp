@@ -7,8 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <vector>
 #include <unordered_map>
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 

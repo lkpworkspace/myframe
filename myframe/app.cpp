@@ -9,8 +9,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <regex>
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/platform.h"
 #include "myframe/common.h"
 #include "myframe/msg.h"

@@ -13,8 +13,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 #include <string>
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/macros.h"
 #include "myframe/shared_library.h"
 

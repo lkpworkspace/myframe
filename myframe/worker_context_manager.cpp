@@ -7,8 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/worker_context_manager.h"
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/worker_context.h"

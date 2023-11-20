@@ -7,8 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/actor.h"
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/app.h"
 #include "myframe/actor_context.h"
 #include "myframe/worker_timer.h"

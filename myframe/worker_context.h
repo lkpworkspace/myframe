@@ -12,8 +12,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <string>
 #include <thread>
 
-#include <json/json.h>
-
 #include "myframe/macros.h"
 #include "myframe/event.h"
 #include "myframe/mailbox.h"
