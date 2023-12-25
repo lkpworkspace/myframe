@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.9.1)
+project(myframe VERSION 0.9.2)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
@@ -72,8 +72,11 @@ install(FILES
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DESTINATION .
 )
+INSTALL(PROGRAMS
+    "tools/gen_mod_proj.py"
+    DESTINATION ${MYFRAME_BIN_DIR}
+)
 install(DIRECTORY templates DESTINATION .)
-install(DIRECTORY tools DESTINATION .)
 install(DIRECTORY conf DESTINATION .)
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
 install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_DIR})
