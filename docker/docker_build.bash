@@ -36,7 +36,7 @@ function main {
   "${cmd[@]}" \
     --build-arg myframe_version=$1 \
     --ulimit nofile=102400:102400 \
-    -f "ubuntu2004.dockerfile" \
+    -f "dev.dockerfile" \
     -t "${IMAGE_NAME}:${tag}" \
     "${MYFRAME_ROOT}"
 }

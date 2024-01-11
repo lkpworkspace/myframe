@@ -7,7 +7,14 @@ myframe安装目录：`/usr/local`
 
 ## 构建docker镜像
 ```sh
+# eg:
+#   myframe_version: 0.9.1
 bash docker_build.bash <myframe_version>
+```
+
+## 构建好的docker镜像
+```sh
+docker pull docker.io/likepeng0418/myframe:amd64-<myframe_version>
 ```
 
 ## 创建运行docker容器
