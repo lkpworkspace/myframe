@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(myframe VERSION 0.9.2)
 
 ### option
-option(MYFRAME_USE_CV "Using conditional variables for thread communication" OFF)
-option(MYFRAME_INSTALL_DEPS "Install deps" ON)
+option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
+option(MYFRAME_INSTALL_DEPS "Install deps" OFF)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
 
@@ -28,7 +28,6 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   message(STATUS "Set default install prefix ${CMAKE_INSTALL_PREFIX}")
 else()
   message(STATUS "Set install prefix ${CMAKE_INSTALL_PREFIX}")
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 set(MYFRAME_BIN_DIR "bin")
 set(MYFRAME_INC_DIR "include")
@@ -43,8 +42,8 @@ find_package(jsoncpp REQUIRED)
 find_package(glog REQUIRED)
 
 link_libraries(
-  Threads::Threads
   ${CMAKE_DL_LIBS}
+  Threads::Threads
   glog::glog
   jsoncpp_lib
 )
@@ -56,21 +55,24 @@ include_directories(.)
 add_subdirectory(myframe)
 add_subdirectory(launcher)
 if (MYFRAME_GENERATE_EXAMPLE)
-    add_subdirectory(examples)
+  add_subdirectory(examples)
 endif()
 if (MYFRAME_GENERATE_TEST)
-    add_subdirectory(test)
+  add_subdirectory(test)
 endif()
 
 ### install file/dir
 install(FILES
-    "LICENSE"
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    DESTINATION .
+  "LICENSE"
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE
+  GROUP_READ
+  WORLD_READ
+  DESTINATION .
 )
 install(PROGRAMS
-    "tools/gen_mod_proj.py"
-    DESTINATION ${MYFRAME_BIN_DIR}
+  "tools/gen_mod_proj.py"
+  DESTINATION ${MYFRAME_BIN_DIR}
 )
 install(DIRECTORY templates DESTINATION .)
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})

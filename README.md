@@ -25,11 +25,6 @@ worker自驱动，可以通过消息与actor交互;
 * [github ci windows](.github/workflows/windows.yml)
 * [github ci macOS](.github/workflows/macos.yml)
 
-## 运行所有的example
-```sh
-path/to/myframe/bin/launcher -p app
-```
-
 ### Hello,World 示例
 ```c
 #include <string.h>

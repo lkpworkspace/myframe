@@ -9,9 +9,9 @@ aux_source_directory(. __srcs)
 ### lib
 add_library(${PROJECT_NAME} SHARED ${__srcs})
 target_include_directories(${PROJECT_NAME}
-    INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
+  INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include>
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
@@ -25,32 +25,35 @@ generate_export_header (${PROJECT_NAME}
 
 ### install
 file(GLOB header_files
-    config.h
-    platform.h
-    export.h
-    macros.h
-    common.h
-    log.h
-    msg.h
-    mailbox.h
-    cmd_channel.h
-    poller.h
-    actor.h
-    event.h
-    worker.h
-    mod_manager.h
-    app.h
+  config.h
+  platform.h
+  export.h
+  macros.h
+  common.h
+  log.h
+  msg.h
+  mailbox.h
+  cmd_channel.h
+  poller.h
+  actor.h
+  event.h
+  worker.h
+  mod_manager.h
+  app.h
 )
 install(FILES 
-    ${header_files}
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    DESTINATION ${MYFRAME_INC_DIR}/${PROJECT_NAME}
+  ${header_files}
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE
+  GROUP_READ
+  WORLD_READ
+  DESTINATION ${MYFRAME_INC_DIR}/${PROJECT_NAME}
 )
 install(TARGETS ${PROJECT_NAME}
-    EXPORT "${PROJECT_NAME}Targets"
-    LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
-    ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
-    RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
+  EXPORT "${PROJECT_NAME}Targets"
+  LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
+  ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
+  RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
 )
 
 include(InstallingConfigs)

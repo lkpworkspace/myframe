@@ -87,6 +87,7 @@ jobs:
           cmake -S . -B ${{github.workspace}}/build_${{matrix.build_type}} \
             -DCMAKE_CXX_STANDARD=${{matrix.std}} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DMYFRAME_USE_CV=OFF \
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
             -DCMAKE_PREFIX_PATH="${{github.workspace}}/jsoncpp;${{github.workspace}}/glog" \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install \
