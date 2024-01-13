@@ -19,6 +19,7 @@ add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME}
   myframe
 )
+target_compile_definitions(${PROJECT_NAME} PRIVATE myframe_EXPORTS)
 
 #### install
 install(TARGETS ${PROJECT_NAME}
