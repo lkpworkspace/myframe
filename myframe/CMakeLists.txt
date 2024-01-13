@@ -9,9 +9,18 @@ aux_source_directory(. __srcs)
 ### lib
 add_library(${PROJECT_NAME} SHARED ${__srcs})
 target_include_directories(${PROJECT_NAME}
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
   INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+  ${CMAKE_DL_LIBS}
+  PUBLIC
+  Threads::Threads
+  glog::glog
+  jsoncpp_lib
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})

@@ -41,16 +41,6 @@ find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(glog REQUIRED)
 
-link_libraries(
-  ${CMAKE_DL_LIBS}
-  Threads::Threads
-  glog::glog
-  jsoncpp_lib
-)
-
-### include dir
-include_directories(.)
-
 ### sub directory
 add_subdirectory(myframe)
 add_subdirectory(launcher)
@@ -77,20 +67,14 @@ install(PROGRAMS
 install(DIRECTORY templates DESTINATION .)
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
 install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_DIR})
-install(CODE "
-  file(
-    WRITE ${CMAKE_INSTALL_PREFIX}/version.txt
-    \"${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}\"
-  )
-")
 if (MYFRAME_INSTALL_DEPS)
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.21")
-  install(IMPORTED_RUNTIME_ARTIFACTS jsoncpp_lib)
-  install(IMPORTED_RUNTIME_ARTIFACTS glog::glog)
-  install(IMPORTED_RUNTIME_ARTIFACTS gflags)
-else()
-  message(WARNING "Can not install deps lib, cmake version ${CMAKE_VERSION} < 3.21")
-endif()
+  if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.21")
+    install(IMPORTED_RUNTIME_ARTIFACTS jsoncpp_lib)
+    install(IMPORTED_RUNTIME_ARTIFACTS glog::glog)
+    install(IMPORTED_RUNTIME_ARTIFACTS gflags)
+  else()
+    message(WARNING "Can not install deps lib, cmake version ${CMAKE_VERSION} < 3.21")
+  endif()
 endif()
 
 ### package
