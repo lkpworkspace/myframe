@@ -10,8 +10,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <string>
 #include <iostream>
 
-#include <glog/logging.h>
-
 static void signal_handler(const char *data, size_t size) {
   std::string str = std::string(data, size);
   std::cerr << str;

@@ -7,8 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/worker_context_manager.h"
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/worker_context.h"
@@ -147,8 +146,10 @@ void WorkerContextManager::WeakupWorker() {
   }
 }
 
-void WorkerContextManager::DispatchWorkerMsg(std::shared_ptr<Msg> msg) {
-  std::string worker_name = msg->GetDst();
+void WorkerContextManager::DispatchWorkerMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst) {
+  std::string worker_name = dst.empty() ? msg->GetDst() : dst;
   if (!ev_mgr_->Has(worker_name)) {
     LOG(ERROR) << "can't find worker " << worker_name << ", drop msg: from "
                << msg->GetSrc() << " to " << msg->GetDst();

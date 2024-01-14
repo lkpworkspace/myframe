@@ -1,51 +1,41 @@
 cmake_minimum_required(VERSION 3.10)
-project(@template_name@)
+project(@template_name@ VERSION 1.0.0)
 
 #### compile option
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-#### path setting
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-set(MYFRAME_INSTALL_SERVICE_DIR ${CMAKE_INSTALL_PREFIX}/service)
-set(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(MYFRAME_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+#### cmake module
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-#### dep 3rd lib
-find_package(Threads REQUIRED)
-find_package(jsoncpp REQUIRED)
-find_package(glog REQUIRED)
-
-#### include directory
-include_directories(${CMAKE_INSTALL_PREFIX}/include)
-
-#### deps libs
-link_libraries(
-    Threads::Threads
-    glog::glog
-    jsoncpp_lib
-)
-link_directories(${MYFRAME_INSTALL_LIB_DIR})
+#### deps lib
+find_package(myframe REQUIRED)
 
 #### lib
 add_library(${PROJECT_NAME} SHARED
-    ${PROJECT_NAME}.cpp
+  ${PROJECT_NAME}.cpp
 )
 target_link_libraries(${PROJECT_NAME}
-    myframe
+  myframe
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE myframe_EXPORTS)
 
 #### install
 install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
-    ARCHIVE DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
-    RUNTIME DESTINATION ${MYFRAME_INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
 )
 file(GLOB conf_files "*.json")
 install(FILES
-    ${conf_files}
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    DESTINATION ${MYFRAME_INSTALL_SERVICE_DIR}
+  ${conf_files}
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE
+  GROUP_READ
+  WORLD_READ
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/service
 )
+
+### package
+include(Packing)

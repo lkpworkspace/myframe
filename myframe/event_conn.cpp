@@ -6,8 +6,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/event_conn.h"
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/msg.h"
 
 namespace myframe {
@@ -36,23 +35,32 @@ CmdChannel* EventConn::GetCmdChannel() {
   return cmd_channel_.get();
 }
 
-int EventConn::Send(
-  const std::string& dst,
-  std::shared_ptr<Msg> msg) {
+int EventConn::Send(std::shared_ptr<Msg> msg) {
   conn_type_ = EventConn::Type::kSend;
   mailbox_.SendClear();
-  mailbox_.Send(dst, msg);
+  if (msg->GetSrc().empty()) {
+    msg->SetSrc(mailbox_.Addr());
+  }
+  if (msg->GetDst().empty()) {
+    return -1;
+  }
+  mailbox_.Send(msg);
   cmd_channel_->SendToMain(CmdChannel::Cmd::kRun);
   CmdChannel::Cmd cmd;
   return cmd_channel_->RecvFromMain(&cmd);
 }
 
 const std::shared_ptr<const Msg> EventConn::SendRequest(
-  const std::string& dst,
   std::shared_ptr<Msg> req) {
   conn_type_ = EventConn::Type::kSendReq;
   mailbox_.SendClear();
-  mailbox_.Send(dst, req);
+  if (req->GetSrc().empty()) {
+    req->SetSrc(mailbox_.Addr());
+  }
+  if (req->GetDst().empty()) {
+    return nullptr;
+  }
+  mailbox_.Send(req);
   cmd_channel_->SendToMain(CmdChannel::Cmd::kRunWithMsg);
   CmdChannel::Cmd cmd;
   cmd_channel_->RecvFromMain(&cmd);

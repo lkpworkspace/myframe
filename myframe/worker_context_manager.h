@@ -44,7 +44,9 @@ class WorkerContextManager final {
   // 用户工作线程
   void PushWaitWorker(std::shared_ptr<WorkerContext> worker);
   void WeakupWorker();
-  void DispatchWorkerMsg(std::shared_ptr<Msg> msg);
+  void DispatchWorkerMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst = "");
 
   std::vector<std::string> GetAllUserWorkerAddr();
 

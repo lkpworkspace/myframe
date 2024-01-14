@@ -9,10 +9,9 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <vector>
 #include <thread>
 #include <chrono>
-#include <glog/logging.h>
 
-#include "myframe/common.h"
 #include "myframe/log.h"
+#include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/mod_manager.h"

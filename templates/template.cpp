@@ -9,8 +9,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <thread>
 #include <iostream>
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/export.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"

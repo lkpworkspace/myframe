@@ -13,6 +13,8 @@ add_library(example_actor_concurrent SHARED example_actor_concurrent.cpp)
 target_link_libraries(example_actor_concurrent ${PROJECT_NAME})
 add_library(example_actor_subscribe SHARED example_actor_subscribe.cpp)
 target_link_libraries(example_actor_subscribe ${PROJECT_NAME})
+add_library(example_node SHARED example_node.cpp)
+target_link_libraries(example_node ${PROJECT_NAME})
 
 ### worker
 add_library(example_worker_publish SHARED example_worker_publish.cpp)
@@ -34,24 +36,28 @@ target_link_libraries(example_trans_obj ${PROJECT_NAME})
 ### install
 FILE(GLOB conf_files "*.json")
 INSTALL(FILES 
-    ${conf_files}
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    DESTINATION ${MYFRAME_SERVICE_DIR}
+  ${conf_files}
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE
+  GROUP_READ
+  WORLD_READ
+  DESTINATION ${MYFRAME_SERVICE_DIR}
 )
 INSTALL(TARGETS 
-    example_actor_helloworld
-    example_actor_timer
-    example_actor_serial
-    example_actor_concurrent
-    example_actor_subscribe
-    example_worker_actor_interactive 
-    example_worker_publish
-    example_worker_talk 
-    example_worker_interactive_with_3rd_frame
-    example_worker_quit
-    example_config
-    example_trans_obj
-    LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
-    ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
-    RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
+  example_actor_helloworld
+  example_actor_timer
+  example_actor_serial
+  example_actor_concurrent
+  example_actor_subscribe
+  example_node
+  example_worker_actor_interactive 
+  example_worker_publish
+  example_worker_talk 
+  example_worker_interactive_with_3rd_frame
+  example_worker_quit
+  example_config
+  example_trans_obj
+  LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
+  ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
+  RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
 )

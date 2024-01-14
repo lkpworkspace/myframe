@@ -9,8 +9,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <vector>
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/actor_context.h"
@@ -25,8 +24,11 @@ ActorContextManager::~ActorContextManager() {
   LOG(INFO) << "ActorContextManager deconstruct";
 }
 
-void ActorContextManager::DispatchMsg(std::shared_ptr<Msg> msg) {
-  auto ctx = GetContext(msg->GetDst());
+void ActorContextManager::DispatchMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst) {
+  std::string actor_name = dst.empty()? msg->GetDst() : dst;
+  auto ctx = GetContext(actor_name);
   if (nullptr == ctx) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
@@ -69,10 +71,8 @@ std::vector<std::string> ActorContextManager::GetAllActorAddr() {
 }
 
 bool ActorContextManager::HasActor(const std::string& name) {
-  bool res = false;
   std::shared_lock<std::shared_mutex> lk(rw_);
-  res = (ctxs_.find(name) != ctxs_.end());
-  return res;
+  return ctxs_.find(name) != ctxs_.end();
 }
 
 void ActorContextManager::PrintWaitQueue() {
@@ -84,7 +84,7 @@ void ActorContextManager::PrintWaitQueue() {
       LOG(ERROR) << "context is nullptr";
       continue;
     }
-    VLOG(1) << "---> " << *ctx;
+    VLOG(1) << "|--> " << *ctx;
     ++it;
   }
 }

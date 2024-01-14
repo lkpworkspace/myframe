@@ -5,8 +5,7 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 

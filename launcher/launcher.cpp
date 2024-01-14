@@ -7,12 +7,9 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <csignal>
 #include <iostream>
 
-#include <gflags/gflags.h>
-#include <glog/logging.h>
-
+#include "myframe/log.h"
 #include "myframe/platform.h"
 #include "myframe/common.h"
-#include "myframe/log.h"
 #include "myframe/app.h"
 #include "launcher_config.h"
 #include "module_argument.h"

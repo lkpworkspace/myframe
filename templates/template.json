@@ -1,19 +1,19 @@
 {
-    "type":"library",
-    "lib":"@template_name@",
-    "actor":{
-        "@template_name@":[
-            {
-                "instance_name":"@template_name@1",
-                "instance_params":""
-            }
-        ]
-    },
-    "worker":{
-        "@template_name@":[
-            {
-                "instance_name":"@template_name@1"
-            }
-        ]
-    }
+  "type":"library",
+  "lib":"@template_name@",
+  "actor":{
+    "@template_name@":[
+      {
+        "instance_name":"@template_name@1",
+        "instance_params":""
+      }
+    ]
+  },
+  "worker":{
+    "@template_name@":[
+      {
+        "instance_name":"@template_name@1"
+      }
+    ]
+  }
 }

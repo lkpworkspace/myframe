@@ -54,7 +54,7 @@
 
 ### 创建组件工程
 ```sh
-python3 path/to/myframe/tools/gen_mod_proj.py --dir="path/to/proj_dir/" --name="mod_name"
+python path/to/myframe/bin/gen_mod_proj.py --dir="path/to/proj_dir/" --name="mod_name"
 ```
 
 ### 组件工程目录说明
@@ -66,7 +66,8 @@ python3 path/to/myframe/tools/gen_mod_proj.py --dir="path/to/proj_dir/" --name="
 
 ### 组件工程构建安装
 ```sh
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX="path/to/myframe" -DCMAKE_PREFIX_PATH="path/to/jsoncpp;path/to/glog"
+# 如果myframe库和依赖库安装到系统目录里，则不需要设置CMAKE_PREFIX_PATH变量
+cmake -S . -B build -DCMAKE_PREFIX_PATH="path/to/myframe;path/to/jsoncpp;path/to/glog"
 cmake --build build --config Release --target install
 ```
 
