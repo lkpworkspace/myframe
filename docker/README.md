@@ -5,28 +5,25 @@
 ## 目录
 myframe安装目录：`/usr/local`
 
-## 构建docker镜像
+## docker操作
 ```sh
 # eg:
+#   arch: < aarch64 | amd64 >
 #   myframe_version: 0.9.1
-bash docker_build.bash <myframe_version>
-```
 
-## 构建好的docker镜像
-```sh
-docker pull docker.io/likepeng0418/myframe:<myframe_version>
-```
+## 构建docker镜像
+bash docker_build.bash <myframe_version>
+
+## 下载docker镜像
+docker pull docker.io/likepeng0418/myframe:<arch>-<myframe_version>
 
 ## 创建运行docker容器
-```sh
 docker run -itd \
     --name "myframe_run" \
-    myframe:${<myframe_version>} \
+    myframe:${<arch>-<myframe_version>} \
     /bin/bash
-```
 
 ## 进入docker容器
-```sh
 docker exec -it \
     -it "myframe_run" \
     /bin/bash
