@@ -18,12 +18,15 @@ function main {
   fi
 
   local arc="$(uname -m)"
+  local cpu_arch="unknown"
   case "${arc}" in
   "aarch64" | "arm64")
     arc="aarch64"
+    cpu_arch="arm"
     ;;
   "x86_64" | "amd64")
     arc="amd64"
+    cpu_arch="x86"
     ;;
   *)
     echo "Unknown arch: ${arc}"
@@ -35,6 +38,7 @@ function main {
 
   "${cmd[@]}" \
     --build-arg myframe_version=$1 \
+    --build-arg cpu_arch=${cpu_arch} \
     --ulimit nofile=102400:102400 \
     -f "dev.dockerfile" \
     -t "${IMAGE_NAME}:${tag}" \
