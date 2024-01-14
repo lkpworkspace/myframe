@@ -14,7 +14,7 @@ bash docker_build.bash <myframe_version>
 
 ## 构建好的docker镜像
 ```sh
-docker pull docker.io/likepeng0418/myframe:amd64-<myframe_version>
+docker pull docker.io/likepeng0418/myframe:<myframe_version>
 ```
 
 ## 创建运行docker容器

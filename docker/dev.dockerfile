@@ -1,9 +1,9 @@
-FROM docker.io/library/ubuntu:20.04
+FROM docker.io/library/ubuntu:22.04
 SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
-COPY docker/ubuntu2004.sourcelist /etc/apt/sources.list
-RUN yes | unminimize
+COPY docker/ubuntu2204.sourcelist /etc/apt/sources.list
+# RUN yes | unminimize
 RUN apt update \
     && apt  install -y --no-install-recommends \
     build-essential cmake \
