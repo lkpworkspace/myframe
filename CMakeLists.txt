@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+if (POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW)
+endif()
 project(myframe VERSION 0.9.2)
 
 ### option
@@ -22,6 +25,7 @@ else()
   set(CMAKE_CXX_STANDARD 17)
   message(STATUS "Set default cxx standard 17")
 endif()
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
 ### install path
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
