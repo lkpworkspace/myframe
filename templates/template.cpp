@@ -9,7 +9,6 @@ Author: likepeng <likepeng0418@163.com>
 #include <thread>
 #include <iostream>
 
-#include "myframe/log.h"
 #include "myframe/export.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
@@ -24,7 +23,6 @@ class @template_name@Actor : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     /* print recv msg */
-    LOG(INFO) << *msg << ": " << msg->GetData();
     std::cout << *msg << ": " << msg->GetData() << std::endl;
     /* resp msg */
     auto mailbox = GetMailbox();
@@ -49,7 +47,6 @@ class @template_name@Worker : public myframe::Worker {
       if (msg == nullptr) {
         break;
       }
-      LOG(INFO) << *msg << ": " << msg->GetData();
       std::cout << *msg << ": " << msg->GetData() << std::endl;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
