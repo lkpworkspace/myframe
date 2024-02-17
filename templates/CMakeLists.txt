@@ -12,8 +12,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
 #### deps lib
@@ -26,7 +26,13 @@ add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME}
   myframe
 )
-target_compile_definitions(${PROJECT_NAME} PRIVATE myframe_EXPORTS)
+
+#### export
+include (GenerateExportHeader)
+generate_export_header (${PROJECT_NAME}
+  EXPORT_MACRO_NAME MYFRAME_SUBMODULE_EXPORT
+  EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/export.h"
+)
 
 #### install
 install(TARGETS ${PROJECT_NAME}
