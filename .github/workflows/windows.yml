@@ -48,10 +48,11 @@ jobs:
         run: |
           cmake -S jsoncpp-1.9.5 -B build-jsoncpp `
             -A ${{matrix.arch}} `
-            -DBUILD_SHARED_LIBS=ON \
+            -DBUILD_SHARED_LIBS=ON `
+            -DBUILD_STATIC_LIBS=OFF `
+            -DBUILD_OBJECT_LIBS=OFF `
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} `
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/jsoncpp `
-            -DBUILD_OBJECT_LIBS=OFF `
             -DJSONCPP_WITH_TESTS=OFF `
             -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF `
             -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
