@@ -43,6 +43,7 @@ jobs:
         if: steps.cache-jsoncpp.outputs.cache-hit != 'true'
         run: |
           cmake -S jsoncpp-1.9.5 -B build-jsoncpp \
+            -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/jsoncpp \
             -DBUILD_OBJECT_LIBS=OFF \
@@ -94,6 +95,7 @@ jobs:
         if: steps.cache-glog.outputs.cache-hit != 'true'
         run: |
           cmake -S glog-0.6.0 -B build-glog \
+            -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
             -DWITH_PKGCONFIG=OFF \
             -DWITH_GTEST=OFF \
