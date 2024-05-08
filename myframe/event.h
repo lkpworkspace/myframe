@@ -31,7 +31,7 @@ namespace myframe {
 #error "Unsupported platform"
 #endif
 
-class MYFRAME_EXPORT Event : public std::enable_shared_from_this<Event> {
+class MYFRAME_EXPORT Event {
  public:
   enum class Type : int {
     kWorkerCommon,

@@ -28,11 +28,10 @@ void Worker::SetTypeName(const std::string& name) { worker_name_ = name; }
 void Worker::SetInstName(const std::string& name) { inst_name_ = name; }
 
 void Worker::Stop() {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+  if (ctx_ == nullptr) {
     return;
   }
-  ctx->Stop();
+  ctx_->Stop();
 }
 
 int Worker::DispatchMsg() {
@@ -62,18 +61,16 @@ int Worker::DispatchAndWaitMsg() {
 }
 
 Mailbox* Worker::GetMailbox() {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+  if (ctx_ == nullptr) {
     return nullptr;
   }
-  return ctx->GetMailbox();
+  return ctx_->GetMailbox();
 }
 
 CmdChannel* Worker::GetCmdChannel() {
-  auto ctx = ctx_.lock();
-  LOG_IF(FATAL, ctx == nullptr)
+  LOG_IF(FATAL, ctx_ == nullptr)
     << "worker ctx is nullptr";
-  return ctx->GetCmdChannel();
+  return ctx_->GetCmdChannel();
 }
 
 void Worker::SetConfig(const Json::Value& conf) {
@@ -84,7 +81,7 @@ const Json::Value* Worker::GetConfig() const {
   return &config_;
 }
 
-void Worker::SetContext(std::shared_ptr<WorkerContext> ctx) {
+void Worker::SetContext(WorkerContext* ctx) {
   ctx_ = ctx;
 }
 
@@ -93,11 +90,10 @@ Event::Type Worker::GetType() {
 }
 
 std::shared_ptr<App> Worker::GetApp() {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+  if (ctx_ == nullptr) {
     return nullptr;
   }
-  return ctx->GetApp();
+  return ctx_->GetApp();
 }
 
 }  // namespace myframe

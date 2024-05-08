@@ -19,7 +19,7 @@ class App;
 class Msg;
 class Actor;
 class WorkerCommon;
-class ActorContext final : public std::enable_shared_from_this<ActorContext> {
+class ActorContext final {
   friend std::ostream& operator<<(std::ostream& out, const ActorContext& ctx);
   friend class ActorContextManager;
   friend class WorkerCommon;

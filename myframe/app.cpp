@@ -276,7 +276,6 @@ bool App::AddWorker(
   const Json::Value& config) {
   auto worker_ctx = std::make_shared<WorkerContext>(
     shared_from_this(), worker, poller_);
-  worker->SetContext(worker_ctx);
   worker->SetInstName(inst_name);
   worker->SetConfig(config);
   if (worker->GetTypeName() == "node") {

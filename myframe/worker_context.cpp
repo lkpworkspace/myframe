@@ -23,6 +23,7 @@ WorkerContext::WorkerContext(
   : runing_(false)
   , worker_(worker)
   , app_(app) {
+  worker_->SetContext(this);
   cmd_channel_ = CmdChannel::Create(poller);
 }
 

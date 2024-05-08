@@ -114,14 +114,14 @@ class MYFRAME_EXPORT Worker {
   void SetInstName(const std::string&);
   void SetConfig(const Json::Value&);
 
-  void SetContext(std::shared_ptr<WorkerContext>);
+  void SetContext(WorkerContext*);
 
   std::string mod_name_;
   std::string worker_name_;
   std::string inst_name_;
   Json::Value config_;
 
-  std::weak_ptr<WorkerContext> ctx_;
+  WorkerContext* ctx_{ nullptr };
 
   DISALLOW_COPY_AND_ASSIGN(Worker)
 };
