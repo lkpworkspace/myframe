@@ -9,7 +9,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <functional>
 
 #include "myframe/log.h"
-#include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/app.h"
@@ -90,7 +89,7 @@ void WorkerContext::Cache(std::shared_ptr<Msg> msg) {
 }
 
 void WorkerContext::Cache(std::list<std::shared_ptr<Msg>>* msg_list) {
-  Common::ListAppend(&cache_, msg_list);
+  cache_.splice(cache_.end(), *msg_list);
 }
 
 Mailbox* WorkerContext::GetMailbox() {

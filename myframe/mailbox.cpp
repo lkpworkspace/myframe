@@ -5,7 +5,6 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/mailbox.h"
-#include "myframe/common.h"
 #include "myframe/msg.h"
 
 namespace myframe {
@@ -51,7 +50,7 @@ void Mailbox::Send(
 }
 
 void Mailbox::Send(std::list<std::shared_ptr<Msg>>* msg_list) {
-  Common::ListAppend(&send_, msg_list);
+  send_.splice(send_.end(), *msg_list);
 }
 
 std::list<std::shared_ptr<Msg>>* Mailbox::GetSendList() {
@@ -75,7 +74,7 @@ void Mailbox::Recv(std::shared_ptr<Msg> msg) {
 }
 
 void Mailbox::Recv(std::list<std::shared_ptr<Msg>>* msg_list) {
-  Common::ListAppend(&recv_, msg_list);
+  recv_.splice(recv_.end(), *msg_list);
 }
 
 const std::shared_ptr<const Msg> Mailbox::PopRecv() {
