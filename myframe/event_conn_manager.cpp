@@ -37,7 +37,7 @@ void EventConnManager::AddEventConn() {
   auto conn = std::make_shared<EventConn>(poller_);
   std::string name = "event.conn." + std::to_string(conn_sz_);
   conn->GetMailbox()->SetAddr(name);
-  idle_conn_.emplace_back(conn);
+  idle_conn_.push_back(std::move(conn));
   conn_sz_++;
 }
 
@@ -62,7 +62,7 @@ void EventConnManager::Release(std::shared_ptr<EventConn> ev) {
   ev_mgr_->Del(ev);
   // add to idle_conn
   std::lock_guard<std::mutex> g(mtx_);
-  idle_conn_.emplace_back(ev);
+  idle_conn_.push_back(std::move(ev));
 }
 
 // call by main frame
@@ -80,7 +80,7 @@ void EventConnManager::Notify(
     return;
   }
   // push msg to event_conn
-  ev->GetMailbox()->Recv(msg);
+  ev->GetMailbox()->Recv(std::move(msg));
   // send cmd to event_conn
   auto cmd_channel = ev->GetCmdChannel();
   cmd_channel->SendToOwner(CmdChannel::Cmd::kIdle);

@@ -34,8 +34,8 @@ void ActorContextManager::DispatchMsg(
     return;
   }
   auto mailbox = ctx->GetMailbox();
-  mailbox->Recv(msg);
-  PushContext(ctx);
+  mailbox->Recv(std::move(msg));
+  PushContext(std::move(ctx));
 }
 
 bool ActorContextManager::RegContext(std::shared_ptr<ActorContext> ctx) {
@@ -46,7 +46,7 @@ bool ActorContextManager::RegContext(std::shared_ptr<ActorContext> ctx) {
     return false;
   }
   LOG(INFO) << "reg actor " << ctx->GetActor()->GetActorName();
-  ctxs_[ctx->GetActor()->GetActorName()] = ctx;
+  ctxs_[ctx->GetActor()->GetActorName()] = std::move(ctx);
   return true;
 }
 
@@ -76,6 +76,9 @@ bool ActorContextManager::HasActor(const std::string& name) {
 }
 
 void ActorContextManager::PrintWaitQueue() {
+  if (!VLOG_IS_ON(1)) {
+    return;
+  }
   VLOG(1) << "cur wait queue actor:";
   auto it = wait_queue_.begin();
   while (it != wait_queue_.end()) {
@@ -94,7 +97,7 @@ std::shared_ptr<ActorContext> ActorContextManager::GetContextWithMsg() {
     return nullptr;
   }
 
-  std::vector<std::shared_ptr<ActorContext>> in_runing_context;
+  std::list<std::weak_ptr<ActorContext>> in_runing_context;
   std::shared_ptr<ActorContext> ret = nullptr;
   while (!wait_queue_.empty()) {
     if (wait_queue_.front().expired()) {
@@ -104,20 +107,19 @@ std::shared_ptr<ActorContext> ActorContextManager::GetContextWithMsg() {
     auto ctx = wait_queue_.front().lock();
     if (ctx->IsRuning()) {
       wait_queue_.pop_front();
-      in_runing_context.push_back(ctx);
+      VLOG(1) << ctx->GetActor()->GetActorName()
+              << " is runing, move to wait queue back";
+      in_runing_context.push_back(std::move(ctx));
     } else {
       wait_queue_.pop_front();
-
       ctx->SetRuningFlag(true);
       ctx->SetWaitQueueFlag(false);
-      ret = ctx;
+      ret.swap(ctx);
       break;
     }
   }
-  for (std::size_t i = 0; i < in_runing_context.size(); ++i) {
-    VLOG(1) << in_runing_context[i]->GetActor()->GetActorName()
-               << " is runing, move to wait queue back";
-    wait_queue_.push_back(in_runing_context[i]);
+  if (!in_runing_context.empty()) {
+    wait_queue_.splice(wait_queue_.end(), in_runing_context);
   }
   return ret;
 }
@@ -129,7 +131,7 @@ void ActorContextManager::PushContext(std::shared_ptr<ActorContext> ctx) {
     return;
   }
   ctx->SetWaitQueueFlag(true);
-  wait_queue_.push_back(ctx);
+  wait_queue_.push_back(std::move(ctx));
   PrintWaitQueue();
 }
 

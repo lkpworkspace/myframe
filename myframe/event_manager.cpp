@@ -52,7 +52,7 @@ std::vector<std::shared_ptr<Event>> EventManager::Get(
   return tmp_evs;
 }
 
-bool EventManager::Add(std::shared_ptr<Event> ev) {
+bool EventManager::Add(const std::shared_ptr<Event>& ev) {
   auto handle = ev->GetHandle();
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (evs_.find(handle) != evs_.end()) {
@@ -64,7 +64,7 @@ bool EventManager::Add(std::shared_ptr<Event> ev) {
   return true;
 }
 
-bool EventManager::Del(std::shared_ptr<Event> ev) {
+bool EventManager::Del(const std::shared_ptr<Event>& ev) {
   auto handle = ev->GetHandle();
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (evs_.find(handle) == evs_.end()) {

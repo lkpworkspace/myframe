@@ -85,7 +85,7 @@ std::list<std::shared_ptr<Msg>>* WorkerContext::GetCache() {
 }
 
 void WorkerContext::Cache(std::shared_ptr<Msg> msg) {
-  cache_.emplace_back(msg);
+  cache_.push_back(std::move(msg));
 }
 
 void WorkerContext::Cache(std::list<std::shared_ptr<Msg>>* msg_list) {

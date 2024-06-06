@@ -30,7 +30,7 @@ void Mailbox::SendClear() {
 }
 
 void Mailbox::Send(std::shared_ptr<Msg> msg) {
-  send_.emplace_back(msg);
+  send_.push_back(std::move(msg));
 }
 
 void Mailbox::Send(
@@ -38,7 +38,7 @@ void Mailbox::Send(
   std::shared_ptr<Msg> msg) {
   msg->SetSrc(addr_);
   msg->SetDst(dst);
-  Send(msg);
+  Send(std::move(msg));
 }
 
 void Mailbox::Send(
@@ -46,7 +46,7 @@ void Mailbox::Send(
   const std::any& data) {
   auto msg = std::make_shared<Msg>();
   msg->SetAnyData(data);
-  Send(dst, msg);
+  Send(dst, std::move(msg));
 }
 
 void Mailbox::Send(std::list<std::shared_ptr<Msg>>* msg_list) {
@@ -70,7 +70,7 @@ void Mailbox::RecvClear() {
 }
 
 void Mailbox::Recv(std::shared_ptr<Msg> msg) {
-  recv_.emplace_back(msg);
+  recv_.push_back(std::move(msg));
 }
 
 void Mailbox::Recv(std::list<std::shared_ptr<Msg>>* msg_list) {

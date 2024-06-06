@@ -113,7 +113,7 @@ std::vector<std::string> Common::SplitMsgName(const std::string& name) {
   std::string item;
   std::stringstream ss(name);
   while (std::getline(ss, item, '.')) {
-    name_list.push_back(item);
+    name_list.push_back(std::move(item));
   }
   return name_list;
 }

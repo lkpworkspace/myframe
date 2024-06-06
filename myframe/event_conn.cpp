@@ -44,7 +44,7 @@ int EventConn::Send(std::shared_ptr<Msg> msg) {
   if (msg->GetDst().empty()) {
     return -1;
   }
-  mailbox_.Send(msg);
+  mailbox_.Send(std::move(msg));
   cmd_channel_->SendToMain(CmdChannel::Cmd::kRun);
   CmdChannel::Cmd cmd;
   return cmd_channel_->RecvFromMain(&cmd);
@@ -60,7 +60,7 @@ const std::shared_ptr<const Msg> EventConn::SendRequest(
   if (req->GetDst().empty()) {
     return nullptr;
   }
-  mailbox_.Send(req);
+  mailbox_.Send(std::move(req));
   cmd_channel_->SendToMain(CmdChannel::Cmd::kRunWithMsg);
   CmdChannel::Cmd cmd;
   cmd_channel_->RecvFromMain(&cmd);

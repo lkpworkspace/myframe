@@ -306,9 +306,9 @@ int App::Send(std::shared_ptr<Msg> msg) {
     return -1;
   }
   poller_->Add(conn);
-  auto ret = conn->Send(msg);
+  auto ret = conn->Send(std::move(msg));
   poller_->Del(conn);
-  ev_conn_mgr_->Release(conn);
+  ev_conn_mgr_->Release(std::move(conn));
   return ret;
 }
 
@@ -320,9 +320,9 @@ const std::shared_ptr<const Msg> App::SendRequest(
     return nullptr;
   }
   poller_->Add(conn);
-  auto resp = conn->SendRequest(msg);
+  auto resp = conn->SendRequest(std::move(msg));
   poller_->Del(conn);
-  ev_conn_mgr_->Release(conn);
+  ev_conn_mgr_->Release(std::move(conn));
   return resp;
 }
 
@@ -434,7 +434,7 @@ void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
       msg_list->size() > warning_msg_size_.load())
     << " dispatch msg too many";
   for (auto& msg : (*msg_list)) {
-    DispatchMsg(msg);
+    DispatchMsg(std::move(msg));
   }
   msg_list->clear();
 }
@@ -444,7 +444,7 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
   VLOG(1) << *msg;
   /// 处理框架消息
   if (msg->GetDst() == MAIN_ADDR) {
-    ProcessMain(msg);
+    ProcessMain(std::move(msg));
     return;
   }
   /// 消息分发
@@ -463,12 +463,14 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
     actor_ctx_mgr_->DispatchMsg(msg);
   } else if (name_list[0] == "event") {
     if (name_list[1] == "conn") {
+      // dispatch to event conn
       auto handle = ev_mgr_->ToHandle(msg->GetDst());
       ev_conn_mgr_->Notify(handle, msg);
     } else {
       LOG(ERROR) << "Unknown msg " << *msg;
     }
   } else if (!node_addr_.empty()) {
+    // dispatch to node
     if (node_addr_.substr(0, 5) == "actor") {
       actor_ctx_mgr_->DispatchMsg(msg, node_addr_);
     } else if (node_addr_.substr(0, 6) == "worker") {

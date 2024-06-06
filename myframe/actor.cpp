@@ -80,7 +80,7 @@ bool Actor::Subscribe(const std::string& addr, const std::string& msg_type) {
   msg->SetType("SUBSCRIBE");
   msg->SetDesc(msg_type);
   auto mailbox = ctx_->GetMailbox();
-  mailbox->Send(addr, msg);
+  mailbox->Send(addr, std::move(msg));
   return true;
 }
 
