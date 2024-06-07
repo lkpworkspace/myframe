@@ -20,7 +20,7 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC
   Threads::Threads
   glog::glog
-  jsoncpp_lib
+  JsonCpp::JsonCpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})

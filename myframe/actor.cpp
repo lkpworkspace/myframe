@@ -6,6 +6,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #include "myframe/actor.h"
+#include <utility>
 
 #include "myframe/log.h"
 #include "myframe/app.h"
@@ -33,11 +34,10 @@ const std::string& Actor::GetModName() const {
 bool Actor::IsFromLib() const { return is_from_lib_; }
 
 Mailbox* Actor::GetMailbox() {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+  if (ctx_ == nullptr) {
     return nullptr;
   }
-  return ctx->GetMailbox();
+  return ctx_->GetMailbox();
 }
 
 const std::string& Actor::GetTypeName() const { return actor_name_; }
@@ -53,12 +53,11 @@ void Actor::SetTypeName(const std::string& name) { actor_name_ = name; }
 void Actor::SetInstName(const std::string& name) { instance_name_ = name; }
 
 int Actor::Timeout(const std::string& timer_name, int expired) {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+  if (ctx_ == nullptr) {
     LOG(ERROR) << "actor context is nullptr";
     return -1;
   }
-  auto app = ctx->GetApp();
+  auto app = ctx_->GetApp();
   if (app == nullptr) {
     LOG(ERROR) << "app is nullptr";
     return -1;
@@ -71,22 +70,22 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
   return timer_worker->SetTimeout(GetActorName(), timer_name, expired);
 }
 
-bool Actor::Subscribe(const std::string& name) {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+bool Actor::Subscribe(const std::string& addr, const std::string& msg_type) {
+  if (ctx_ == nullptr) {
     return false;
   }
-  if (name == GetActorName()) {
+  if (addr == GetActorName()) {
     return false;
   }
   auto msg = std::make_shared<Msg>();
   msg->SetType("SUBSCRIBE");
-  auto mailbox = ctx->GetMailbox();
-  mailbox->Send(name, msg);
+  msg->SetDesc(msg_type);
+  auto mailbox = ctx_->GetMailbox();
+  mailbox->Send(addr, std::move(msg));
   return true;
 }
 
-void Actor::SetContext(std::shared_ptr<ActorContext> c) { ctx_ = c; }
+void Actor::SetContext(ActorContext* c) { ctx_ = c; }
 
 const Json::Value* Actor::GetConfig() const {
   return &config_;
@@ -97,11 +96,10 @@ void Actor::SetConfig(const Json::Value& conf) {
 }
 
 std::shared_ptr<App> Actor::GetApp() {
-  auto ctx = ctx_.lock();
-  if (ctx == nullptr) {
+  if (ctx_ == nullptr) {
     return nullptr;
   }
-  return ctx->GetApp();
+  return ctx_->GetApp();
 }
 
 }  // namespace myframe

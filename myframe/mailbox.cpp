@@ -5,7 +5,8 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/mailbox.h"
-#include "myframe/common.h"
+#include <utility>
+
 #include "myframe/msg.h"
 
 namespace myframe {
@@ -31,7 +32,7 @@ void Mailbox::SendClear() {
 }
 
 void Mailbox::Send(std::shared_ptr<Msg> msg) {
-  send_.emplace_back(msg);
+  send_.push_back(std::move(msg));
 }
 
 void Mailbox::Send(
@@ -39,7 +40,7 @@ void Mailbox::Send(
   std::shared_ptr<Msg> msg) {
   msg->SetSrc(addr_);
   msg->SetDst(dst);
-  Send(msg);
+  Send(std::move(msg));
 }
 
 void Mailbox::Send(
@@ -47,11 +48,11 @@ void Mailbox::Send(
   const std::any& data) {
   auto msg = std::make_shared<Msg>();
   msg->SetAnyData(data);
-  Send(dst, msg);
+  Send(dst, std::move(msg));
 }
 
 void Mailbox::Send(std::list<std::shared_ptr<Msg>>* msg_list) {
-  Common::ListAppend(&send_, msg_list);
+  send_.splice(send_.end(), *msg_list);
 }
 
 std::list<std::shared_ptr<Msg>>* Mailbox::GetSendList() {
@@ -71,11 +72,11 @@ void Mailbox::RecvClear() {
 }
 
 void Mailbox::Recv(std::shared_ptr<Msg> msg) {
-  recv_.emplace_back(msg);
+  recv_.push_back(std::move(msg));
 }
 
 void Mailbox::Recv(std::list<std::shared_ptr<Msg>>* msg_list) {
-  Common::ListAppend(&recv_, msg_list);
+  recv_.splice(recv_.end(), *msg_list);
 }
 
 const std::shared_ptr<const Msg> Mailbox::PopRecv() {

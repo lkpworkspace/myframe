@@ -87,15 +87,17 @@ class MYFRAME_EXPORT Actor {
   int Timeout(const std::string& timer_name, int expired);
 
   /**
-   * Subscribe() - 订阅actor或者worker的消息
-   * @name: 订阅actor或者worker的名称
+   * Subscribe() - 订阅actor的消息
+   * @addr: 订阅actor的地址
+   * @msg_type: 订阅消息类型
    *
-   *     被订阅的组件需要处理订阅消息，消息格式：
+   *     被订阅的组件需要在Proc函数中处理订阅消息，消息格式：
    *        msg->GetType() == "SUBSCRIBE" 确认是订阅消息
-   *        msg->GetSrc() 确定是订阅组件名称
+   *        msg->GetDesc() == <msg_type> 确认消息类型
+   *        msg->GetSrc() 确定是订阅组件地址
    * @return: 成功返回true,失败返回false
    */
-  bool Subscribe(const std::string& name);
+  bool Subscribe(const std::string& addr, const std::string& msg_type = "");
 
   /**
    * GetApp() - 获得应用实例
@@ -114,14 +116,14 @@ class MYFRAME_EXPORT Actor {
   void SetInstName(const std::string& name);
   void SetConfig(const Json::Value& conf);
 
-  void SetContext(std::shared_ptr<ActorContext>);
+  void SetContext(ActorContext*);
 
   bool is_from_lib_{ false };
   std::string mod_name_;
   std::string actor_name_;
   std::string instance_name_;
   Json::Value config_;
-  std::weak_ptr<ActorContext> ctx_;
+  ActorContext* ctx_{ nullptr };
 
   DISALLOW_COPY_AND_ASSIGN(Actor)
 };

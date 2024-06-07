@@ -7,6 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/common.h"
 
 #include <string.h>
+#include <utility>
 
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
@@ -113,7 +114,7 @@ std::vector<std::string> Common::SplitMsgName(const std::string& name) {
   std::string item;
   std::stringstream ss(name);
   while (std::getline(ss, item, '.')) {
-    name_list.push_back(item);
+    name_list.push_back(std::move(item));
   }
   return name_list;
 }

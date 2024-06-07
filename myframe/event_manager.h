@@ -54,8 +54,8 @@ class EventManager final {
   ev_handle_t ToHandle(const std::string&);
 
  private:
-  bool Add(std::shared_ptr<Event>);
-  bool Del(std::shared_ptr<Event>);
+  bool Add(const std::shared_ptr<Event>&);
+  bool Del(const std::shared_ptr<Event>&);
 
   std::shared_mutex rw_;
   std::unordered_map<std::string, ev_handle_t> name_handle_map_;

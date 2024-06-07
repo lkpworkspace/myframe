@@ -13,6 +13,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <utility>
 
 #include <json/json.h>
 
@@ -136,7 +137,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   struct CacheMsg {
     CacheMsg(int c, std::shared_ptr<Msg> m)
       : search_count(c)
-      , msg(m) {}
+      , msg(std::move(m)) {}
     int search_count{0};
     std::shared_ptr<Msg> msg{nullptr};
   };

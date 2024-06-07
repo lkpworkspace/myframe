@@ -7,9 +7,9 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/worker_context.h"
 
 #include <functional>
+#include <utility>
 
 #include "myframe/log.h"
-#include "myframe/common.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/app.h"
@@ -23,6 +23,7 @@ WorkerContext::WorkerContext(
   : runing_(false)
   , worker_(worker)
   , app_(app) {
+  worker_->SetContext(this);
   cmd_channel_ = CmdChannel::Create(poller);
 }
 
@@ -85,11 +86,11 @@ std::list<std::shared_ptr<Msg>>* WorkerContext::GetCache() {
 }
 
 void WorkerContext::Cache(std::shared_ptr<Msg> msg) {
-  cache_.emplace_back(msg);
+  cache_.push_back(std::move(msg));
 }
 
 void WorkerContext::Cache(std::list<std::shared_ptr<Msg>>* msg_list) {
-  Common::ListAppend(&cache_, msg_list);
+  cache_.splice(cache_.end(), *msg_list);
 }
 
 Mailbox* WorkerContext::GetMailbox() {

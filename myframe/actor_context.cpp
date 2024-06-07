@@ -23,6 +23,7 @@ ActorContext::ActorContext(
     , in_wait_que_(false)
     , actor_(actor)
     , app_(app) {
+  actor_->SetContext(this);
   mailbox_.SetAddr(actor_->GetActorName());
   LOG(INFO) << mailbox_.Addr() << " context create";
 }
@@ -34,7 +35,6 @@ ActorContext::~ActorContext() {
 std::shared_ptr<App> ActorContext::GetApp() { return app_.lock(); }
 
 int ActorContext::Init(const char* param) {
-  actor_->SetContext(shared_from_this());
   return actor_->Init(param);
 }
 

@@ -9,8 +9,7 @@ Author: likepeng <likepeng0418@163.com>
 #include <thread>
 #include <iostream>
 
-#include "myframe/log.h"
-#include "myframe/export.h"
+#include "export.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/worker.h"
@@ -24,7 +23,6 @@ class @template_name@Actor : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     /* print recv msg */
-    LOG(INFO) << *msg << ": " << msg->GetData();
     std::cout << *msg << ": " << msg->GetData() << std::endl;
     /* resp msg */
     auto mailbox = GetMailbox();
@@ -49,7 +47,6 @@ class @template_name@Worker : public myframe::Worker {
       if (msg == nullptr) {
         break;
       }
-      LOG(INFO) << *msg << ": " << msg->GetData();
       std::cout << *msg << ": " << msg->GetData() << std::endl;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -57,7 +54,8 @@ class @template_name@Worker : public myframe::Worker {
 };
 
 /* create actor instance */
-extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
+extern "C" MYFRAME_SUBMODULE_EXPORT std::shared_ptr<myframe::Actor>
+actor_create(
     const std::string& actor_name) {
   if (actor_name == "@template_name@") {
     return std::make_shared<@template_name@Actor>();
@@ -66,7 +64,8 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
 }
 
 /* create worker instance */
-extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
+extern "C" MYFRAME_SUBMODULE_EXPORT std::shared_ptr<myframe::Worker>
+worker_create(
     const std::string& worker_name) {
   if (worker_name == "@template_name@") {
     return std::make_shared<@template_name@Worker>();

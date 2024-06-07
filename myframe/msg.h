@@ -47,7 +47,7 @@ class MYFRAME_EXPORT Msg final {
 
   /**
    * @brief 消息类型
-   * @note 目前使用到的 "TEXT", "TIMER";
+   * @note 目前使用到的 "TEXT", "TIMER", "SUBSCRIBE";
    * 也可以自定义，用于区分传递给同一个actor的不同消息类型
    * @return const std::string& 消息类型
    */

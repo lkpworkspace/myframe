@@ -7,6 +7,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/worker_context_manager.h"
 
+#include <utility>
+
 #include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/worker.h"
@@ -77,7 +79,7 @@ void WorkerContextManager::PopFrontIdleWorker() {
 void WorkerContextManager::PushBackIdleWorker(
   std::shared_ptr<WorkerContext> worker) {
   std::unique_lock<std::shared_mutex> lk(rw_);
-  idle_workers_ctx_.emplace_back(worker);
+  idle_workers_ctx_.push_back(std::move(worker));
 }
 
 std::vector<std::string> WorkerContextManager::GetAllUserWorkerAddr() {
@@ -163,7 +165,7 @@ void WorkerContextManager::DispatchWorkerMsg(
     LOG(WARNING) << worker_name << " unsupport recv msg, drop it";
     return;
   }
-  worker_ctx->Cache(msg);
+  worker_ctx->Cache(std::move(msg));
   LOG_IF(WARNING,
     worker_ctx->CacheSize() > warning_msg_size_.load())
       << *worker_ctx << " has " << worker_ctx->CacheSize()

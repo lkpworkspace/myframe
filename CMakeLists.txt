@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
-project(myframe VERSION 0.9.2)
+if (POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW)
+endif()
+project(myframe VERSION 0.9.3)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
@@ -13,8 +16,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 ### compile option
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if (CMAKE_CXX_STANDARD_REQUIRED)
   message(STATUS "Set cxx standard ${CMAKE_CXX_STANDARD}")
 else()
@@ -22,6 +25,7 @@ else()
   set(CMAKE_CXX_STANDARD 17)
   message(STATUS "Set default cxx standard 17")
 endif()
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
 ### install path
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

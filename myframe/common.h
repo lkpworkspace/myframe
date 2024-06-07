@@ -31,13 +31,6 @@ class MYFRAME_EXPORT Common final {
   static stdfs::path GetAbsolutePath(const std::string& flag_path);
   static bool IsAbsolutePath(const std::string& path);
 
-  template <typename T>
-  static void ListAppend(
-    std::list<std::shared_ptr<T>>* dst,
-    std::list<std::shared_ptr<T>>* src) {
-    dst->insert(dst->end(), src->begin(), src->end());
-    src->clear();
-  }
   static std::vector<std::string> SplitMsgName(const std::string& name);
 };
 

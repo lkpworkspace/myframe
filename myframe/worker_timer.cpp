@@ -9,6 +9,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include <chrono>
 #include <thread>
+#include <utility>
 
 #include "myframe/log.h"
 #include "myframe/actor.h"
@@ -85,7 +86,7 @@ void TimerManager::_Dispath(List* cur) {
     msg->SetDesc(timer->timer_name_);
     msg->SetType("TIMER");
     delete begin;
-    timeout_list_.emplace_back(msg);
+    timeout_list_.push_back(std::move(msg));
     begin = temp;
   }
 }
