@@ -44,6 +44,14 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   friend class Actor;
 
  public:
+  enum State : std::uint8_t {
+    kUninitialized = 0,
+    kInitialized,
+    kRunning,
+    kQuitting,
+    kQuit,
+  };
+
   App();
   virtual ~App();
 
@@ -57,9 +65,9 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
 
   bool LoadServiceFromFile(const std::string& file);
 
-  bool LoadServiceFromJson(const Json::Value& service);
-
   bool LoadServiceFromJsonStr(const std::string& service);
+
+  bool LoadServiceFromJson(const Json::Value& service);
 
   bool AddActor(
     const std::string& inst_name,
@@ -77,7 +85,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   const std::shared_ptr<const Msg> SendRequest(
     std::shared_ptr<Msg> msg);
 
-  std::unique_ptr<ModManager>& GetModManager() { return mods_; }
+  std::unique_ptr<ModManager>& GetModManager();
 
   int Exec();
 
@@ -130,8 +138,9 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   stdfs::path lib_dir_;
   /// node地址
   std::string node_addr_;
+  ///
   std::atomic<std::size_t> warning_msg_size_{10};
-  std::atomic_bool quit_{true};
+  std::atomic<State> state_{kUninitialized};
   std::recursive_mutex local_mtx_;
   /// 缓存消息列表
   struct CacheMsg {
