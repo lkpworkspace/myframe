@@ -400,26 +400,29 @@ bool App::CreateActorContext(
   std::lock_guard<std::recursive_mutex> lock(local_mtx_);
   // 接收缓存中发给自己的消息
   for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
-    if (it->msg->GetDst() == actor_name) {
+    if ((*it)->GetDst() == actor_name) {
       LOG(INFO) << actor_name
-        << " recv msg from cache " << *(it->msg);
-      DispatchMsg(it->msg);
+        << " recv msg from cache " << *(it);
+      DispatchMsg(*it);
       it = cache_msgs_.erase(it);
       continue;
     }
     ++it;
   }
   // 目的地址不存在的暂时放到缓存消息队列
-  auto send_list = ctx->GetMailbox()->GetSendList();
-  for (auto it = send_list->begin(); it != send_list->end();) {
-    if (!HasUserInst((*it)->GetDst())) {
-      LOG(WARNING) << "can't found " << (*it)->GetDst()
-        << ", cache this msg";
-      cache_msgs_.emplace_back(0, *it);
-      it = send_list->erase(it);
-      continue;
+  // 在运行时不再缓存，直接分发
+  if (state_.load() != kRunning) {
+    auto send_list = ctx->GetMailbox()->GetSendList();
+    for (auto it = send_list->begin(); it != send_list->end();) {
+      if (!HasUserInst((*it)->GetDst())) {
+        LOG(WARNING) << "can't found " << (*it)->GetDst()
+          << ", cache this msg";
+        cache_msgs_.push_back(*it);
+        it = send_list->erase(it);
+        continue;
+      }
+      ++it;
     }
-    ++it;
   }
   // 分发目的地址已经存在的消息
   DispatchMsg(ctx);
@@ -452,16 +455,6 @@ bool App::StartTimerWorker() {
   }
   LOG(INFO) << "start timer worker " << worker->GetWorkerName();
   return true;
-}
-
-void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
-  LOG_IF(WARNING,
-      msg_list->size() > warning_msg_size_.load())
-    << " dispatch msg too many";
-  for (auto& msg : (*msg_list)) {
-    DispatchMsg(std::move(msg));
-  }
-  msg_list->clear();
 }
 
 void App::DispatchMsg(std::shared_ptr<Msg> msg) {
@@ -506,6 +499,16 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
   } else {
     LOG(ERROR) << "Unknown msg " << *msg;
   }
+}
+
+void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
+  LOG_IF(WARNING,
+      msg_list->size() > warning_msg_size_.load())
+    << " dispatch msg too many";
+  for (auto& msg : (*msg_list)) {
+    DispatchMsg(std::move(msg));
+  }
+  msg_list->clear();
 }
 
 // 将获得的消息分发给其他actor
@@ -742,20 +745,6 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
   }
 }
 
-void App::ProcessCacheMsg() {
-  for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
-    if (it->search_count >= default_search_count_) {
-      VLOG(1) << *(it->msg) << " search count: " << it->search_count
-        << ", dispatch it";
-      DispatchMsg(it->msg);
-      it = cache_msgs_.erase(it);
-    } else {
-      it->search_count++;
-      ++it;
-    }
-  }
-}
-
 int App::Exec() {
   if (state_.load() == kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before Exec()";
@@ -764,13 +753,13 @@ int App::Exec() {
   int time_wait_ms = 100;
   std::vector<ev_handle_t> evs;
   state_.store(kRunning);
+  /// 处理初始化中缓存消息
+  DispatchMsg(&cache_msgs_);
   while (worker_ctx_mgr_->WorkerSize()) {
     /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
     CheckStopWorkers();
     /// 等待事件
     poller_->Wait(&evs, time_wait_ms);
-    /// 处理缓存消息
-    ProcessCacheMsg();
     /// 处理事件
     ProcessEvent(evs);
   }
