@@ -63,7 +63,7 @@ bool App::Init(
   int thread_pool_size,
   int event_conn_size,
   int warning_msg_size) {
-  if (!quit_.load()) {
+  if (state_.load() != kUninitialized) {
     return true;
   }
 
@@ -73,10 +73,11 @@ bool App::Init(
   ret &= poller_->Init();
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
   ret &= ev_conn_mgr_->Init(event_conn_size);
+
+  state_.store(kInitialized);
+
   ret &= StartCommonWorker(thread_pool_size);
   ret &= StartTimerWorker();
-
-  quit_.store(false);
   return ret;
 }
 
@@ -119,6 +120,10 @@ bool App::LoadServiceFromJsonStr(const std::string& service) {
 }
 
 bool App::LoadServiceFromJson(const Json::Value& service) {
+  if (state_.load() == kUninitialized) {
+    LOG(ERROR) << "not init, please call Init() before LoadServiceFromJson()";
+    return false;
+  }
   if (service.isNull()) {
     LOG(ERROR) << "parse service json failed, skip";
     return false;
@@ -265,6 +270,10 @@ bool App::AddActor(
   const std::string& params,
   std::shared_ptr<Actor> actor,
   const Json::Value& config) {
+  if (state_.load() == kUninitialized) {
+    LOG(ERROR) << "not init, please call Init() before AddActor()";
+    return false;
+  }
   actor->SetInstName(inst_name);
   actor->SetConfig(config);
   return CreateActorContext(actor, params);
@@ -274,6 +283,10 @@ bool App::AddWorker(
   const std::string& inst_name,
   std::shared_ptr<Worker> worker,
   const Json::Value& config) {
+  if (state_.load() == kUninitialized) {
+    LOG(ERROR) << "not init, please call Init() before AddWorker()";
+    return false;
+  }
   auto worker_ctx = std::make_shared<WorkerContext>(
     shared_from_this(), worker, poller_);
   worker->SetInstName(inst_name);
@@ -300,6 +313,10 @@ bool App::AddWorker(
 }
 
 int App::Send(std::shared_ptr<Msg> msg) {
+  if (state_.load() == kUninitialized) {
+    LOG(ERROR) << "not init, please call Init() before Send()";
+    return -1;
+  }
   auto conn = ev_conn_mgr_->Alloc();
   if (conn == nullptr) {
     LOG(ERROR) << "alloc conn event failed";
@@ -314,6 +331,10 @@ int App::Send(std::shared_ptr<Msg> msg) {
 
 const std::shared_ptr<const Msg> App::SendRequest(
   std::shared_ptr<Msg> msg) {
+  if (state_.load() == kUninitialized) {
+    LOG(ERROR) << "not init, please call Init() before SendRequest()";
+    return nullptr;
+  }
   auto conn = ev_conn_mgr_->Alloc();
   if (conn == nullptr) {
     LOG(ERROR) << "alloc conn event failed";
@@ -324,6 +345,10 @@ const std::shared_ptr<const Msg> App::SendRequest(
   poller_->Del(conn);
   ev_conn_mgr_->Release(std::move(conn));
   return resp;
+}
+
+std::unique_ptr<ModManager>& App::GetModManager() {
+  return mods_;
 }
 
 /**
@@ -732,9 +757,13 @@ void App::ProcessCacheMsg() {
 }
 
 int App::Exec() {
+  if (state_.load() == kUninitialized) {
+    LOG(ERROR) << "not init, please call Init() before Exec()";
+    return -1;
+  }
   int time_wait_ms = 100;
   std::vector<ev_handle_t> evs;
-
+  state_.store(kRunning);
   while (worker_ctx_mgr_->WorkerSize()) {
     /// 检查空闲线程队列是否有空闲线程，如果有就找到一个有消息的actor处理
     CheckStopWorkers();
@@ -748,17 +777,18 @@ int App::Exec() {
 
   // quit App
   worker_ctx_mgr_->WaitAllWorkerQuit();
-  quit_.store(true);
+  state_.store(kQuit);
   LOG(INFO) << "app exit exec";
   return 0;
 }
 
 void App::Quit() {
   // wait worker stop
-  if (quit_.load()) {
-    return;
+  if (state_.load() == kRunning
+      || state_.load() == kInitialized) {
+    state_.store(kQuitting);
+    worker_ctx_mgr_->StopAllWorker();
   }
-  worker_ctx_mgr_->StopAllWorker();
 }
 
 bool App::HasUserInst(const std::string& name) {
