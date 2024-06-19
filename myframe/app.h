@@ -122,11 +122,11 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   /// 通知执行事件
   void CheckStopWorkers();
 
-  /// 分发事件
+  /// 分发消息
   void DispatchMsg(std::shared_ptr<Msg> msg);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<ActorContext> context);
-  void ProcessCacheMsg();
+  /// 处理事件
   void ProcessEvent(const std::vector<ev_handle_t>& evs);
   void ProcessWorkerEvent(std::shared_ptr<WorkerContext>);
   void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
@@ -143,16 +143,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   std::atomic<State> state_{kUninitialized};
   std::recursive_mutex local_mtx_;
   /// 缓存消息列表
-  struct CacheMsg {
-    CacheMsg(int c, std::shared_ptr<Msg> m)
-      : search_count(c)
-      , msg(std::move(m)) {}
-    int search_count{0};
-    std::shared_ptr<Msg> msg{nullptr};
-  };
-  int default_search_count_{3};
-  std::vector<CacheMsg> cache_msgs_;
-
+  std::list<std::shared_ptr<Msg>> cache_msgs_;
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// poller
