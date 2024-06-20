@@ -166,7 +166,7 @@ void WorkerContextManager::DispatchWorkerMsg(
     return;
   }
   worker_ctx->GetMailbox()->Recv(std::move(msg));
-  int recv_size = worker_ctx->GetMailbox()->RecvSize();
+  std::size_t recv_size = worker_ctx->GetMailbox()->RecvSize();
   LOG_IF(WARNING, recv_size > warning_msg_size_.load())
       << *worker_ctx << " has " << recv_size
       << " msg not process!!!";

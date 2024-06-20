@@ -542,7 +542,7 @@ void App::CheckStopWorkers() {
       << " dispatch msg to "
       << *worker_ctx;
     auto actor_mailbox = actor_ctx->GetMailbox();
-    int actor_ctx_recv_sz = actor_mailbox->RecvSize();
+    std::size_t actor_ctx_recv_sz = actor_mailbox->RecvSize();
     if (!actor_mailbox->RecvEmpty()) {
       LOG_IF(WARNING,
         actor_ctx_recv_sz > warning_msg_size_.load())
