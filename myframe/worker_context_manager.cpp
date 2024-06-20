@@ -139,7 +139,7 @@ void WorkerContextManager::WeakupWorker() {
       ++it;
       continue;
     }
-    worker_ctx->GetMailbox()->Recv(worker_ctx->GetCache());
+    worker_ctx->GetMailbox()->MoveToRun();
     it = weakup_workers_ctx_.erase(it);
     worker_ctx->SetCtrlOwnerFlag(WorkerContext::CtrlOwner::kWorker);
     worker_ctx->SetWaitMsgQueueFlag(false);
@@ -165,10 +165,10 @@ void WorkerContextManager::DispatchWorkerMsg(
     LOG(WARNING) << worker_name << " unsupport recv msg, drop it";
     return;
   }
-  worker_ctx->Cache(std::move(msg));
-  LOG_IF(WARNING,
-    worker_ctx->CacheSize() > warning_msg_size_.load())
-      << *worker_ctx << " has " << worker_ctx->CacheSize()
+  worker_ctx->GetMailbox()->Recv(std::move(msg));
+  int recv_size = worker_ctx->GetMailbox()->RecvSize();
+  LOG_IF(WARNING, recv_size > warning_msg_size_.load())
+      << *worker_ctx << " has " << recv_size
       << " msg not process!!!";
   if (worker_ctx->IsInWaitMsgQueue()) {
     VLOG(1) << *worker_ctx << " already in wait queue, return";
@@ -176,7 +176,7 @@ void WorkerContextManager::DispatchWorkerMsg(
   }
   worker_ctx->SetWaitMsgQueueFlag(true);
   std::unique_lock<std::shared_mutex> lk(rw_);
-  weakup_workers_ctx_.emplace_back(worker_ctx);
+  weakup_workers_ctx_.push_back(std::move(worker_ctx));
 }
 
 }  // namespace myframe

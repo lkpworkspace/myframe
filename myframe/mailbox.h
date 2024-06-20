@@ -16,8 +16,12 @@ namespace myframe {
 
 class Msg;
 class MYFRAME_EXPORT Mailbox final {
+  friend std::ostream& operator<<(std::ostream&, const Mailbox&);
   friend class ActorContext;
+  friend class ActorContextManager;
   friend class WorkerContext;
+  friend class WorkerContextManager;
+  friend class EventConn;
   friend class EventConnManager;
   friend class App;
 
@@ -25,7 +29,7 @@ class MYFRAME_EXPORT Mailbox final {
   /// 邮箱地址
   const std::string& Addr() const;
 
-  /// 发件箱(适用于worker/actor)
+  /// 发件箱
   int SendSize() const;
   bool SendEmpty() const;
   void SendClear();
@@ -38,7 +42,13 @@ class MYFRAME_EXPORT Mailbox final {
     const std::any& data);
   void Send(std::list<std::shared_ptr<Msg>>* msg_list);
 
-  /// 收件箱(适用于worker)
+  /// 信件处理
+  void MoveToRun();
+  bool RunEmpty() const;
+  const std::shared_ptr<const Msg> PopRun();
+
+ private:
+  /// 收件箱
   int RecvSize() const;
   bool RecvEmpty() const;
   void RecvClear();
@@ -46,7 +56,6 @@ class MYFRAME_EXPORT Mailbox final {
   void Recv(std::list<std::shared_ptr<Msg>>* msg_list);
   const std::shared_ptr<const Msg> PopRecv();
 
- private:
   /// 设置邮箱地址
   void SetAddr(const std::string& addr);
 
@@ -56,6 +65,7 @@ class MYFRAME_EXPORT Mailbox final {
   std::string addr_;
   std::list<std::shared_ptr<Msg>> recv_;
   std::list<std::shared_ptr<Msg>> send_;
+  std::list<std::shared_ptr<Msg>> run_;
 };
 
 MYFRAME_EXPORT std::ostream& operator<<(

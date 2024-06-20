@@ -59,7 +59,9 @@ std::shared_ptr<EventConn> EventConnManager::Alloc() {
 
 void EventConnManager::Release(std::shared_ptr<EventConn> ev) {
   // remove from run_conn
-  ev_mgr_->Del(ev);
+  if (!ev_mgr_->Del(ev)) {
+    return;
+  }
   // add to idle_conn
   std::lock_guard<std::mutex> g(mtx_);
   idle_conn_.push_back(std::move(ev));
@@ -79,6 +81,8 @@ void EventConnManager::Notify(
     LOG(WARNING) << "event " << ev->GetName() << " need't resp msg";
     return;
   }
+  // need release immediately
+  Release(ev);
   // push msg to event_conn
   ev->GetMailbox()->Recv(std::move(msg));
   // send cmd to event_conn

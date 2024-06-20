@@ -88,13 +88,31 @@ const std::shared_ptr<const Msg> Mailbox::PopRecv() {
   return msg;
 }
 
+void Mailbox::MoveToRun() {
+  run_.splice(run_.end(), recv_);
+}
+
+bool Mailbox::RunEmpty() const {
+  return run_.empty();
+}
+
+const std::shared_ptr<const Msg> Mailbox::PopRun() {
+  if (run_.empty()) {
+    return nullptr;
+  }
+  auto msg = run_.front();
+  run_.pop_front();
+  return msg;
+}
+
 std::list<std::shared_ptr<Msg>>* Mailbox::GetRecvList() {
   return &recv_;
 }
 
 std::ostream& operator<<(std::ostream& out, const Mailbox& mailbox) {
-  out << mailbox.Addr() << " recv " << mailbox.RecvSize() << ", "
-    << " send " << mailbox.SendSize();
+  out << mailbox.Addr() << " recv " << mailbox.RecvSize()
+    << ", send " << mailbox.SendSize()
+    << ", run " << mailbox.run_.size();
   return out;
 }
 
