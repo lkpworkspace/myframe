@@ -96,6 +96,10 @@ bool Mailbox::RunEmpty() const {
   return run_.empty();
 }
 
+int Mailbox::RunSize() const {
+  return run_.size();
+}
+
 const std::shared_ptr<const Msg> Mailbox::PopRun() {
   if (run_.empty()) {
     return nullptr;
@@ -112,7 +116,7 @@ std::list<std::shared_ptr<Msg>>* Mailbox::GetRecvList() {
 std::ostream& operator<<(std::ostream& out, const Mailbox& mailbox) {
   out << mailbox.Addr() << " recv " << mailbox.RecvSize()
     << ", send " << mailbox.SendSize()
-    << ", run " << mailbox.run_.size();
+    << ", run " << mailbox.RunSize();
   return out;
 }
 
