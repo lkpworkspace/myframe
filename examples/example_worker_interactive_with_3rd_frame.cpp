@@ -102,8 +102,8 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
           recv_run_flag_ = true;
         } else if (cmd == myframe::CmdChannel::Cmd::kRunWithMsg) {
           auto mailbox = GetMailbox();
-          while (!mailbox->RecvEmpty()) {
-            const auto msg = mailbox->PopRecv();
+          while (!mailbox->RunEmpty()) {
+            const auto msg = mailbox->PopRun();
             // 接收到其它组件消息
             LOG(INFO) << "get main " << msg->GetData();
           }

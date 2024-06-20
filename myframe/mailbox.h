@@ -16,7 +16,6 @@ namespace myframe {
 
 class Msg;
 class MYFRAME_EXPORT Mailbox final {
-  friend std::ostream& operator<<(std::ostream&, const Mailbox&);
   friend class ActorContext;
   friend class ActorContextManager;
   friend class WorkerContext;
@@ -45,12 +44,15 @@ class MYFRAME_EXPORT Mailbox final {
   /// 信件处理
   void MoveToRun();
   bool RunEmpty() const;
+  int RunSize() const;
   const std::shared_ptr<const Msg> PopRun();
 
- private:
   /// 收件箱
   int RecvSize() const;
   bool RecvEmpty() const;
+
+ private:
+  /// 收件箱
   void RecvClear();
   void Recv(std::shared_ptr<Msg> msg);
   void Recv(std::list<std::shared_ptr<Msg>>* msg_list);
