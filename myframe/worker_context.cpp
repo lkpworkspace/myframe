@@ -77,22 +77,6 @@ void WorkerContext::ListenThread() {
   cmd_channel_->SendToMain(CmdChannel::Cmd::kQuit);
 }
 
-std::size_t WorkerContext::CacheSize() const {
-  return cache_.size();
-}
-
-std::list<std::shared_ptr<Msg>>* WorkerContext::GetCache() {
-  return &cache_;
-}
-
-void WorkerContext::Cache(std::shared_ptr<Msg> msg) {
-  cache_.push_back(std::move(msg));
-}
-
-void WorkerContext::Cache(std::list<std::shared_ptr<Msg>>* msg_list) {
-  cache_.splice(cache_.end(), *msg_list);
-}
-
 Mailbox* WorkerContext::GetMailbox() {
   return &mailbox_;
 }

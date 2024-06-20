@@ -325,6 +325,7 @@ int App::Send(std::shared_ptr<Msg> msg) {
   poller_->Add(conn);
   auto ret = conn->Send(std::move(msg));
   poller_->Del(conn);
+  // 主动释放
   ev_conn_mgr_->Release(std::move(conn));
   return ret;
 }
@@ -343,7 +344,8 @@ const std::shared_ptr<const Msg> App::SendRequest(
   poller_->Add(conn);
   auto resp = conn->SendRequest(std::move(msg));
   poller_->Del(conn);
-  ev_conn_mgr_->Release(std::move(conn));
+  // 不需要调用ev_conn_mgr_->Release()
+  // 系统会主动释放
   return resp;
 }
 
@@ -539,16 +541,17 @@ void App::CheckStopWorkers() {
       << actor_ctx->GetActor()->GetActorName()
       << " dispatch msg to "
       << *worker_ctx;
-    auto msg_list = actor_ctx->GetMailbox()->GetRecvList();
-    if (!msg_list->empty()) {
+    auto actor_mailbox = actor_ctx->GetMailbox();
+    int actor_ctx_recv_sz = actor_mailbox->RecvSize();
+    if (!actor_mailbox->RecvEmpty()) {
       LOG_IF(WARNING,
-        msg_list->size() > warning_msg_size_.load())
+        actor_ctx_recv_sz > warning_msg_size_.load())
           << actor_ctx->GetActor()->GetActorName()
-          << " recv msg size too many: " << msg_list->size();
+          << " recv msg size too many: " << actor_ctx_recv_sz;
       VLOG(1) << "run " << actor_ctx->GetActor()->GetActorName();
-      worker_ctx->GetMailbox()->Recv(msg_list);
+      actor_mailbox->MoveToRun();
       VLOG(1) << actor_ctx->GetActor()->GetActorName()
-        << " has " << worker_ctx->GetMailbox()->RecvSize()
+        << " has " << actor_ctx_recv_sz
         << " msg need process";
       worker_ctx_mgr_->PopFrontIdleWorker();
       auto common_idle_worker = worker_ctx->GetWorker<WorkerCommon>();

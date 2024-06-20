@@ -55,12 +55,6 @@ class WorkerContext final : public Event {
     return std::dynamic_pointer_cast<T>(worker_);
   }
 
-  /// recv cache list method
-  std::size_t CacheSize() const;
-  std::list<std::shared_ptr<Msg>>* GetCache();
-  void Cache(std::shared_ptr<Msg> msg);
-  void Cache(std::list<std::shared_ptr<Msg>>* msg_list);
-
   /// 线程交互控制flag函数
   void SetCtrlOwnerFlag(CtrlOwner owner) {
     ctrl_owner_ = owner;
@@ -89,9 +83,6 @@ class WorkerContext final : public Event {
   /// worker
   std::shared_ptr<Worker> worker_;
   std::weak_ptr<App> app_;
-
-  /// recv cache list
-  std::list<std::shared_ptr<Msg>> cache_;
 
   /// mailbox
   Mailbox mailbox_;

@@ -42,8 +42,9 @@ int WorkerCommon::Work() {
     LOG(ERROR) << "context is nullptr";
     return -1;
   }
-  while (!GetMailbox()->RecvEmpty()) {
-    ctx->Proc(GetMailbox()->PopRecv());
+  auto ctx_mailbox = ctx->GetMailbox();
+  while (!ctx_mailbox->RunEmpty()) {
+    ctx->Proc(ctx_mailbox->PopRun());
   }
 
   return 0;

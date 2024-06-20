@@ -22,8 +22,8 @@ class ExampleWorkerPublic : public myframe::Worker {
       return;
     }
     auto mailbox = GetMailbox();
-    while (!mailbox->RecvEmpty()) {
-      const auto msg = mailbox->PopRecv();
+    while (!mailbox->RunEmpty()) {
+      const auto msg = mailbox->PopRun();
       // send msg by udp/tcp/zmq/...
       LOG(INFO) << "public msg " << msg->GetData() << " ...";
     }
