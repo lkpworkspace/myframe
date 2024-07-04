@@ -26,10 +26,11 @@ EventManager::~EventManager() {
 
 ev_handle_t EventManager::ToHandle(const std::string& name) {
   std::shared_lock<std::shared_mutex> lk(rw_);
-  if (name_handle_map_.find(name) == name_handle_map_.end()) {
+  auto p = name_handle_map_.find(name);
+  if (p == name_handle_map_.end()) {
     return Event::DEFAULT_EV_HANDLE;
   }
-  return name_handle_map_[name];
+  return p->second;
 }
 
 bool EventManager::Has(const std::string& name) {
