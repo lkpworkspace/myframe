@@ -51,8 +51,9 @@ App::App()
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_mgr_(new EventManager())
   , ev_conn_mgr_(new EventConnManager(ev_mgr_, poller_))
-  , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_))
-{}
+  , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_)) {
+  LOG(INFO) << "myframe version: " << MYFRAME_VERSION;
+}
 
 App::~App() {
   LOG(INFO) << "app deconstruct";
