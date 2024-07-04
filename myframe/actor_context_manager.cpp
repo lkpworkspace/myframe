@@ -54,12 +54,12 @@ bool ActorContextManager::RegContext(std::shared_ptr<ActorContext> ctx) {
 std::shared_ptr<ActorContext> ActorContextManager::GetContext(
     const std::string& actor_name) {
   std::shared_lock<std::shared_mutex> lk(rw_);
-  if (ctxs_.find(actor_name) == ctxs_.end()) {
+  auto p = ctxs_.find(actor_name);
+  if (p == ctxs_.end()) {
     LOG(WARNING) << "not found " << actor_name;
     return nullptr;
   }
-  auto ctx = ctxs_[actor_name];
-  return ctx;
+  return p->second;
 }
 
 std::vector<std::string> ActorContextManager::GetAllActorAddr() {
