@@ -109,14 +109,21 @@ bool Common::IsAbsolutePath(const std::string& path) {
   return false;
 }
 
-std::vector<std::string> Common::SplitMsgName(const std::string& name) {
-  std::vector<std::string> name_list;
-  std::string item;
-  std::stringstream ss(name);
-  while (std::getline(ss, item, '.')) {
-    name_list.push_back(std::move(item));
+std::vector<std::string_view> Common::SplitMsgName(const std::string& name) {
+  std::vector<std::string_view> tokens;
+  tokens.reserve(3);
+  size_t name_sz = name.size();
+  size_t start_pos = 0;
+  for (size_t i = 0; i < name_sz; ++i) {
+    if (name[i] == '.') {
+      tokens.emplace_back(&name[start_pos], i - start_pos);
+      start_pos = i + 1;
+    }
+    if (i == name_sz - 1) {
+      tokens.emplace_back(&name[start_pos], i - start_pos + 1);
+    }
   }
-  return name_list;
+  return tokens;
 }
 
 }  // namespace myframe

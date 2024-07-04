@@ -10,6 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 #include <string>
 #include <vector>
+#include <string_view>
 #if __has_include(<filesystem>)
 #include <filesystem>
 namespace stdfs = std::filesystem;
@@ -31,7 +32,7 @@ class MYFRAME_EXPORT Common final {
   static stdfs::path GetAbsolutePath(const std::string& flag_path);
   static bool IsAbsolutePath(const std::string& path);
 
-  static std::vector<std::string> SplitMsgName(const std::string& name);
+  static std::vector<std::string_view> SplitMsgName(const std::string& name);
 };
 
 }  // namespace myframe
