@@ -6,7 +6,6 @@ project(myframe VERSION 0.9.4)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
-option(MYFRAME_INSTALL_DEPS "Install deps" OFF)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
 
@@ -72,15 +71,6 @@ install(PROGRAMS
 install(DIRECTORY templates DESTINATION .)
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
 install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_DIR})
-if (MYFRAME_INSTALL_DEPS)
-  if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.21")
-    install(IMPORTED_RUNTIME_ARTIFACTS jsoncpp_lib)
-    install(IMPORTED_RUNTIME_ARTIFACTS glog::glog)
-    install(IMPORTED_RUNTIME_ARTIFACTS gflags)
-  else()
-    message(WARNING "Can not install deps lib, cmake version ${CMAKE_VERSION} < 3.21")
-  endif()
-endif()
 
 ### package
 include(Packing)
