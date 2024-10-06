@@ -29,11 +29,11 @@ worker自驱动，可以通过消息与actor交互;
 ```sh
 # 下载/构建/安装依赖库
 cd 3rd
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=../output
-cmake --build build -j
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX="../output"
+cmake --build build -j --config Release
 # 构建安装
 cd ..
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=./output -DCMAKE_PREFIX_PATH=./output
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX="./output" -DCMAKE_PREFIX_PATH="./output"
 cmake --build build -j --config Release --target install
 ```
 
