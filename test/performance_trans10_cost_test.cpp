@@ -75,7 +75,8 @@ class Trans10ActorCostTest : public myframe::Actor {
       LOG(INFO) << "trans 10 actor avg(us): " << avg;
       std::sort(cost_us_list_.begin(), cost_us_list_.end());
       LOG(INFO) << "trans 10 actor 99(us): " <<
-        cost_us_list_[cost_us_list_.size() * 0.99];
+        cost_us_list_[
+          static_cast<size_t>(cost_us_list_.size() * 0.99)];
       GetApp()->Quit();
     }
   }
@@ -84,14 +85,14 @@ class Trans10ActorCostTest : public myframe::Actor {
   static bool init_;
   static std::chrono::high_resolution_clock::time_point total_;
   static std::chrono::high_resolution_clock::time_point begin_;
-  static std::vector<int> cost_us_list_;
+  static std::vector<int64_t> cost_us_list_;
   int task_num_{0};
   std::string msg_;
 };
 bool Trans10ActorCostTest::init_{false};
 std::chrono::high_resolution_clock::time_point Trans10ActorCostTest::total_;
 std::chrono::high_resolution_clock::time_point Trans10ActorCostTest::begin_;
-std::vector<int> Trans10ActorCostTest::cost_us_list_;
+std::vector<int64_t> Trans10ActorCostTest::cost_us_list_;
 
 
 int main() {

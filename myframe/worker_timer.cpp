@@ -19,7 +19,7 @@ namespace myframe {
 
 uint64_t TimerManager::GetMonoTimeMs() {
   auto now = std::chrono::steady_clock::now();
-  return now.time_since_epoch().count() / 1e6;
+  return static_cast<uint64_t>(now.time_since_epoch().count() / 1e6);
 }
 
 TimerManager::TimerManager() {
