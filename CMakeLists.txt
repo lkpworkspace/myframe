@@ -25,6 +25,11 @@ else()
   message(STATUS "Set default cxx standard 17")
 endif()
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+if (MSVC)
+  add_definitions(
+		-wd4251
+  )
+endif (MSVC)
 
 ### install path
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
