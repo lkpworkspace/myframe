@@ -66,7 +66,8 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
         LOG(INFO) << "20 actor fullspeed trans msg avg(cnt/sec): " << avg;
         std::sort(msg_cnt_per_sec_list_.begin(), msg_cnt_per_sec_list_.end());
         LOG(INFO) << "20 actor fullspeed trans msg 99(cnt/sec): "
-          << msg_cnt_per_sec_list_[msg_cnt_per_sec_list_.size() * 0.99];
+          << msg_cnt_per_sec_list_[
+              static_cast<size_t>(msg_cnt_per_sec_list_.size() * 0.99)];
         GetApp()->Quit();
       }
     }

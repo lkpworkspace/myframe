@@ -60,7 +60,8 @@ class TransMsgCostTest : public myframe::Actor {
       LOG(INFO) << "trans 1 actor avg(us): " << avg;
       std::sort(cost_us_list_.begin(), cost_us_list_.end());
       LOG(INFO) << "trans 1 actor 99(us): " <<
-        cost_us_list_[cost_us_list_.size() * 0.99];
+        cost_us_list_[
+            static_cast<size_t>(cost_us_list_.size() * 0.99)];
       GetApp()->Quit();
     }
   }
@@ -69,7 +70,7 @@ class TransMsgCostTest : public myframe::Actor {
   std::chrono::high_resolution_clock::time_point begin_;
   std::chrono::high_resolution_clock::time_point last_;
   std::string msg_;
-  std::vector<int> cost_us_list_;
+  std::vector<int64_t> cost_us_list_;
 };
 
 int main() {
