@@ -17,6 +17,8 @@ class ExampleActorConfig : public myframe::Actor {
   int Init(const char* param) override {
     (void)param;
     auto conf = GetConfig();
+    LOG(INFO) << GetActorName() << " pending queue size "
+      << GetMailbox()->GetPendingQueueSize();
     LOG(INFO) << GetActorName() << " conf " << conf->toStyledString();
     return 0;
   }

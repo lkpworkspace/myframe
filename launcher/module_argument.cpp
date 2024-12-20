@@ -131,6 +131,10 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
       && root["service_dir"].isString()) {
     conf_dir_ = root["service_dir"].asString();
   }
+  if (root.isMember("default_pending_queue_size")
+      && root["default_pending_queue_size"].isInt()) {
+    default_pending_queue_size_ = root["default_pending_queue_size"].asInt();
+  }
   return true;
 }
 

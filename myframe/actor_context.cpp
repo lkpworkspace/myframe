@@ -25,6 +25,12 @@ ActorContext::ActorContext(
     , app_(app) {
   actor_->SetContext(this);
   mailbox_.SetAddr(actor_->GetActorName());
+  int pending_queue_size = app->GetDefaultPendingQueueSize();
+  auto cfg = actor_->GetConfig();
+  if (cfg->isMember("pending_queue_size")) {
+    pending_queue_size = cfg->get("pending_queue_size", -1).asInt();
+  }
+  mailbox_.SetPendingQueueSize(pending_queue_size);
   LOG(INFO) << mailbox_.Addr() << " context create";
 }
 

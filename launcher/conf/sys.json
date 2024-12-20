@@ -1,4 +1,5 @@
 {
+    "default_pending_queue_size":-1,
     "thread_poll_size":4,
     "conn_event_size":2,
     "warning_msg_size":10

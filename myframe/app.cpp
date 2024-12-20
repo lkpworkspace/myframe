@@ -63,7 +63,8 @@ bool App::Init(
   const std::string& lib_dir,
   int thread_pool_size,
   int event_conn_size,
-  int warning_msg_size) {
+  int warning_msg_size,
+  int default_pending_queue_size) {
   if (state_.load() != kUninitialized) {
     return true;
   }
@@ -71,6 +72,7 @@ bool App::Init(
   bool ret = true;
   lib_dir_ = lib_dir;
   warning_msg_size_.store(warning_msg_size);
+  default_pending_queue_size_ = default_pending_queue_size;
   ret &= poller_->Init();
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
   ret &= ev_conn_mgr_->Init(event_conn_size);
@@ -814,6 +816,10 @@ std::string App::GetLibName(const std::string& name) {
 #elif defined(MYFRAME_OS_MACOSX)
   return "lib" + name + ".dylib";
 #endif
+}
+
+int App::GetDefaultPendingQueueSize() const {
+  return default_pending_queue_size_;
 }
 
 }  // namespace myframe
