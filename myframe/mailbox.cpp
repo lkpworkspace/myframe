@@ -73,7 +73,7 @@ void Mailbox::RecvClear() {
 
 void Mailbox::Recv(std::shared_ptr<Msg> msg) {
   if (pending_queue_size_ > 0) {
-    for(;recv_.size() >= pending_queue_size_;) {
+    for (; recv_.size() >= pending_queue_size_;) {
       recv_.pop_front();
     }
   }
