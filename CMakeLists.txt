@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 if (POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
-project(myframe VERSION 0.9.4)
+project(myframe VERSION 0.9.5)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)

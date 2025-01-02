@@ -5,7 +5,9 @@
 
 bin/
 
-build/
+build*
+
+output*
 
 *.user
 
@@ -17,5 +19,3 @@ myframe/export.h
 myframe/config.h
 3rd/pkg/
 3rd/src/
-3rd/build/
-output/
