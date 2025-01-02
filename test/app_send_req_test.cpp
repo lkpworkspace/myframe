@@ -9,6 +9,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <glog/logging.h>
 #include "myframe/common.h"
 #include "myframe/log.h"
 #include "myframe/msg.h"
@@ -27,8 +28,16 @@ class EchoActorTest : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    LOG(INFO) << "recv " << msg->GetSrc() << ":" << msg->GetData();
+    if (msg->GetData() == "hello") {
+      auto re = std::make_shared<myframe::Msg>(
+        "resp:" + std::to_string(seq_++));
+      auto mailbox = GetMailbox();
+      mailbox->Send(msg->GetSrc(), std::move(re));
+    }
   }
+
+ private:
+  int seq_{0};
 };
 
 int main() {
@@ -37,7 +46,7 @@ int main() {
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
 
-  myframe::InitLog(log_dir, "app_send_test");
+  myframe::InitLog(log_dir, "app_send_req_test");
 
   auto app = std::make_shared<myframe::App>();
   if (false == app->Init(lib_dir, 4)) {
@@ -55,7 +64,7 @@ int main() {
   auto actor = mod->CreateActorInst("class", "EchoActorTest");
   app->AddActor("1", "", actor);
 
-  // 测试Send函数
+  // 压力测试SendRequest函数
   std::mutex mtx;
   int th_cnt = 5;
   int exit_th_cnt = 0;
@@ -65,11 +74,10 @@ int main() {
     th_vec.push_back(std::thread([&, i](){
       int cnt = send_cnt;
       while (cnt--) {
-        auto msg = std::make_shared<myframe::Msg>(
-          "world " + std::to_string(i));
+        auto msg = std::make_shared<myframe::Msg>("hello");
         msg->SetDst("actor.EchoActorTest.1");
-        app->Send(std::move(msg));
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        auto resp = app->SendRequest(std::move(msg));
+        LOG(INFO) << "thread " << i << " resp: " << resp->GetData();
       }
       std::lock_guard<std::mutex> g(mtx);
       LOG(INFO) << "user thread " << i << " exit";

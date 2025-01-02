@@ -347,8 +347,7 @@ const std::shared_ptr<const Msg> App::SendRequest(
   poller_->Add(conn);
   auto resp = conn->SendRequest(std::move(msg));
   poller_->Del(conn);
-  // 不需要调用ev_conn_mgr_->Release()
-  // 系统会主动释放
+  ev_conn_mgr_->Release(std::move(conn));
   return resp;
 }
 

@@ -81,8 +81,6 @@ void EventConnManager::Notify(
     LOG(WARNING) << "event " << ev->GetName() << " need't resp msg";
     return;
   }
-  // need release immediately
-  Release(ev);
   // push msg to event_conn
   ev->GetMailbox()->Recv(std::move(msg));
   // send cmd to event_conn
