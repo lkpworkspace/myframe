@@ -61,12 +61,16 @@ int main() {
   auto app = std::make_shared<myframe::App>();
   if (false == app->Init(
     lib_dir,
-    4,  // 线程池大小
-    2,  // ConnectEvent池大小
-    10, // 接收队列最大值警告
-    -1, // 接收队列最大值（全局）
-    2  // 运行队列最大值（全局）
-  )) {
+    // 线程池大小
+    4,
+    // ConnectEvent池大小
+    2,
+    // 接收队列最大值警告
+    10,
+    // 接收队列最大值(全局)
+    -1,
+    // 运行队列最大值(全局)
+    2)) {
     LOG(ERROR) << "Init failed";
     return -1;
   }
