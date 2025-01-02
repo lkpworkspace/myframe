@@ -6,6 +6,8 @@
             {
                 "instance_name":"#1",
                 "instance_config":{
+                    "pending_queue_size":-1,
+                    "run_queue_size":-1,
                     "key1":"hello",
                     "key2":"world"
                 }

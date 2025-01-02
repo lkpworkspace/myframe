@@ -31,6 +31,9 @@ class ModuleArgument final {
   inline int GetDefaultPendingQueueSize() const {
     return default_pending_queue_size_;
   }
+  inline int GetDefaultRunQueueSize() const {
+    return default_run_queue_size_;
+  }
 
  private:
   bool ParseSysConf(const std::string&);
@@ -39,6 +42,7 @@ class ModuleArgument final {
   int conn_event_size_{2};
   int warning_msg_size_{10};
   int default_pending_queue_size_{-1};
+  int default_run_queue_size_{-1};
   std::string log_dir_;
   std::string lib_dir_;
   std::string conf_dir_;

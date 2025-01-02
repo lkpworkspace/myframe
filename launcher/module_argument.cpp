@@ -135,6 +135,10 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
       && root["default_pending_queue_size"].isInt()) {
     default_pending_queue_size_ = root["default_pending_queue_size"].asInt();
   }
+  if (root.isMember("default_run_queue_size")
+      && root["default_run_queue_size"].isInt()) {
+    default_run_queue_size_ = root["default_run_queue_size"].asInt();
+  }
   return true;
 }
 

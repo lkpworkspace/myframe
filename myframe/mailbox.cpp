@@ -90,6 +90,16 @@ const std::shared_ptr<const Msg> Mailbox::PopRecv() {
 }
 
 void Mailbox::MoveToRun() {
+  if (run_queue_size_ > 0) {
+    auto it = recv_.begin();
+    for (size_t i = 0;
+        i < static_cast<std::size_t>(run_queue_size_) && it != recv_.end();
+        ++i) {
+      ++it;
+    }
+    run_.splice(run_.begin(), recv_, recv_.begin(), it);
+    return;
+  }
   run_.splice(run_.end(), recv_);
 }
 
@@ -116,6 +126,14 @@ void Mailbox::SetPendingQueueSize(int sz) {
 
 int Mailbox::GetPendingQueueSize() const {
   return pending_queue_size_;
+}
+
+void Mailbox::SetRunQueueSize(int sz) {
+  run_queue_size_ = sz;
+}
+
+int Mailbox::GetRunQueueSize() const {
+  return run_queue_size_;
 }
 
 std::list<std::shared_ptr<Msg>>* Mailbox::GetRecvList() {

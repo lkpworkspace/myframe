@@ -46,12 +46,14 @@ class MYFRAME_EXPORT Mailbox final {
   bool RunEmpty() const;
   int RunSize() const;
   const std::shared_ptr<const Msg> PopRun();
-  void SetPendingQueueSize(int sz);
-  int GetPendingQueueSize() const;
+  void SetRunQueueSize(int sz);
+  int GetRunQueueSize() const;
 
   /// 收件箱
   int RecvSize() const;
   bool RecvEmpty() const;
+  void SetPendingQueueSize(int sz);
+  int GetPendingQueueSize() const;
 
  private:
   /// 收件箱
@@ -70,6 +72,7 @@ class MYFRAME_EXPORT Mailbox final {
   std::list<std::shared_ptr<Msg>> send_;
   std::list<std::shared_ptr<Msg>> run_;
   int pending_queue_size_{-1};
+  int run_queue_size_{-1};
 };
 
 MYFRAME_EXPORT std::ostream& operator<<(

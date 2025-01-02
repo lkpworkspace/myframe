@@ -19,6 +19,8 @@ class ExampleActorConfig : public myframe::Actor {
     auto conf = GetConfig();
     LOG(INFO) << GetActorName() << " pending queue size "
       << GetMailbox()->GetPendingQueueSize();
+    LOG(INFO) << GetActorName() << " run queue size "
+      << GetMailbox()->GetRunQueueSize();
     LOG(INFO) << GetActorName() << " conf " << conf->toStyledString();
     return 0;
   }

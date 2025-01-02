@@ -64,7 +64,8 @@ bool App::Init(
   int thread_pool_size,
   int event_conn_size,
   int warning_msg_size,
-  int default_pending_queue_size) {
+  int default_pending_queue_size,
+  int default_run_queue_size) {
   if (state_.load() != kUninitialized) {
     return true;
   }
@@ -73,6 +74,7 @@ bool App::Init(
   lib_dir_ = lib_dir;
   warning_msg_size_.store(warning_msg_size);
   default_pending_queue_size_ = default_pending_queue_size;
+  default_run_queue_size_ = default_run_queue_size;
   ret &= poller_->Init();
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
   ret &= ev_conn_mgr_->Init(event_conn_size);
@@ -558,6 +560,10 @@ void App::CheckStopWorkers() {
       worker_ctx_mgr_->PopFrontIdleWorker();
       auto common_idle_worker = worker_ctx->GetWorker<WorkerCommon>();
       common_idle_worker->SetActorContext(actor_ctx);
+      // 接收队列不空，重新加入等待执行队列
+      if (!actor_mailbox->RecvEmpty()) {
+        actor_ctx_mgr_->PushContext(std::move(actor_ctx));
+      }
       worker_ctx->GetCmdChannel()->SendToOwner(CmdChannel::Cmd::kRun);
     } else {
       LOG(ERROR) << actor_ctx->GetActor()->GetActorName() << " has no msg";
@@ -819,6 +825,10 @@ std::string App::GetLibName(const std::string& name) {
 
 int App::GetDefaultPendingQueueSize() const {
   return default_pending_queue_size_;
+}
+
+int App::GetDefaultRunQueueSize() const {
+  return default_run_queue_size_;
 }
 
 }  // namespace myframe
