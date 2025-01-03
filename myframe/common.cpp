@@ -16,6 +16,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <Windows.h>
 #elif defined(MYFRAME_OS_MACOSX)
 #include <mach-o/dyld.h>
+#include <mach/mach.h>
 #else
 #error "Platform not supported"
 #endif
@@ -135,6 +136,20 @@ int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
     return -1;
   }
   return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  thread_affinity_policy policy;
+  policy.affinity_tag = cpu_core;
+  auto handle = pthread_mach_thread_np(t->native_handle());
+  kern_return_t kr = thread_policy_set(
+    handle,
+    THREAD_AFFINITY_POLICY,
+    reinterpret_cast<thread_policy_t>(&policy),
+    THREAD_AFFINITY_POLICY_COUNT);
+  mach_port_deallocate(mach_task_self(), handle);
+  if (kr != KERN_SUCCESS) {
+    return -1;
+  }
+  return 0;
 #else
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
@@ -150,6 +165,20 @@ int Common::SetSelfThreadAffinity(int cpu_core) {
   auto hThread = GetCurrentThread();
   DWORD_PTR mask = 1 << cpu_core;
   if (SetThreadAffinityMask(hThread, mask) == 0) {
+    return -1;
+  }
+  return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  thread_affinity_policy policy;
+  policy.affinity_tag = cpu_core;
+  auto handle = mach_thread_self();
+  kern_return_t kr = thread_policy_set(
+    handle,
+    THREAD_AFFINITY_POLICY,
+    reinterpret_cast<thread_policy_t>(&policy),
+    THREAD_AFFINITY_POLICY_COUNT);
+  mach_port_deallocate(mach_task_self(), handle);
+  if (kr != KERN_SUCCESS) {
     return -1;
   }
   return 0;
