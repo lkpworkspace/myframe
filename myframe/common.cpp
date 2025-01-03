@@ -194,9 +194,16 @@ int Common::SetSelfThreadAffinity(int cpu_core) {
 
 int Common::SetThreadName(std::thread* t, const std::string& name) {
 #if defined(MYFRAME_OS_WINDOWS)
+  int len = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, nullptr, 0);
+  if (len <= 0) {
+    return -1;
+  }
+  wchar_t* wide_name = new wchar_t[len];
+  MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, wide_name, len);
   auto handle = t->native_handle();
-  auto res = SetThreadDescription(handle, name.c_str());
-  if (res != 0) {
+  auto res = SetThreadDescription(handle, wide_name);
+  delete[] wide_name;
+  if (FAILED(res)) {
     return -1;
   }
   return 0;
@@ -211,9 +218,16 @@ int Common::SetThreadName(std::thread* t, const std::string& name) {
 
 int Common::SetSelfThreadName(const std::string& name) {
 #if defined(MYFRAME_OS_WINDOWS)
+  int len = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, nullptr, 0);
+  if (len <= 0) {
+    return -1;
+  }
+  wchar_t* wide_name = new wchar_t[len];
+  MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, wide_name, len);
   auto handle = GetCurrentThread();
-  auto res = SetThreadDescription(handle, name.c_str());
-  if (res != 0) {
+  auto res = SetThreadDescription(handle, wide_name);
+  delete[] wide_name;
+  if (FAILED(res)) {
     return -1;
   }
   return 0;
