@@ -126,4 +126,41 @@ std::vector<std::string_view> Common::SplitMsgName(const std::string& name) {
   return tokens;
 }
 
+// 可以通过std::thread::hardware_concurrency()获得核心数
+int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
+#if defined(MYFRAME_OS_WINDOWS)
+  auto hThread = t->native_handle();
+  DWORD_PTR mask = 1 << cpu_core;
+  if (SetThreadAffinityMask(hThread, mask) == 0) {
+    return -1;
+  }
+  return 0;
+#else
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_core, &cpuset);
+  auto handle = t->native_handle();
+  int result = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
+  return result;
+#endif
+}
+
+int Common::SetSelfThreadAffinity(int cpu_core) {
+#if defined(MYFRAME_OS_WINDOWS)
+  auto hThread = GetCurrentThread();
+  DWORD_PTR mask = 1 << cpu_core;
+  if (SetThreadAffinityMask(hThread, mask) == 0) {
+    return -1;
+  }
+  return 0;
+#else
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_core, &cpuset);
+  auto handle = pthread_self();
+  int result = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
+  return result;
+#endif
+}
+
 }  // namespace myframe

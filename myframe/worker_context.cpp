@@ -13,6 +13,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/app.h"
+#include "myframe/common.h"
 
 namespace myframe {
 
@@ -58,6 +59,18 @@ void WorkerContext::Join() {
   if (th_.joinable()) {
     th_.join();
   }
+}
+
+bool WorkerContext::SetThreadAffinity(int cpu_core) {
+  if (runing_.load()) {
+    if (0 == Common::SetThreadAffinity(&th_, cpu_core)) {
+      return true;
+    }
+    LOG(WARNING) << GetName() << " bind cpu " << cpu_core << " failed";
+  } else {
+    LOG(WARNING) << GetName() << " not runing, skip SetThreadAffinity";
+  }
+  return false;
 }
 
 void WorkerContext::Initialize() {
