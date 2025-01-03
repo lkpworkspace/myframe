@@ -34,7 +34,7 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
     LOG(ERROR) << "worker context manager is nullptr";
     return nullptr;
   }
-  std::string worker_timer_name = "worker.timer.#1";
+  std::string worker_timer_name = "worker.T.1";
   auto w = ev_mgr_->Get<WorkerContext>(worker_timer_name);
   if (w == nullptr) {
     LOG(ERROR)
@@ -440,7 +440,7 @@ bool App::StartCommonWorker(int worker_count) {
   for (int i = 0; i < worker_count; ++i) {
     auto worker = std::make_shared<WorkerCommon>();
     worker->SetModName("class");
-    worker->SetTypeName("WorkerCommon");
+    worker->SetTypeName("C");
     if (!AddWorker(std::to_string(i), worker)) {
       LOG(ERROR) << "start common worker " << i << " failed";
       continue;
@@ -454,8 +454,8 @@ bool App::StartCommonWorker(int worker_count) {
 bool App::StartTimerWorker() {
   auto worker = std::make_shared<WorkerTimer>();
   worker->SetModName("class");
-  worker->SetTypeName("timer");
-  if (!AddWorker("#1", worker)) {
+  worker->SetTypeName("T");
+  if (!AddWorker("1", worker)) {
     LOG(ERROR) << "start timer worker failed";
     return false;
   }

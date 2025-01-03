@@ -37,6 +37,8 @@ class MYFRAME_EXPORT Common final {
 
   static int SetThreadAffinity(std::thread* t, int cpu_core);
   static int SetSelfThreadAffinity(int cpu_core);
+  static int SetThreadName(std::thread* t, const std::string& name);
+  static int SetSelfThreadName(const std::string& name);
 };
 
 }  // namespace myframe

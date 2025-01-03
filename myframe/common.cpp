@@ -192,4 +192,36 @@ int Common::SetSelfThreadAffinity(int cpu_core) {
 #endif
 }
 
+int Common::SetThreadName(std::thread* t, const std::string& name) {
+#if defined(MYFRAME_OS_WINDOWS)
+  auto handle = t->native_handle();
+  auto res = SetThreadDescription(handle, name.c_str());
+  if (res != 0) {
+    return -1;
+  }
+  return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  // unsupport
+  return -1;
+#else
+  auto handle = t->native_handle();
+  return pthread_setname_np(handle, name.c_str());
+#endif
+}
+
+int Common::SetSelfThreadName(const std::string& name) {
+#if defined(MYFRAME_OS_WINDOWS)
+  auto handle = GetCurrentThread();
+  auto res = SetThreadDescription(handle, name.c_str());
+  if (res != 0) {
+    return -1;
+  }
+  return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  return pthread_setname_np(name.c_str());
+#else
+  return pthread_setname_np(pthread_self(), name.c_str());
+#endif
+}
+
 }  // namespace myframe
