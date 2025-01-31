@@ -9,8 +9,18 @@ target_link_libraries(common_test
     myframe
 )
 
+add_executable(actor_run_queue_test actor_run_queue_test.cpp)
+target_link_libraries(actor_run_queue_test
+    myframe
+)
+
 add_executable(app_send_test app_send_test.cpp)
 target_link_libraries(app_send_test
+    myframe
+)
+
+add_executable(app_send_req_test app_send_req_test.cpp)
+target_link_libraries(app_send_req_test
     myframe
 )
 
@@ -42,7 +52,9 @@ target_link_libraries(performance_trans100_fullspeed_test
 ### install
 INSTALL(TARGETS
     common_test
+    actor_run_queue_test
     app_send_test
+    app_send_req_test
     performance_trans1_cost_test
     performance_trans10_cost_test
     performance_trans1_fullspeed_test

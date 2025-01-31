@@ -59,7 +59,9 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
     const std::string& lib_dir,
     int thread_pool_size = 4,
     int event_conn_size = 2,
-    int warning_msg_size = 10);
+    int warning_msg_size = 10,
+    int default_pending_queue_size = -1,
+    int default_run_queue_size = -1);
 
   int LoadServiceFromDir(const std::string& path);
 
@@ -90,6 +92,9 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   int Exec();
 
   void Quit();
+
+  int GetDefaultPendingQueueSize() const;
+  int GetDefaultRunQueueSize() const;
 
  private:
   bool CreateActorContext(
@@ -139,6 +144,8 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   /// node地址
   std::string node_addr_;
   ///
+  int default_pending_queue_size_{-1};
+  int default_run_queue_size_{-1};
   std::atomic<std::size_t> warning_msg_size_{10};
   std::atomic<State> state_{kUninitialized};
   std::recursive_mutex local_mtx_;

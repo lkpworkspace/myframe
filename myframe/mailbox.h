@@ -41,21 +41,24 @@ class MYFRAME_EXPORT Mailbox final {
     const std::any& data);
   void Send(std::list<std::shared_ptr<Msg>>* msg_list);
 
-  /// 信件处理
+  /// 信件处理(仅供worker调用)
   void MoveToRun();
   bool RunEmpty() const;
   int RunSize() const;
   const std::shared_ptr<const Msg> PopRun();
+  void SetRunQueueSize(int sz);
+  int GetRunQueueSize() const;
 
   /// 收件箱
   int RecvSize() const;
   bool RecvEmpty() const;
+  void SetPendingQueueSize(int sz);
+  int GetPendingQueueSize() const;
 
  private:
   /// 收件箱
   void RecvClear();
   void Recv(std::shared_ptr<Msg> msg);
-  void Recv(std::list<std::shared_ptr<Msg>>* msg_list);
   const std::shared_ptr<const Msg> PopRecv();
 
   /// 设置邮箱地址
@@ -68,6 +71,8 @@ class MYFRAME_EXPORT Mailbox final {
   std::list<std::shared_ptr<Msg>> recv_;
   std::list<std::shared_ptr<Msg>> send_;
   std::list<std::shared_ptr<Msg>> run_;
+  int pending_queue_size_{-1};
+  int run_queue_size_{-1};
 };
 
 MYFRAME_EXPORT std::ostream& operator<<(

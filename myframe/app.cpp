@@ -34,7 +34,7 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
     LOG(ERROR) << "worker context manager is nullptr";
     return nullptr;
   }
-  std::string worker_timer_name = "worker.timer.#1";
+  std::string worker_timer_name = "worker.T.1";
   auto w = ev_mgr_->Get<WorkerContext>(worker_timer_name);
   if (w == nullptr) {
     LOG(ERROR)
@@ -63,7 +63,9 @@ bool App::Init(
   const std::string& lib_dir,
   int thread_pool_size,
   int event_conn_size,
-  int warning_msg_size) {
+  int warning_msg_size,
+  int default_pending_queue_size,
+  int default_run_queue_size) {
   if (state_.load() != kUninitialized) {
     return true;
   }
@@ -71,6 +73,8 @@ bool App::Init(
   bool ret = true;
   lib_dir_ = lib_dir;
   warning_msg_size_.store(warning_msg_size);
+  default_pending_queue_size_ = default_pending_queue_size;
+  default_run_queue_size_ = default_run_queue_size;
   ret &= poller_->Init();
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
   ret &= ev_conn_mgr_->Init(event_conn_size);
@@ -437,7 +441,7 @@ bool App::StartCommonWorker(int worker_count) {
   for (int i = 0; i < worker_count; ++i) {
     auto worker = std::make_shared<WorkerCommon>();
     worker->SetModName("class");
-    worker->SetTypeName("WorkerCommon");
+    worker->SetTypeName("C");
     if (!AddWorker(std::to_string(i), worker)) {
       LOG(ERROR) << "start common worker " << i << " failed";
       continue;
@@ -451,8 +455,8 @@ bool App::StartCommonWorker(int worker_count) {
 bool App::StartTimerWorker() {
   auto worker = std::make_shared<WorkerTimer>();
   worker->SetModName("class");
-  worker->SetTypeName("timer");
-  if (!AddWorker("#1", worker)) {
+  worker->SetTypeName("T");
+  if (!AddWorker("1", worker)) {
     LOG(ERROR) << "start timer worker failed";
     return false;
   }
@@ -557,6 +561,10 @@ void App::CheckStopWorkers() {
       worker_ctx_mgr_->PopFrontIdleWorker();
       auto common_idle_worker = worker_ctx->GetWorker<WorkerCommon>();
       common_idle_worker->SetActorContext(actor_ctx);
+      // 接收队列不空，重新加入等待执行队列
+      if (!actor_mailbox->RecvEmpty()) {
+        actor_ctx_mgr_->PushContext(std::move(actor_ctx));
+      }
       worker_ctx->GetCmdChannel()->SendToOwner(CmdChannel::Cmd::kRun);
     } else {
       LOG(ERROR) << actor_ctx->GetActor()->GetActorName() << " has no msg";
@@ -814,6 +822,14 @@ std::string App::GetLibName(const std::string& name) {
 #elif defined(MYFRAME_OS_MACOSX)
   return "lib" + name + ".dylib";
 #endif
+}
+
+int App::GetDefaultPendingQueueSize() const {
+  return default_pending_queue_size_;
+}
+
+int App::GetDefaultRunQueueSize() const {
+  return default_run_queue_size_;
 }
 
 }  // namespace myframe

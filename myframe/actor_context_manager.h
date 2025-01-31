@@ -39,11 +39,12 @@ class ActorContextManager final {
   std::vector<std::string> GetAllActorAddr();
   bool HasActor(const std::string& name);
 
+  /* 将有消息的actor放入链表 */
+  void PushContext(std::shared_ptr<ActorContext> ctx);
+
  private:
   /* 获得actor名对应的actor */
   std::shared_ptr<ActorContext> GetContext(const std::string& actor_name);
-  /* 将有消息的actor放入链表 */
-  void PushContext(std::shared_ptr<ActorContext> ctx);
   void PrintWaitQueue();
 
   /// 当前注册actor数量

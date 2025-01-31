@@ -28,6 +28,12 @@ class ModuleArgument final {
   inline int GetThreadPoolSize() const { return thread_poll_size_; }
   inline int GetConnEventSize() const { return conn_event_size_; }
   inline int GetWarningMsgSize() const { return warning_msg_size_; }
+  inline int GetDefaultPendingQueueSize() const {
+    return default_pending_queue_size_;
+  }
+  inline int GetDefaultRunQueueSize() const {
+    return default_run_queue_size_;
+  }
 
  private:
   bool ParseSysConf(const std::string&);
@@ -35,6 +41,8 @@ class ModuleArgument final {
   int thread_poll_size_{4};
   int conn_event_size_{2};
   int warning_msg_size_{10};
+  int default_pending_queue_size_{-1};
+  int default_run_queue_size_{-1};
   std::string log_dir_;
   std::string lib_dir_;
   std::string conf_dir_;

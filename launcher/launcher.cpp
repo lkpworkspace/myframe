@@ -77,7 +77,9 @@ int main(int argc, char** argv) {
     lib_dir.string(),
     module_args.GetThreadPoolSize(),
     module_args.GetConnEventSize(),
-    module_args.GetWarningMsgSize())) {
+    module_args.GetWarningMsgSize(),
+    module_args.GetDefaultPendingQueueSize(),
+    module_args.GetDefaultRunQueueSize())) {
     LOG(ERROR) << "Init failed";
     return -1;
   }

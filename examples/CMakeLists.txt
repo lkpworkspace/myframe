@@ -34,8 +34,10 @@ add_library(example_trans_obj SHARED example_trans_obj.cpp)
 target_link_libraries(example_trans_obj ${PROJECT_NAME})
 
 ### install
-FILE(GLOB conf_files "*.json")
-INSTALL(FILES 
+file(GLOB conf_files "*.json")
+# 在unix like系统下禁用MYFRAME_USE_CV才能用,有需要再打开
+list(REMOVE_ITEM conf_files "${CMAKE_CURRENT_SOURCE_DIR}/example_worker_interactive_with_3rd_frame.json")
+install(FILES
   ${conf_files}
   PERMISSIONS
   OWNER_READ OWNER_WRITE
@@ -43,17 +45,18 @@ INSTALL(FILES
   WORLD_READ
   DESTINATION ${MYFRAME_SERVICE_DIR}
 )
-INSTALL(TARGETS 
+install(TARGETS
   example_actor_helloworld
   example_actor_timer
   example_actor_serial
   example_actor_concurrent
   example_actor_subscribe
   example_node
-  example_worker_actor_interactive 
+  example_worker_actor_interactive
   example_worker_publish
-  example_worker_talk 
-  example_worker_interactive_with_3rd_frame
+  example_worker_talk
+  # 在unix like系统下禁用MYFRAME_USE_CV才能用,有需要再打开
+  # example_worker_interactive_with_3rd_frame
   example_worker_quit
   example_config
   example_trans_obj

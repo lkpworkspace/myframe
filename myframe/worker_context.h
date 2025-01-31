@@ -40,6 +40,7 @@ class WorkerContext final : public Event {
   void Join();
   bool IsRuning() { return runing_.load(); }
   std::thread::id GetThreadId() { return th_.get_id(); }
+  bool SetThreadAffinity(int cpu_core);
 
   /// event 相关函数
   ev_handle_t GetHandle() const override;

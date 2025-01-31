@@ -13,6 +13,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/msg.h"
 #include "myframe/worker.h"
 #include "myframe/app.h"
+#include "myframe/common.h"
 
 namespace myframe {
 
@@ -60,8 +61,29 @@ void WorkerContext::Join() {
   }
 }
 
+bool WorkerContext::SetThreadAffinity(int cpu_core) {
+  if (runing_.load()) {
+    if (0 == Common::SetThreadAffinity(&th_, cpu_core)) {
+      return true;
+    }
+    LOG(WARNING) << GetName() << " bind cpu " << cpu_core << " failed";
+  } else {
+    LOG(WARNING) << GetName() << " not runing, skip SetThreadAffinity";
+  }
+  return false;
+}
+
 void WorkerContext::Initialize() {
   mailbox_.SetAddr(worker_->GetWorkerName());
+  std::string th_name = mailbox_.Addr();
+  th_name = th_name.size() >= 16 ? th_name.substr(0, 15) : th_name;
+  if (Common::SetSelfThreadName(th_name)) {
+    LOG(WARNING) << "set " << mailbox_.Addr()
+      << " thread name " << th_name << " failed";
+  } else {
+    LOG(INFO) << "set " << mailbox_.Addr()
+      << " thread name " << th_name;
+  }
   worker_->Init();
 }
 
