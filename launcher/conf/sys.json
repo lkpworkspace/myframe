@@ -1,7 +1,11 @@
 {
-    "default_pending_queue_size":-1,
-    "default_run_queue_size":-1,
     "thread_poll_size":4,
     "conn_event_size":2,
-    "warning_msg_size":10
+    "warning_msg_size":10,
+    "log_dir":"log",
+    "lib_dir":"",
+    "service_dir":"service",
+    "default_pending_queue_size":-1,
+    "default_run_queue_size":2,
+    "log_max_size_mb":100
 }

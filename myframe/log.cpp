@@ -18,11 +18,14 @@ static void signal_handler(const char *data, size_t size) {
 
 namespace myframe {
 
-void InitLog(const stdfs::path& log_dir, const std::string& bin_name) {
+void InitLog(
+  const stdfs::path& log_dir,
+  const std::string& bin_name,
+  int max_size_mb) {
   google::InitGoogleLogging(bin_name.c_str());
 
   FLAGS_logbufsecs = 0;
-  FLAGS_max_log_size = 100;
+  FLAGS_max_log_size = max_size_mb;
   FLAGS_stop_logging_if_full_disk = true;
 
   std::string dst_str = (log_dir / bin_name).string();
