@@ -16,6 +16,7 @@ class Hello : public myframe::Actor {
  public:
   /* actor模块加载完毕后调用 */
   int Init(const char* param) override {
+    (void)param;
     /* 构造 hello,world 消息发送给自己 */
     auto mailbox = GetMailbox();
     mailbox->Send(
