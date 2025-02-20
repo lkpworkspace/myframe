@@ -4,6 +4,11 @@ cmake_minimum_required(VERSION 3.10)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h @ONLY)
 
 ### test bin
+add_executable(hello_test hello_test.cpp)
+target_link_libraries(hello_test
+    myframe
+)
+
 add_executable(common_test common_test.cpp)
 target_link_libraries(common_test
     myframe
@@ -51,6 +56,7 @@ target_link_libraries(performance_trans100_fullspeed_test
 
 ### install
 INSTALL(TARGETS
+    hello_test
     common_test
     actor_run_queue_test
     app_send_test

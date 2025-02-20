@@ -42,7 +42,10 @@ int main(int argc, char** argv) {
     log_dir = module_args.GetLogDir();
   }
   log_dir = myframe::Common::GetAbsolutePath(log_dir.string());
-  myframe::InitLog(log_dir, module_args.GetProcessName());
+  myframe::InitLog(
+    log_dir,
+    module_args.GetProcessName(),
+    module_args.GetLogMaxSizeMB());
   LOG(INFO) << "launch command: " << module_args.GetCmd();
 
   if (module_args.GetLibDir().empty()) {

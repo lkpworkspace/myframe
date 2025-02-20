@@ -61,6 +61,7 @@ void ModuleArgument::ParseArgument(
     process_name_ = process_name;
   }
 
+  // 命令行参数优先级大于配置文件优先级
   auto sys_conf = parser_.get<std::string>("sys_conf");
   if (!sys_conf.empty()) {
     if (!ParseSysConf(sys_conf)) {
@@ -74,10 +75,6 @@ void ModuleArgument::ParseArgument(
     conf_dir_ = dir;
   }
 
-  for (size_t i = 0; i < parser_.rest().size(); i++) {
-    conf_list_.emplace_back(parser_.rest()[i]);
-  }
-
   auto log_dir = parser_.get<std::string>("log_dir");
   if (!log_dir.empty()) {
     log_dir_ = log_dir;
@@ -86,6 +83,10 @@ void ModuleArgument::ParseArgument(
   auto lib_dir = parser_.get<std::string>("lib_dir");
   if (!lib_dir.empty()) {
     lib_dir_ = lib_dir;
+  }
+
+  for (size_t i = 0; i < parser_.rest().size(); i++) {
+    conf_list_.emplace_back(parser_.rest()[i]);
   }
 }
 
@@ -138,6 +139,10 @@ bool ModuleArgument::ParseSysConf(const std::string& sys_conf) {
   if (root.isMember("default_run_queue_size")
       && root["default_run_queue_size"].isInt()) {
     default_run_queue_size_ = root["default_run_queue_size"].asInt();
+  }
+  if (root.isMember("log_max_size_mb")
+      && root["log_max_size_mb"].isInt()) {
+    log_max_size_mb_ = root["log_max_size_mb"].asInt();
   }
   return true;
 }

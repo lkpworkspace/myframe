@@ -8,6 +8,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/app.h"
 
 #include <regex>
+#include <utility>
 
 #include "myframe/log.h"
 #include "myframe/platform.h"
@@ -509,9 +510,6 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
-  LOG_IF(WARNING,
-      msg_list->size() > warning_msg_size_.load())
-    << " dispatch msg too many";
   for (auto& msg : (*msg_list)) {
     DispatchMsg(std::move(msg));
   }

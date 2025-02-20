@@ -6,22 +6,18 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
 #include <atomic>
-#include <list>
 #include <memory>
 #include <mutex>
-#include <unordered_map>
-#include <vector>
+#include <list>
 #include <string>
-#include <filesystem>
-#include <utility>
+#include <vector>
 
 #include <json/json.h>
 
 #include "myframe/macros.h"
 #include "myframe/event.h"
 #include "myframe/export.h"
-
-namespace stdfs = std::filesystem;
+#include "myframe/common.h"
 
 namespace myframe {
 
@@ -61,7 +57,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
     int event_conn_size = 2,
     int warning_msg_size = 10,
     int default_pending_queue_size = -1,
-    int default_run_queue_size = -1);
+    int default_run_queue_size = 2);
 
   int LoadServiceFromDir(const std::string& path);
 
@@ -145,7 +141,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   std::string node_addr_;
   ///
   int default_pending_queue_size_{-1};
-  int default_run_queue_size_{-1};
+  int default_run_queue_size_{2};
   std::atomic<std::size_t> warning_msg_size_{10};
   std::atomic<State> state_{kUninitialized};
   std::recursive_mutex local_mtx_;

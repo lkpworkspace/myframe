@@ -18,8 +18,8 @@ function main() {
     -name "*.hxx" -or \
     -name "*.cxx" -or \
     -name "*.cuh" \
-    ')' -and -not -path "./build/*" \
-    -and -not -path "./output/*" \
+    ')' -and -not -path "./build*" \
+    -and -not -path "./output*" \
     -and -not -path "./3rd/*" \
     -and -not -path "./myframe/export.h" \
     | xargs python3 ./cpplint.py
