@@ -8,6 +8,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <utility>
 
 #include "myframe/msg.h"
+#include "myframe/log.h"
 
 namespace myframe {
 
@@ -74,6 +75,8 @@ void Mailbox::RecvClear() {
 void Mailbox::Recv(std::shared_ptr<Msg> msg) {
   if (pending_queue_size_ > 0) {
     for (; recv_.size() >= static_cast<std::size_t>(pending_queue_size_);) {
+      LOG(WARNING) << Addr() << " pending queue overflow "
+        << recv_.size() << "/" << pending_queue_size_;
       recv_.pop_front();
     }
   }

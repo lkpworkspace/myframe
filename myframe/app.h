@@ -57,7 +57,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
     int event_conn_size = 2,
     int warning_msg_size = 10,
     int default_pending_queue_size = -1,
-    int default_run_queue_size = -1);
+    int default_run_queue_size = 2);
 
   int LoadServiceFromDir(const std::string& path);
 
@@ -141,7 +141,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   std::string node_addr_;
   ///
   int default_pending_queue_size_{-1};
-  int default_run_queue_size_{-1};
+  int default_run_queue_size_{2};
   std::atomic<std::size_t> warning_msg_size_{10};
   std::atomic<State> state_{kUninitialized};
   std::recursive_mutex local_mtx_;
