@@ -28,11 +28,11 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache jsoncpp
         id: cache-jsoncpp
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: jsoncpp/
           key: ${{runner.os}}-jsoncpp-1.9.5-${{matrix.arch}}-${{matrix.build_type}}
@@ -62,7 +62,7 @@ jobs:
 
       - name: Cache gflags
         id: cache-gflags
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: gflags/
           key: ${{runner.os}}-gflags-2.2.2-${{matrix.arch}}-${{matrix.build_type}}
@@ -86,7 +86,7 @@ jobs:
 
       - name: Cache glog
         id: cache-glog
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
             path: glog/
             key: ${{runner.os}}-glog-0.6.0-${{matrix.arch}}-${{matrix.build_type}}

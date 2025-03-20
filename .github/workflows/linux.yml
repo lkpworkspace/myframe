@@ -16,7 +16,7 @@ jobs:
         std: [17, 20]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: sudo apt update
     - run: sudo apt install build-essential cmake ninja-build
     - run: sudo apt install libunwind-dev libgflags-dev
@@ -28,7 +28,7 @@ jobs:
 
     - name: Cache jsoncpp
       id: cache-jsoncpp
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: jsoncpp/
         key: ${{runner.os}}-jsoncpp-1.9.5
@@ -56,7 +56,7 @@ jobs:
 
     - name: Cache glog
       id: cache-glog
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: glog/
         key: ${{runner.os}}-glog-0.6.0
