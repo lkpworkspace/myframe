@@ -93,16 +93,6 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   int GetDefaultRunQueueSize() const;
 
  private:
-  bool CreateActorContext(
-    const std::string& mod_name,
-    const std::string& actor_name,
-    const std::string& inst_name,
-    const std::string& params,
-    const Json::Value& config);
-  bool CreateActorContext(
-    std::shared_ptr<Actor> inst,
-    const std::string& params);
-
   bool HasUserInst(const std::string& name);
   std::shared_ptr<WorkerTimer> GetTimerWorker();
 

@@ -223,14 +223,13 @@ bool App::LoadActors(
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto res = CreateActorContext(
-      mod_name,
-      actor_name,
-      inst_name,
-      inst_param,
-      cfg);
-    if (!res) {
-      return res;
+    auto actor_inst = mods_->CreateActorInst(mod_name, actor_name);
+    if (actor_inst == nullptr) {
+      LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
+      return false;
+    }
+    if (!AddActor(inst_name, inst_param, actor_inst, cfg)) {
+      return false;
     }
   }
   return true;
@@ -282,7 +281,55 @@ bool App::AddActor(
   }
   actor->SetInstName(inst_name);
   actor->SetConfig(config);
-  return CreateActorContext(actor, params);
+
+  auto actor_name = actor->GetActorName();
+  if (actor->GetTypeName() == "node") {
+    std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+    if (node_addr_.empty()) {
+      LOG(INFO) << "create node " << actor_name;
+      node_addr_ = actor_name;
+    } else {
+      LOG(ERROR) << "has more than one node instance, "
+        << node_addr_ << " and " << actor_name;
+      return false;
+    }
+  }
+  auto ctx = std::make_shared<ActorContext>(shared_from_this(), actor);
+  if (ctx->Init(params.c_str())) {
+    LOG(ERROR) << "init " << actor_name << " fail";
+    return false;
+  }
+  actor_ctx_mgr_->RegContext(ctx);
+  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+  // 接收缓存中发给自己的消息
+  for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
+    if ((*it)->GetDst() == actor_name) {
+      LOG(INFO) << actor_name
+        << " recv msg from cache " << *(it);
+      DispatchMsg(*it);
+      it = cache_msgs_.erase(it);
+      continue;
+    }
+    ++it;
+  }
+  // 目的地址不存在的暂时放到缓存消息队列
+  // 在运行时不再缓存，直接分发
+  if (state_.load() != kRunning) {
+    auto send_list = ctx->GetMailbox()->GetSendList();
+    for (auto it = send_list->begin(); it != send_list->end();) {
+      if (!HasUserInst((*it)->GetDst())) {
+        LOG(WARNING) << "can't found " << (*it)->GetDst()
+          << ", cache this msg";
+        cache_msgs_.push_back(*it);
+        it = send_list->erase(it);
+        continue;
+      }
+      ++it;
+    }
+  }
+  // 分发目的地址已经存在的消息
+  DispatchMsg(ctx);
+  return true;
 }
 
 bool App::AddWorker(
@@ -356,84 +403,6 @@ const std::shared_ptr<const Msg> App::SendRequest(
 
 std::unique_ptr<ModManager>& App::GetModManager() {
   return mods_;
-}
-
-/**
- * 创建一个新的actor:
- *      1. 从ModManager中获得对应模块对象
- *      2. 生成Context
- *      3. 将模块对象加入Context对象
- *      4. 将Context加入Context数组
- *      3. 注册句柄
- *      4. 初始化actor
- */
-bool App::CreateActorContext(
-  const std::string& mod_name,
-  const std::string& actor_name,
-  const std::string& instance_name,
-  const std::string& params,
-  const Json::Value& config) {
-  auto actor_inst = mods_->CreateActorInst(mod_name, actor_name);
-  if (actor_inst == nullptr) {
-    LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
-    return false;
-  }
-  actor_inst->SetInstName(instance_name);
-  actor_inst->SetConfig(config);
-  return CreateActorContext(actor_inst, params);
-}
-
-bool App::CreateActorContext(
-    std::shared_ptr<Actor> mod_inst,
-    const std::string& params) {
-  auto actor_name = mod_inst->GetActorName();
-  if (mod_inst->GetTypeName() == "node") {
-    std::lock_guard<std::recursive_mutex> lock(local_mtx_);
-    if (node_addr_.empty()) {
-      LOG(INFO) << "create node " << actor_name;
-      node_addr_ = actor_name;
-    } else {
-      LOG(ERROR) << "has more than one node instance, "
-        << node_addr_ << " and " << actor_name;
-      return false;
-    }
-  }
-  auto ctx = std::make_shared<ActorContext>(shared_from_this(), mod_inst);
-  if (ctx->Init(params.c_str())) {
-    LOG(ERROR) << "init " << actor_name << " fail";
-    return false;
-  }
-  actor_ctx_mgr_->RegContext(ctx);
-  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
-  // 接收缓存中发给自己的消息
-  for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
-    if ((*it)->GetDst() == actor_name) {
-      LOG(INFO) << actor_name
-        << " recv msg from cache " << *(it);
-      DispatchMsg(*it);
-      it = cache_msgs_.erase(it);
-      continue;
-    }
-    ++it;
-  }
-  // 目的地址不存在的暂时放到缓存消息队列
-  // 在运行时不再缓存，直接分发
-  if (state_.load() != kRunning) {
-    auto send_list = ctx->GetMailbox()->GetSendList();
-    for (auto it = send_list->begin(); it != send_list->end();) {
-      if (!HasUserInst((*it)->GetDst())) {
-        LOG(WARNING) << "can't found " << (*it)->GetDst()
-          << ", cache this msg";
-        cache_msgs_.push_back(*it);
-        it = send_list->erase(it);
-        continue;
-      }
-      ++it;
-    }
-  }
-  // 分发目的地址已经存在的消息
-  DispatchMsg(ctx);
-  return true;
 }
 
 bool App::StartCommonWorker(int worker_count) {
