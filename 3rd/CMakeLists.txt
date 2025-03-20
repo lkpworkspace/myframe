@@ -6,8 +6,8 @@ project(myframe_deps VERSION 1.0.0)
 
 include(ExternalProject)
 
-set(DEPS_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src CACHE PATH "package source dir")
-set(DEPS_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/pkg CACHE PATH "package tgz dir")
+set(DEPS_SOURCE_DIR ${CMAKE_BINARY_DIR}/src CACHE PATH "package source dir")
+set(DEPS_DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/pkg CACHE PATH "package tgz dir")
 
 ExternalProject_Add(
     gflags

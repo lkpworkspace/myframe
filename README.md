@@ -28,13 +28,11 @@ worker自驱动，可以通过消息与actor交互;
 ## 快速本地构建
 ```sh
 # 下载/构建/安装依赖库
-cd 3rd
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX="../output"
-cmake --build build -j --config Release
+cmake -S 3rd -B build_3rd -DCMAKE_INSTALL_PREFIX="./output"
+cmake --build build_3rd -j --config Release
 # 构建安装
-cd ..
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX="./output" -DCMAKE_PREFIX_PATH="./output"
-cmake --build build -j --config Release --target install
+cmake -S . -B build_proj -DCMAKE_INSTALL_PREFIX="./output" -DCMAKE_PREFIX_PATH="./output"
+cmake --build build_proj -j --config Release --target install
 ```
 
 ### Hello,World API示例
