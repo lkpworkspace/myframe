@@ -27,18 +27,16 @@ namespace myframe {
 class MYFRAME_EXPORT Common final {
  public:
   static std::vector<stdfs::path> GetDirFiles(const std::string& conf_path);
-  static Json::Value LoadJsonFromFile(const std::string& json_file);
-
   static stdfs::path GetWorkRoot();
   static stdfs::path GetAbsolutePath(const std::string& flag_path);
   static bool IsAbsolutePath(const std::string& path);
 
+  static Json::Value LoadJsonFromFile(const std::string& json_file);
+
   static std::vector<std::string_view> SplitMsgName(const std::string& name);
 
   static int SetThreadAffinity(std::thread* t, int cpu_core);
-  static int SetSelfThreadAffinity(int cpu_core);
   static int SetThreadName(std::thread* t, const std::string& name);
-  static int SetSelfThreadName(const std::string& name);
   enum class ProcessPriority : int {
     kLowest,
     kNormal,

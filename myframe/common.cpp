@@ -131,7 +131,12 @@ std::vector<std::string_view> Common::SplitMsgName(const std::string& name) {
 // 可以通过std::thread::hardware_concurrency()获得核心数
 int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
 #if defined(MYFRAME_OS_WINDOWS)
-  auto hThread = t->native_handle();
+  HANDLE hThread;
+  if (t == nullptr) {
+    hThread = GetCurrentThread();
+  } else {
+    hThread = t->native_handle();
+  }
   DWORD_PTR mask = 1 << cpu_core;
   if (SetThreadAffinityMask(hThread, mask) == 0) {
     return -1;
@@ -140,7 +145,12 @@ int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
 #elif defined(MYFRAME_OS_MACOSX)
   thread_affinity_policy policy;
   policy.affinity_tag = cpu_core;
-  auto handle = pthread_mach_thread_np(t->native_handle());
+  thread_t handle;
+  if (t == nullptr) {
+    handle = mach_thread_self();
+  } else {
+    handle = pthread_mach_thread_np(t->native_handle());
+  }
   kern_return_t kr = thread_policy_set(
     handle,
     THREAD_AFFINITY_POLICY,
@@ -155,39 +165,12 @@ int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
   CPU_SET(cpu_core, &cpuset);
-  auto handle = t->native_handle();
-  int result = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
-  return result;
-#endif
-}
-
-int Common::SetSelfThreadAffinity(int cpu_core) {
-#if defined(MYFRAME_OS_WINDOWS)
-  auto hThread = GetCurrentThread();
-  DWORD_PTR mask = 1 << cpu_core;
-  if (SetThreadAffinityMask(hThread, mask) == 0) {
-    return -1;
+  int handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
   }
-  return 0;
-#elif defined(MYFRAME_OS_MACOSX)
-  thread_affinity_policy policy;
-  policy.affinity_tag = cpu_core;
-  auto handle = mach_thread_self();
-  kern_return_t kr = thread_policy_set(
-    handle,
-    THREAD_AFFINITY_POLICY,
-    reinterpret_cast<thread_policy_t>(&policy),
-    THREAD_AFFINITY_POLICY_COUNT);
-  mach_port_deallocate(mach_task_self(), handle);
-  if (kr != KERN_SUCCESS) {
-    return -1;
-  }
-  return 0;
-#else
-  cpu_set_t cpuset;
-  CPU_ZERO(&cpuset);
-  CPU_SET(cpu_core, &cpuset);
-  auto handle = pthread_self();
   int result = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
   return result;
 #endif
@@ -201,7 +184,12 @@ int Common::SetThreadName(std::thread* t, const std::string& name) {
   }
   wchar_t* wide_name = new wchar_t[len];
   MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, wide_name, len);
-  auto handle = t->native_handle();
+  HANDLE handle;
+  if (t == nullptr) {
+    handle = GetCurrentThread();
+  } else {
+    handle = t->native_handle();
+  }
   auto res = SetThreadDescription(handle, wide_name);
   delete[] wide_name;
   if (FAILED(res)) {
@@ -209,33 +197,19 @@ int Common::SetThreadName(std::thread* t, const std::string& name) {
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  // unsupport
-  return -1;
-#else
-  auto handle = t->native_handle();
-  return pthread_setname_np(handle, name.c_str());
-#endif
-}
-
-int Common::SetSelfThreadName(const std::string& name) {
-#if defined(MYFRAME_OS_WINDOWS)
-  int len = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, nullptr, 0);
-  if (len <= 0) {
+  // macos仅支持设置自身线程名字
+  if (t != nullptr) {
     return -1;
   }
-  wchar_t* wide_name = new wchar_t[len];
-  MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, wide_name, len);
-  auto handle = GetCurrentThread();
-  auto res = SetThreadDescription(handle, wide_name);
-  delete[] wide_name;
-  if (FAILED(res)) {
-    return -1;
-  }
-  return 0;
-#elif defined(MYFRAME_OS_MACOSX)
   return pthread_setname_np(name.c_str());
 #else
-  return pthread_setname_np(pthread_self(), name.c_str());
+  pthread_t handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
+  }
+  return pthread_setname_np(handle, name.c_str());
 #endif
 }
 
