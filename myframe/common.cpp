@@ -254,10 +254,8 @@ int Common::SetProcessPriority(ProcessPriority pp) {
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  // TODO
   return 0;
 #else
-  // TODO
   return 0;
 #endif
 }
@@ -283,10 +281,8 @@ int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  // TODO
   return 0;
 #else
-  // TODO
   return 0;
 #endif
 }
