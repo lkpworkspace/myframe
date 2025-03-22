@@ -11,6 +11,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+#include <sched.h>
 #include <unistd.h>
 #elif defined(MYFRAME_OS_WINDOWS)
 #include <Windows.h>
@@ -257,7 +258,21 @@ int Common::SetProcessPriority(ProcessPriority pp) {
   (void)pp;
   return 0;
 #else
-  (void)pp;
+  struct sched_param process_param;
+  int sched_policy = SCHED_OTHER;
+  if (pp == ProcessPriority::kLowest) {
+    process_param.sched_priority = 0;
+    sched_policy = SCHED_IDLE;
+  } else if (pp == ProcessPriority::kNormal) {
+    process_param.sched_priority = 0;
+    sched_policy = SCHED_OTHER;
+  } else {
+    process_param.sched_priority = 99;
+    sched_policy = SCHED_RR;
+  }
+  if (sched_setscheduler(0, sched_policy, &process_param)) {
+    return -1;
+  }
   return 0;
 #endif
 }
@@ -287,8 +302,27 @@ int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
   (void)tp;
   return 0;
 #else
-  (void)t;
-  (void)tp;
+  pthread_t handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
+  }
+  struct sched_param thread_param;
+  int sched_policy = SCHED_OTHER;
+  if (tp == ThreadPriority::kLowest) {
+    thread_param.sched_priority = 0;
+    sched_policy = SCHED_IDLE;
+  } else if (tp == ThreadPriority::kNormal) {
+    thread_param.sched_priority = 0;
+    sched_policy = SCHED_OTHER;
+  } else {
+    thread_param.sched_priority = 99;
+    sched_policy = SCHED_RR;
+  }
+  if (pthread_setschedparam(handle, sched_policy, &thread_param)) {
+    return -1;
+  }
   return 0;
 #endif
 }
