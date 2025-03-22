@@ -238,4 +238,57 @@ int Common::SetSelfThreadName(const std::string& name) {
 #endif
 }
 
+int Common::SetProcessPriority(ProcessPriority pp) {
+#if defined(MYFRAME_OS_WINDOWS)
+  HANDLE hProcess = ::GetCurrentProcess();
+  int process_pri;
+  if (pp == ProcessPriority::kLowest) {
+    process_pri = IDLE_PRIORITY_CLASS;
+  } else if (pp == ProcessPriority::kNormal) {
+    process_pri = NORMAL_PRIORITY_CLASS;
+  } else {
+    process_pri = REALTIME_PRIORITY_CLASS;
+  }
+  if (!::SetPriorityClass(hProcess, process_pri)) {
+    return -1;
+  }
+  return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  // TODO
+  return 0;
+#else
+  // TODO
+  return 0;
+#endif
+}
+
+int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
+#if defined(MYFRAME_OS_WINDOWS)
+  int thread_pri;
+  if (tp == ThreadPriority::kLowest) {
+    thread_pri = THREAD_PRIORITY_IDLE;
+  } else if (tp == ThreadPriority::kNormal) {
+    thread_pri = THREAD_PRIORITY_NORMAL;
+  } else {
+    thread_pri = THREAD_PRIORITY_TIME_CRITICAL;
+  }
+  HANDLE thread_handle;
+  if (t == nullptr) {
+    thread_handle = GetCurrentThread();
+  } else {
+    thread_handle = t->native_handle();
+  }
+  if (!::SetThreadPriority(thread_handle, thread_pri)) {
+    return -1;
+  }
+  return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  // TODO
+  return 0;
+#else
+  // TODO
+  return 0;
+#endif
+}
+
 }  // namespace myframe

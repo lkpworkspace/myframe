@@ -67,7 +67,7 @@ bool App::Init(
   int warning_msg_size,
   int default_pending_queue_size,
   int default_run_queue_size) {
-  if (state_.load() != kUninitialized) {
+  if (state_.load() != State::kUninitialized) {
     return true;
   }
 
@@ -80,7 +80,7 @@ bool App::Init(
   ret &= worker_ctx_mgr_->Init(warning_msg_size);
   ret &= ev_conn_mgr_->Init(event_conn_size);
 
-  state_.store(kInitialized);
+  state_.store(State::kInitialized);
 
   ret &= StartCommonWorker(thread_pool_size);
   ret &= StartTimerWorker();
@@ -126,7 +126,7 @@ bool App::LoadServiceFromJsonStr(const std::string& service) {
 }
 
 bool App::LoadServiceFromJson(const Json::Value& service) {
-  if (state_.load() == kUninitialized) {
+  if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before LoadServiceFromJson()";
     return false;
   }
@@ -275,7 +275,7 @@ bool App::AddActor(
   const std::string& params,
   std::shared_ptr<Actor> actor,
   const Json::Value& config) {
-  if (state_.load() == kUninitialized) {
+  if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before AddActor()";
     return false;
   }
@@ -314,7 +314,7 @@ bool App::AddActor(
   }
   // 目的地址不存在的暂时放到缓存消息队列
   // 在运行时不再缓存，直接分发
-  if (state_.load() != kRunning) {
+  if (state_.load() != State::kRunning) {
     auto send_list = ctx->GetMailbox()->GetSendList();
     for (auto it = send_list->begin(); it != send_list->end();) {
       if (!HasUserInst((*it)->GetDst())) {
@@ -336,7 +336,7 @@ bool App::AddWorker(
   const std::string& inst_name,
   std::shared_ptr<Worker> worker,
   const Json::Value& config) {
-  if (state_.load() == kUninitialized) {
+  if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before AddWorker()";
     return false;
   }
@@ -366,7 +366,7 @@ bool App::AddWorker(
 }
 
 int App::Send(std::shared_ptr<Msg> msg) {
-  if (state_.load() == kUninitialized) {
+  if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before Send()";
     return -1;
   }
@@ -385,7 +385,7 @@ int App::Send(std::shared_ptr<Msg> msg) {
 
 const std::shared_ptr<const Msg> App::SendRequest(
   std::shared_ptr<Msg> msg) {
-  if (state_.load() == kUninitialized) {
+  if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before SendRequest()";
     return nullptr;
   }
@@ -724,13 +724,13 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
 }
 
 int App::Exec() {
-  if (state_.load() == kUninitialized) {
+  if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before Exec()";
     return -1;
   }
   int time_wait_ms = 100;
   std::vector<ev_handle_t> evs;
-  state_.store(kRunning);
+  state_.store(State::kRunning);
   /// 处理初始化中缓存消息
   DispatchMsg(&cache_msgs_);
   while (worker_ctx_mgr_->WorkerSize()) {
@@ -744,16 +744,16 @@ int App::Exec() {
 
   // quit App
   worker_ctx_mgr_->WaitAllWorkerQuit();
-  state_.store(kQuit);
+  state_.store(State::kQuit);
   LOG(INFO) << "app exit exec";
   return 0;
 }
 
 void App::Quit() {
   // wait worker stop
-  if (state_.load() == kRunning
-      || state_.load() == kInitialized) {
-    state_.store(kQuitting);
+  if (state_.load() == State::kRunning
+      || state_.load() == State::kInitialized) {
+    state_.store(State::kQuitting);
     worker_ctx_mgr_->StopAllWorker();
   }
 }
