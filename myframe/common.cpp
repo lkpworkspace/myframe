@@ -212,13 +212,13 @@ int Common::SetThreadName(std::thread* t, const std::string& name) {
 #endif
 }
 
-int Common::SetProcessPriority(ProcessPriority pp) {
+int Common::SetProcessSchedPriority(SchedPriority sp) {
 #if defined(MYFRAME_OS_WINDOWS)
   HANDLE hProcess = ::GetCurrentProcess();
   int process_pri;
-  if (pp == ProcessPriority::kLowest) {
+  if (sp == SchedPriority::kLowest) {
     process_pri = IDLE_PRIORITY_CLASS;
-  } else if (pp == ProcessPriority::kNormal) {
+  } else if (sp == SchedPriority::kNormal) {
     process_pri = NORMAL_PRIORITY_CLASS;
   } else {
     process_pri = REALTIME_PRIORITY_CLASS;
@@ -228,8 +228,8 @@ int Common::SetProcessPriority(ProcessPriority pp) {
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  (void)pp;
-  return -1;
+  (void)sp;
+  return 0;
 #else
   struct sched_param process_param;
   int sched_policy = sched_getscheduler(0);
@@ -239,10 +239,10 @@ int Common::SetProcessPriority(ProcessPriority pp) {
   if (sched_getparam(0, &process_param) == -1) {
     return -1;
   }
-  if (pp == ProcessPriority::kLowest) {
+  if (sp == SchedPriority::kLowest) {
     process_param.sched_priority = 0;
     sched_policy = SCHED_IDLE;
-  } else if (pp == ProcessPriority::kNormal) {
+  } else if (sp == SchedPriority::kNormal) {
     process_param.sched_priority = 0;
     sched_policy = SCHED_OTHER;
   } else {
@@ -256,19 +256,19 @@ int Common::SetProcessPriority(ProcessPriority pp) {
 #endif
 }
 
-int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
+int Common::SetThreadSchedPriority(std::thread* t, SchedPriority sp) {
 #if defined(MYFRAME_OS_WINDOWS)
   int thread_pri;
-  if (tp == ThreadPriority::kLowest) {
+  if (sp == SchedPriority::kLowest) {
     thread_pri = THREAD_PRIORITY_IDLE;
-  } else if (tp == ThreadPriority::kNormal) {
+  } else if (sp == SchedPriority::kNormal) {
     thread_pri = THREAD_PRIORITY_NORMAL;
   } else {
     thread_pri = THREAD_PRIORITY_TIME_CRITICAL;
   }
   HANDLE thread_handle;
   if (t == nullptr) {
-    thread_handle = GetCurrentThread();
+    thread_handle = ::GetCurrentThread();
   } else {
     thread_handle = t->native_handle();
   }
@@ -288,10 +288,10 @@ int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
   if (pthread_getschedparam(handle, &sched_policy, &thread_param)) {
     return -1;
   }
-  if (tp == ThreadPriority::kLowest) {
+  if (sp == SchedPriority::kLowest) {
     thread_param.sched_priority = 0;
     sched_policy = SCHED_OTHER;
-  } else if (tp == ThreadPriority::kNormal) {
+  } else if (sp == SchedPriority::kNormal) {
     thread_param.sched_priority = 31;
     sched_policy = SCHED_OTHER;
   } else {
@@ -314,10 +314,10 @@ int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
   if (pthread_getschedparam(handle, &sched_policy, &thread_param)) {
     return -1;
   }
-  if (tp == ThreadPriority::kLowest) {
+  if (sp == SchedPriority::kLowest) {
     thread_param.sched_priority = 0;
     sched_policy = SCHED_IDLE;
-  } else if (tp == ThreadPriority::kNormal) {
+  } else if (sp == SchedPriority::kNormal) {
     thread_param.sched_priority = 0;
     sched_policy = SCHED_OTHER;
   } else {

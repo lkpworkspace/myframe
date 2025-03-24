@@ -37,18 +37,13 @@ class MYFRAME_EXPORT Common final {
 
   static int SetThreadAffinity(std::thread* t, int cpu_core);
   static int SetThreadName(std::thread* t, const std::string& name);
-  enum class ProcessPriority : int {
+  enum class SchedPriority : int {
     kLowest,
     kNormal,
     kRealtime,
   };
-  enum class ThreadPriority : int {
-    kLowest,
-    kNormal,
-    kRealtime,
-  };
-  static int SetProcessPriority(ProcessPriority pp);
-  static int SetThreadPriority(std::thread* t, ThreadPriority tp);
+  static int SetProcessSchedPriority(SchedPriority);
+  static int SetThreadSchedPriority(std::thread*, SchedPriority);
 };
 
 }  // namespace myframe
