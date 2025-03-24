@@ -232,7 +232,13 @@ int Common::SetProcessPriority(ProcessPriority pp) {
   return -1;
 #else
   struct sched_param process_param;
-  int sched_policy = SCHED_OTHER;
+  int sched_policy = sched_getscheduler(0);
+  if (sched_policy == -1) {
+    return -1;
+  }
+  if (sched_getparam(0, &process_param) == -1) {
+    return -1;
+  }
   if (pp == ProcessPriority::kLowest) {
     process_param.sched_priority = 0;
     sched_policy = SCHED_IDLE;
@@ -304,7 +310,10 @@ int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
     handle = t->native_handle();
   }
   struct sched_param thread_param;
-  int sched_policy = SCHED_OTHER;
+  int sched_policy;
+  if (pthread_getschedparam(handle, &sched_policy, &thread_param)) {
+    return -1;
+  }
   if (tp == ThreadPriority::kLowest) {
     thread_param.sched_priority = 0;
     sched_policy = SCHED_IDLE;
