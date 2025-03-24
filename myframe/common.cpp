@@ -5,7 +5,6 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/common.h"
-
 #include <string.h>
 #include <utility>
 
@@ -230,7 +229,7 @@ int Common::SetProcessPriority(ProcessPriority pp) {
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
   (void)pp;
-  return 0;
+  return -1;
 #else
   struct sched_param process_param;
   int sched_policy = SCHED_OTHER;
@@ -272,8 +271,30 @@ int Common::SetThreadPriority(std::thread* t, ThreadPriority tp) {
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  (void)t;
-  (void)tp;
+  pthread_t handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
+  }
+  struct sched_param thread_param;
+  int sched_policy;
+  if (pthread_getschedparam(handle, &sched_policy, &thread_param)) {
+    return -1;
+  }
+  if (tp == ThreadPriority::kLowest) {
+    thread_param.sched_priority = 0;
+    sched_policy = SCHED_OTHER;
+  } else if (tp == ThreadPriority::kNormal) {
+    thread_param.sched_priority = 31;
+    sched_policy = SCHED_OTHER;
+  } else {
+    thread_param.sched_priority = 31;
+    sched_policy = SCHED_RR;
+  }
+  if (pthread_setschedparam(handle, sched_policy, &thread_param)) {
+    return -1;
+  }
   return 0;
 #else
   pthread_t handle;
