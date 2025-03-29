@@ -4,7 +4,7 @@ SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 ARG cpu_arch=unknown
 COPY docker/ubuntu2204_${cpu_arch}.sourcelist /etc/apt/sources.list
-# RUN yes | unminimize
+
 RUN apt update \
     && apt  install -y --no-install-recommends \
     build-essential cmake \
@@ -17,6 +17,7 @@ RUN wget -q --content-disposition --no-check-certificate \
 RUN tar -xf jsoncpp-1.9.5.tar.gz \
  && cmake -S jsoncpp-1.9.5 -B build-jsoncpp \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     -DBUILD_OBJECT_LIBS=OFF \
     -DJSONCPP_WITH_TESTS=OFF \
     -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF \
