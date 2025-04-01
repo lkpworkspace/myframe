@@ -38,6 +38,7 @@ class ExampleThreadQuit : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    (void)msg;
   }
 
  private:
