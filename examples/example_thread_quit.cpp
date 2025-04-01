@@ -11,6 +11,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
+#include "myframe/app.h"
 
 class ExampleThreadQuit : public myframe::Actor {
  public:
@@ -30,7 +31,11 @@ class ExampleThreadQuit : public myframe::Actor {
       while (th_run_.load()) {
         LOG(INFO) << "thread quit example runing...";
         auto app = GetApp();
-        // do something here
+        auto msg = std::make_shared<myframe::Msg>();
+        msg->SetDst(GetActorName());
+        msg->SetData("thread quit example");
+        msg->SetType("TEXT");
+        app->Send(std::move(msg));
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
     });
@@ -38,7 +43,7 @@ class ExampleThreadQuit : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    (void)msg;
+    LOG(INFO) << "recv msg: " << *msg;
   }
 
  private:

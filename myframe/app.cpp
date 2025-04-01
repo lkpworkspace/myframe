@@ -130,6 +130,11 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
     LOG(ERROR) << "not init, please call Init() before LoadServiceFromJson()";
     return false;
   }
+  if (state_.load() == State::kQuitting
+      || state_.load() == State::kQuit) {
+    LOG(ERROR) << "program quiting or quit";
+    return false;
+  }
   if (service.isNull()) {
     LOG(ERROR) << "parse service json failed, skip";
     return false;
@@ -279,6 +284,11 @@ bool App::AddActor(
     LOG(ERROR) << "not init, please call Init() before AddActor()";
     return false;
   }
+  if (state_.load() == State::kQuitting
+      || state_.load() == State::kQuit) {
+    LOG(ERROR) << "program quiting or quit";
+    return false;
+  }
   actor->SetInstName(inst_name);
   actor->SetConfig(config);
 
@@ -340,6 +350,11 @@ bool App::AddWorker(
     LOG(ERROR) << "not init, please call Init() before AddWorker()";
     return false;
   }
+  if (state_.load() == State::kQuitting
+      || state_.load() == State::kQuit) {
+    LOG(ERROR) << "program quiting or quit";
+    return false;
+  }
   auto worker_ctx = std::make_shared<WorkerContext>(
     shared_from_this(), worker, poller_);
   worker->SetInstName(inst_name);
@@ -366,8 +381,8 @@ bool App::AddWorker(
 }
 
 int App::Send(std::shared_ptr<Msg> msg) {
-  if (state_.load() == State::kUninitialized) {
-    LOG(ERROR) << "not init, please call Init() before Send()";
+  if (state_.load() != State::kRunning) {
+    VLOG(1) << "program not runing";
     return -1;
   }
   auto conn = ev_conn_mgr_->Alloc();
@@ -385,8 +400,8 @@ int App::Send(std::shared_ptr<Msg> msg) {
 
 const std::shared_ptr<const Msg> App::SendRequest(
   std::shared_ptr<Msg> msg) {
-  if (state_.load() == State::kUninitialized) {
-    LOG(ERROR) << "not init, please call Init() before SendRequest()";
+  if (state_.load() != State::kRunning) {
+    VLOG(1) << "program not runing";
     return nullptr;
   }
   auto conn = ev_conn_mgr_->Alloc();
@@ -724,8 +739,8 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
 }
 
 int App::Exec() {
-  if (state_.load() == State::kUninitialized) {
-    LOG(ERROR) << "not init, please call Init() before Exec()";
+  if (state_.load() != State::kInitialized) {
+    LOG(ERROR) << "not init";
     return -1;
   }
   int time_wait_ms = 100;
