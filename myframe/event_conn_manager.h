@@ -35,6 +35,8 @@ class EventConnManager final {
 
   void Notify(ev_handle_t, std::shared_ptr<Msg> msg);
 
+  void Clear();
+
  private:
   void AddEventConn();
 

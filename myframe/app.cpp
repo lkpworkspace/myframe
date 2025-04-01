@@ -744,6 +744,10 @@ int App::Exec() {
 
   // quit App
   worker_ctx_mgr_->WaitAllWorkerQuit();
+  worker_ctx_mgr_->ClearStopWorker();
+  ev_conn_mgr_->Clear();
+  ev_mgr_->Clear();
+  actor_ctx_mgr_->ClearContext();
   state_.store(State::kQuit);
   LOG(INFO) << "app exit exec";
   return 0;

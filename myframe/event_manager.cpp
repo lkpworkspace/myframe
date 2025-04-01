@@ -77,4 +77,10 @@ bool EventManager::Del(const std::shared_ptr<Event>& ev) {
   return true;
 }
 
+void EventManager::Clear() {
+  std::unique_lock<std::shared_mutex> lk(rw_);
+  name_handle_map_.clear();
+  evs_.clear();
+}
+
 }  // namespace myframe

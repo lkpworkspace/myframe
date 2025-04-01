@@ -55,6 +55,8 @@ class EventManager final {
 
   ev_handle_t ToHandle(const std::string&);
 
+  void Clear();
+
  private:
   bool Add(const std::shared_ptr<Event>&);
   bool Del(const std::shared_ptr<Event>&);

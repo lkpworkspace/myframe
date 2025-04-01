@@ -121,6 +121,11 @@ void WorkerContextManager::WaitAllWorkerQuit() {
   }
 }
 
+void WorkerContextManager::ClearStopWorker() {
+  std::shared_lock<std::shared_mutex> lk(rw_);
+  stoped_workers_ctx_.clear();
+}
+
 void WorkerContextManager::PushWaitWorker(
   std::shared_ptr<WorkerContext> worker) {
   worker->SetCtrlOwnerFlag(WorkerContext::CtrlOwner::kMain);

@@ -1,0 +1,12 @@
+{
+    "type":"library",
+    "lib":"example_thread_quit",
+    "actor":{
+        "example_thread_quit":[
+            {
+                "instance_name":"1",
+                "instance_params":""
+            }
+        ]
+    }
+}

@@ -136,4 +136,9 @@ void ActorContextManager::PushContext(std::shared_ptr<ActorContext> ctx) {
   PrintWaitQueue();
 }
 
+void ActorContextManager::ClearContext() {
+  std::shared_lock<std::shared_mutex> lk(rw_);
+  ctxs_.clear();
+}
+
 }  // namespace myframe
