@@ -78,7 +78,7 @@ jobs:
         run: |
           cmake -S gflags-2.2.2 -B build-gflags `
             -A ${{matrix.arch}} `
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 `
+            -DCMAKE_POLICY_VERSION_MINIMUM="3.5" `
             -DBUILD_SHARED_LIBS=ON `
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags
           cmake --build build-gflags `
