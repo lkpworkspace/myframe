@@ -30,6 +30,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: CMake install
+        run: choco install cmake --version=3.22.6 -y
+
+      - name: CMake version
+        run: cmake --version
+
       - name: Cache jsoncpp
         id: cache-jsoncpp
         uses: actions/cache@v4
@@ -48,7 +54,6 @@ jobs:
         run: |
           cmake -S jsoncpp-1.9.5 -B build-jsoncpp `
             -A ${{matrix.arch}} `
-            -DCMAKE_POLICY_VERSION_MINIMUM="3.5" `
             -DBUILD_SHARED_LIBS=ON `
             -DBUILD_STATIC_LIBS=OFF `
             -DBUILD_OBJECT_LIBS=OFF `
@@ -79,7 +84,6 @@ jobs:
         run: |
           cmake -S gflags-2.2.2 -B build-gflags `
             -A ${{matrix.arch}} `
-            -DCMAKE_POLICY_VERSION_MINIMUM="3.5" `
             -DBUILD_SHARED_LIBS=ON `
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags
           cmake --build build-gflags `
@@ -104,7 +108,6 @@ jobs:
         run: |
             cmake -S glog-0.6.0 -B build-glog `
               -A ${{matrix.arch}} `
-              -DCMAKE_POLICY_VERSION_MINIMUM="3.5" `
               -DBUILD_SHARED_LIBS=ON `
               -DWITH_GTEST=OFF `
               -DWITH_PKGCONFIG=OFF `
