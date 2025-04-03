@@ -32,6 +32,8 @@ add_library(example_config SHARED example_config.cpp)
 target_link_libraries(example_config ${PROJECT_NAME})
 add_library(example_trans_obj SHARED example_trans_obj.cpp)
 target_link_libraries(example_trans_obj ${PROJECT_NAME})
+add_library(example_thread_quit SHARED example_thread_quit.cpp)
+target_link_libraries(example_thread_quit ${PROJECT_NAME})
 
 ### install
 file(GLOB conf_files "*.json")
@@ -60,6 +62,7 @@ install(TARGETS
   example_worker_quit
   example_config
   example_trans_obj
+  example_thread_quit
   LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
   ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
   RUNTIME DESTINATION ${MYFRAME_BIN_DIR}

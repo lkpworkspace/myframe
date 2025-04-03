@@ -39,6 +39,13 @@
 #include <cstdlib>
 
 #include "myframe/platform.h"
+#if !defined(MYFRAME_OS_WINDOWS)
+#include <cxxabi.h>
+#else
+#include <windows.h>
+#include <Dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+#endif
 
 namespace cmdline {
 
@@ -106,8 +113,6 @@ Target lexical_cast(const Source &arg) {
 }
 
 #if !defined(MYFRAME_OS_WINDOWS)
-#include <cxxabi.h>
-
 static inline ::std::string demangle(const ::std::string &name) {
   int status = 0;
   char *p = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
@@ -115,12 +120,7 @@ static inline ::std::string demangle(const ::std::string &name) {
   free(p);
   return ret;
 }
-
 #else
-#include <windows.h>
-#include <Dbghelp.h>
-#pragma comment(lib, "dbghelp.lib")
-
 static inline ::std::string demangle(const ::std::string &name) {
   TCHAR szUndecorateName[256];
   memset(szUndecorateName, 0, 256);

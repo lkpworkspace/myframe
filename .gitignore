@@ -19,3 +19,4 @@ myframe/export.h
 myframe/config.h
 3rd/pkg/
 3rd/src/
+.DS_Store

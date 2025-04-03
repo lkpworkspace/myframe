@@ -53,6 +53,7 @@ class WorkerContextManager final {
   // 停止工作线程
   void StopAllWorker();
   void WaitAllWorkerQuit();
+  void ClearStopWorker();
 
  private:
   std::atomic<std::size_t> warning_msg_size_{10};

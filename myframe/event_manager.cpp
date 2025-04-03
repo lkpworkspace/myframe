@@ -77,4 +77,18 @@ bool EventManager::Del(const std::shared_ptr<Event>& ev) {
   return true;
 }
 
+void EventManager::Clear() {
+  std::unique_lock<std::shared_mutex> lk(rw_);
+  name_handle_map_.clear();
+  // notify all connevent quit
+  for (auto& p : evs_) {
+    if (p.second->GetType() == Event::Type::kEventConn) {
+      auto ev_conn = std::dynamic_pointer_cast<EventConn>(p.second);
+      auto cmd_channel = ev_conn->GetCmdChannel();
+      cmd_channel->SendToOwner(CmdChannel::Cmd::kQuit);
+    }
+  }
+  evs_.clear();
+}
+
 }  // namespace myframe

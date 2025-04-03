@@ -41,6 +41,7 @@ class ActorContextManager final {
 
   /* 将有消息的actor放入链表 */
   void PushContext(std::shared_ptr<ActorContext> ctx);
+  void ClearContext();
 
  private:
   /* 获得actor名对应的actor */

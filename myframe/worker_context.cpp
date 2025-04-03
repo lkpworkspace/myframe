@@ -77,7 +77,7 @@ void WorkerContext::Initialize() {
   mailbox_.SetAddr(worker_->GetWorkerName());
   std::string th_name = mailbox_.Addr();
   th_name = th_name.size() >= 16 ? th_name.substr(0, 15) : th_name;
-  if (Common::SetSelfThreadName(th_name)) {
+  if (Common::SetThreadName(nullptr, th_name)) {
     LOG(WARNING) << "set " << mailbox_.Addr()
       << " thread name " << th_name << " failed";
   } else {

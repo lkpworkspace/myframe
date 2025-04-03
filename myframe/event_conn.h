@@ -20,6 +20,7 @@ class Msg;
 class EventConnManager;
 class EventConn final : public Event {
   friend class App;
+  friend class EventManager;
   friend class EventConnManager;
 
  public:

@@ -5,12 +5,12 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #include "myframe/common.h"
-
 #include <string.h>
 #include <utility>
 
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+#include <sched.h>
 #include <unistd.h>
 #elif defined(MYFRAME_OS_WINDOWS)
 #include <Windows.h>
@@ -130,7 +130,12 @@ std::vector<std::string_view> Common::SplitMsgName(const std::string& name) {
 // 可以通过std::thread::hardware_concurrency()获得核心数
 int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
 #if defined(MYFRAME_OS_WINDOWS)
-  auto hThread = t->native_handle();
+  HANDLE hThread;
+  if (t == nullptr) {
+    hThread = GetCurrentThread();
+  } else {
+    hThread = t->native_handle();
+  }
   DWORD_PTR mask = 1 << cpu_core;
   if (SetThreadAffinityMask(hThread, mask) == 0) {
     return -1;
@@ -139,7 +144,12 @@ int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
 #elif defined(MYFRAME_OS_MACOSX)
   thread_affinity_policy policy;
   policy.affinity_tag = cpu_core;
-  auto handle = pthread_mach_thread_np(t->native_handle());
+  thread_t handle;
+  if (t == nullptr) {
+    handle = mach_thread_self();
+  } else {
+    handle = pthread_mach_thread_np(t->native_handle());
+  }
   kern_return_t kr = thread_policy_set(
     handle,
     THREAD_AFFINITY_POLICY,
@@ -154,39 +164,12 @@ int Common::SetThreadAffinity(std::thread* t, int cpu_core) {
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
   CPU_SET(cpu_core, &cpuset);
-  auto handle = t->native_handle();
-  int result = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
-  return result;
-#endif
-}
-
-int Common::SetSelfThreadAffinity(int cpu_core) {
-#if defined(MYFRAME_OS_WINDOWS)
-  auto hThread = GetCurrentThread();
-  DWORD_PTR mask = 1 << cpu_core;
-  if (SetThreadAffinityMask(hThread, mask) == 0) {
-    return -1;
+  int handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
   }
-  return 0;
-#elif defined(MYFRAME_OS_MACOSX)
-  thread_affinity_policy policy;
-  policy.affinity_tag = cpu_core;
-  auto handle = mach_thread_self();
-  kern_return_t kr = thread_policy_set(
-    handle,
-    THREAD_AFFINITY_POLICY,
-    reinterpret_cast<thread_policy_t>(&policy),
-    THREAD_AFFINITY_POLICY_COUNT);
-  mach_port_deallocate(mach_task_self(), handle);
-  if (kr != KERN_SUCCESS) {
-    return -1;
-  }
-  return 0;
-#else
-  cpu_set_t cpuset;
-  CPU_ZERO(&cpuset);
-  CPU_SET(cpu_core, &cpuset);
-  auto handle = pthread_self();
   int result = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
   return result;
 #endif
@@ -200,7 +183,12 @@ int Common::SetThreadName(std::thread* t, const std::string& name) {
   }
   wchar_t* wide_name = new wchar_t[len];
   MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, wide_name, len);
-  auto handle = t->native_handle();
+  HANDLE handle;
+  if (t == nullptr) {
+    handle = GetCurrentThread();
+  } else {
+    handle = t->native_handle();
+  }
   auto res = SetThreadDescription(handle, wide_name);
   delete[] wide_name;
   if (FAILED(res)) {
@@ -208,33 +196,138 @@ int Common::SetThreadName(std::thread* t, const std::string& name) {
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  // unsupport
-  return -1;
+  // macos仅支持设置自身线程名字
+  if (t != nullptr) {
+    return -1;
+  }
+  return pthread_setname_np(name.c_str());
 #else
-  auto handle = t->native_handle();
+  pthread_t handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
+  }
   return pthread_setname_np(handle, name.c_str());
 #endif
 }
 
-int Common::SetSelfThreadName(const std::string& name) {
+int Common::SetProcessSchedPriority(SchedPriority sp) {
 #if defined(MYFRAME_OS_WINDOWS)
-  int len = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, nullptr, 0);
-  if (len <= 0) {
-    return -1;
+  HANDLE hProcess = ::GetCurrentProcess();
+  int process_pri;
+  if (sp == SchedPriority::kLowest) {
+    process_pri = IDLE_PRIORITY_CLASS;
+  } else if (sp == SchedPriority::kNormal) {
+    process_pri = NORMAL_PRIORITY_CLASS;
+  } else {
+    process_pri = REALTIME_PRIORITY_CLASS;
   }
-  wchar_t* wide_name = new wchar_t[len];
-  MultiByteToWideChar(CP_UTF8, 0, name.c_str(), -1, wide_name, len);
-  auto handle = GetCurrentThread();
-  auto res = SetThreadDescription(handle, wide_name);
-  delete[] wide_name;
-  if (FAILED(res)) {
+  if (!::SetPriorityClass(hProcess, process_pri)) {
     return -1;
   }
   return 0;
 #elif defined(MYFRAME_OS_MACOSX)
-  return pthread_setname_np(name.c_str());
+  (void)sp;
+  return 0;
 #else
-  return pthread_setname_np(pthread_self(), name.c_str());
+  struct sched_param process_param;
+  int sched_policy = sched_getscheduler(0);
+  if (sched_policy == -1) {
+    return -1;
+  }
+  if (sched_getparam(0, &process_param) == -1) {
+    return -1;
+  }
+  if (sp == SchedPriority::kLowest) {
+    process_param.sched_priority = 0;
+    sched_policy = SCHED_IDLE;
+  } else if (sp == SchedPriority::kNormal) {
+    process_param.sched_priority = 0;
+    sched_policy = SCHED_OTHER;
+  } else {
+    process_param.sched_priority = 99;
+    sched_policy = SCHED_RR;
+  }
+  if (sched_setscheduler(0, sched_policy, &process_param)) {
+    return -1;
+  }
+  return 0;
+#endif
+}
+
+int Common::SetThreadSchedPriority(std::thread* t, SchedPriority sp) {
+#if defined(MYFRAME_OS_WINDOWS)
+  int thread_pri;
+  if (sp == SchedPriority::kLowest) {
+    thread_pri = THREAD_PRIORITY_IDLE;
+  } else if (sp == SchedPriority::kNormal) {
+    thread_pri = THREAD_PRIORITY_NORMAL;
+  } else {
+    thread_pri = THREAD_PRIORITY_TIME_CRITICAL;
+  }
+  HANDLE thread_handle;
+  if (t == nullptr) {
+    thread_handle = ::GetCurrentThread();
+  } else {
+    thread_handle = t->native_handle();
+  }
+  if (!::SetThreadPriority(thread_handle, thread_pri)) {
+    return -1;
+  }
+  return 0;
+#elif defined(MYFRAME_OS_MACOSX)
+  pthread_t handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
+  }
+  struct sched_param thread_param;
+  int sched_policy;
+  if (pthread_getschedparam(handle, &sched_policy, &thread_param)) {
+    return -1;
+  }
+  if (sp == SchedPriority::kLowest) {
+    thread_param.sched_priority = 0;
+    sched_policy = SCHED_OTHER;
+  } else if (sp == SchedPriority::kNormal) {
+    thread_param.sched_priority = 31;
+    sched_policy = SCHED_OTHER;
+  } else {
+    thread_param.sched_priority = 31;
+    sched_policy = SCHED_RR;
+  }
+  if (pthread_setschedparam(handle, sched_policy, &thread_param)) {
+    return -1;
+  }
+  return 0;
+#else
+  pthread_t handle;
+  if (t == nullptr) {
+    handle = pthread_self();
+  } else {
+    handle = t->native_handle();
+  }
+  struct sched_param thread_param;
+  int sched_policy;
+  if (pthread_getschedparam(handle, &sched_policy, &thread_param)) {
+    return -1;
+  }
+  if (sp == SchedPriority::kLowest) {
+    thread_param.sched_priority = 0;
+    sched_policy = SCHED_IDLE;
+  } else if (sp == SchedPriority::kNormal) {
+    thread_param.sched_priority = 0;
+    sched_policy = SCHED_OTHER;
+  } else {
+    thread_param.sched_priority = 99;
+    sched_policy = SCHED_RR;
+  }
+  if (pthread_setschedparam(handle, sched_policy, &thread_param)) {
+    return -1;
+  }
+  return 0;
 #endif
 }
 

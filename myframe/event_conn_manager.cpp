@@ -90,4 +90,9 @@ void EventConnManager::Notify(
   cmd_channel->SendToOwner(CmdChannel::Cmd::kIdle);
 }
 
+void EventConnManager::Clear() {
+  std::lock_guard<std::mutex> g(mtx_);
+  idle_conn_.clear();
+}
+
 }  // namespace myframe
