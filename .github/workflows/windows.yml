@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: CMake install
-        run: choco install cmake --version=3.22.6 -y
+        run: choco install cmake --version=3.22.6 -y --force
 
       - name: CMake version
         run: cmake --version
