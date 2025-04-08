@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.10)
 if (POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
-project(myframe VERSION 0.9.7)
+project(myframe VERSION 0.9.8)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
+option(MYFRAME_INSTALL_TEMPLATE "Install template project" ON)
 
 ### cmake module
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -69,11 +70,13 @@ install(FILES
   WORLD_READ
   DESTINATION .
 )
-install(PROGRAMS
-  "tools/gen_mod_proj.py"
-  DESTINATION ${MYFRAME_BIN_DIR}
-)
-install(DIRECTORY templates DESTINATION .)
+if (MYFRAME_INSTALL_TEMPLATE)
+  install(PROGRAMS
+    "tools/gen_mod_proj.py"
+    DESTINATION ${MYFRAME_BIN_DIR}
+  )
+  install(DIRECTORY templates DESTINATION .)
+endif()
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
 install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_DIR})
 
