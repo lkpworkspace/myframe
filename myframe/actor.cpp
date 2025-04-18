@@ -70,7 +70,10 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
   return timer_worker->SetTimeout(GetActorName(), timer_name, expired);
 }
 
-bool Actor::Subscribe(const std::string& addr, const std::string& msg_type) {
+bool Actor::Subscribe(
+  const std::string& addr,
+  const std::string& msg_type,
+  const Msg::TransMode mode) {
   if (ctx_ == nullptr) {
     return false;
   }
@@ -80,6 +83,7 @@ bool Actor::Subscribe(const std::string& addr, const std::string& msg_type) {
   auto msg = std::make_shared<Msg>();
   msg->SetType("SUBSCRIBE");
   msg->SetDesc(msg_type);
+  msg->SetTransMode(mode);
   auto mailbox = ctx_->GetMailbox();
   mailbox->Send(addr, std::move(msg));
   return true;

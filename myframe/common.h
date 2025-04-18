@@ -33,7 +33,9 @@ class MYFRAME_EXPORT Common final {
 
   static Json::Value LoadJsonFromFile(const std::string& json_file);
 
-  static std::vector<std::string_view> SplitMsgName(const std::string& name);
+  static void SplitMsgName(
+    const std::string& name,
+    std::vector<std::string_view>* tokens);
 
   static int SetThreadAffinity(std::thread* t, int cpu_core);
   static int SetThreadName(std::thread* t, const std::string& name);

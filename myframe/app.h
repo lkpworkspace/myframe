@@ -127,6 +127,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   void GetAllUserModAddr(std::string* info);
 
   stdfs::path lib_dir_;
+  std::vector<std::string_view> name_list_;
   /// node地址
   std::string node_addr_;
   ///

@@ -15,6 +15,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/export.h"
 #include "myframe/macros.h"
 #include "myframe/mailbox.h"
+#include "myframe/msg.h"
 
 namespace myframe {
 
@@ -90,6 +91,7 @@ class MYFRAME_EXPORT Actor {
    * Subscribe() - 订阅actor的消息
    * @addr: 订阅actor的地址
    * @msg_type: 订阅消息类型
+   * @mode: 订阅消息影响范围
    *
    *     被订阅的组件需要在Proc函数中处理订阅消息，消息格式：
    *        msg->GetType() == "SUBSCRIBE" 确认是订阅消息
@@ -97,7 +99,10 @@ class MYFRAME_EXPORT Actor {
    *        msg->GetSrc() 确定是订阅组件地址
    * @return: 成功返回true,失败返回false
    */
-  bool Subscribe(const std::string& addr, const std::string& msg_type = "");
+  bool Subscribe(
+    const std::string& addr,
+    const std::string& msg_type = "",
+    const Msg::TransMode mode = Msg::TransMode::kIntra);
 
   /**
    * GetApp() - 获得应用实例

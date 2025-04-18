@@ -77,6 +77,9 @@ int main() {
         auto msg = std::make_shared<myframe::Msg>("hello");
         msg->SetDst("actor.EchoActorTest.1");
         auto resp = app->SendRequest(std::move(msg));
+        if (resp == nullptr) {
+          continue;
+        }
         LOG(INFO) << "thread " << i << " resp: " << resp->GetData();
       }
       std::lock_guard<std::mutex> g(mtx);

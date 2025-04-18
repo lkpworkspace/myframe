@@ -110,21 +110,24 @@ bool Common::IsAbsolutePath(const std::string& path) {
   return false;
 }
 
-std::vector<std::string_view> Common::SplitMsgName(const std::string& name) {
-  std::vector<std::string_view> tokens;
-  tokens.reserve(3);
+void Common::SplitMsgName(
+  const std::string& name,
+  std::vector<std::string_view>* tokens) {
+  if (tokens == nullptr) {
+    return;
+  }
+  tokens->clear();
   size_t name_sz = name.size();
   size_t start_pos = 0;
   for (size_t i = 0; i < name_sz; ++i) {
     if (name[i] == '.') {
-      tokens.emplace_back(&name[start_pos], i - start_pos);
+      tokens->emplace_back(&name[start_pos], i - start_pos);
       start_pos = i + 1;
     }
     if (i == name_sz - 1) {
-      tokens.emplace_back(&name[start_pos], i - start_pos + 1);
+      tokens->emplace_back(&name[start_pos], i - start_pos + 1);
     }
   }
-  return tokens;
 }
 
 // 可以通过std::thread::hardware_concurrency()获得核心数

@@ -53,6 +53,7 @@ App::App()
   , ev_mgr_(new EventManager())
   , ev_conn_mgr_(new EventConnManager(ev_mgr_, poller_))
   , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_)) {
+  name_list_.reserve(3);
   LOG(INFO) << "myframe version: " << MYFRAME_VERSION;
 }
 
@@ -457,29 +458,34 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
     return;
   }
   /// 消息分发
-  auto name_list = Common::SplitMsgName(msg->GetDst());
-  if (name_list.size() < 2) {
+  Common::SplitMsgName(msg->GetDst(), &name_list_);
+  if (name_list_.size() != 3) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
   }
-  if (name_list[0] == "worker"
-      && ev_mgr_->Has(msg->GetDst())) {
-    // dispatch to user worker
-    worker_ctx_mgr_->DispatchWorkerMsg(msg);
-  } else if (name_list[0] == "actor"
-      && actor_ctx_mgr_->HasActor(msg->GetDst())) {
-    // dispatch to actor
-    actor_ctx_mgr_->DispatchMsg(msg);
-  } else if (name_list[0] == "event") {
-    if (name_list[1] == "conn") {
-      // dispatch to event conn
+  // trans func
+  static auto trans2actor = [this](std::shared_ptr<Msg> msg) {
+    if (actor_ctx_mgr_->HasActor(msg->GetDst())) {
+      actor_ctx_mgr_->DispatchMsg(std::move(msg));
+    }
+  };
+  static auto trans2worker = [this](std::shared_ptr<Msg> msg) {
+    if (ev_mgr_->Has(msg->GetDst())) {
+      worker_ctx_mgr_->DispatchWorkerMsg(std::move(msg));
+    }
+  };
+  static auto trans2ev = [this](std::shared_ptr<Msg> msg) {
+    if (name_list_[1] == "conn") {
       auto handle = ev_mgr_->ToHandle(msg->GetDst());
-      ev_conn_mgr_->Notify(handle, msg);
+      ev_conn_mgr_->Notify(handle, std::move(msg));
     } else {
       LOG(ERROR) << "Unknown msg " << *msg;
     }
-  } else if (!node_addr_.empty()) {
-    // dispatch to node
+  };
+  static auto trans2dds = [this](std::shared_ptr<Msg> msg) {
+    if (node_addr_.empty()) {
+      return;
+    }
     if (node_addr_.substr(0, 5) == "actor") {
       actor_ctx_mgr_->DispatchMsg(msg, node_addr_);
     } else if (node_addr_.substr(0, 6) == "worker") {
@@ -487,9 +493,63 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
     } else {
       LOG(ERROR) << "Unknown msg " << *msg;
     }
-  } else {
-    LOG(ERROR) << "Unknown msg " << *msg;
+  };
+  static auto trans2hybird1 = [&, this](std::shared_ptr<Msg> msg) {
+    if (node_addr_.empty()) {
+      trans2actor(std::move(msg));
+      return;
+    }
+    trans2actor(msg);
+    trans2dds(std::move(msg));
+  };
+  static auto trans2hybird2 = [&, this](std::shared_ptr<Msg> msg) {
+    if (node_addr_.empty()) {
+      trans2worker(std::move(msg));
+      return;
+    }
+    trans2worker(msg);
+    trans2dds(std::move(msg));
+  };
+  static auto trans2hybird3 = [&, this](std::shared_ptr<Msg> msg) {
+    if (node_addr_.empty()) {
+      trans2ev(std::move(msg));
+      return;
+    }
+    trans2ev(msg);
+    trans2dds(std::move(msg));
+  };
+  // trans vec
+  static std::vector<
+    std::vector<
+      std::function<void(std::shared_ptr<Msg>)>>> trans_map = {
+    // kIntra, kDDS, kHybird
+    {trans2actor, trans2dds, trans2hybird1},  // actor
+    {trans2worker, trans2dds, trans2hybird2},  // worker
+    {trans2ev, trans2dds, trans2hybird3}  // connevent
+  };
+  // trans
+  int trans_idx1 = -1;
+  int trans_idx2 = -1;
+  if (name_list_[0] == "actor") {
+    trans_idx1 = 0;
+  } else if (name_list_[0] == "worker") {
+    trans_idx1 = 1;
+  } else if (name_list_[0] == "event") {
+    trans_idx1 = 2;
   }
+  auto trans_mode = msg->GetTransMode();
+  if (trans_mode == Msg::TransMode::kIntra) {
+    trans_idx2 = 0;
+  } else if (trans_mode == Msg::TransMode::kDDS) {
+    trans_idx2 = 1;
+  } else if (trans_mode == Msg::TransMode::kHybrid) {
+    trans_idx2 = 2;
+  }
+  if (trans_idx1 == -1 || trans_idx2 == -1) {
+    LOG(ERROR) << "Unknown msg " << *msg;
+    return;
+  }
+  trans_map[trans_idx1][trans_idx2](std::move(msg));
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
