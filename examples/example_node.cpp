@@ -120,11 +120,11 @@ class ExampleNodePub : public myframe::Actor {
     }
     if (msg->GetType() == "TIMER") {
       auto mailbox = GetMailbox();
-      for (int i = 0; i < pub_list_.size(); ++i) {
-        LOG(INFO) << "ExampleNodePub send msg to " << pub_list_[i];
+      for (const auto& pub : pub_list_) {
+        LOG(INFO) << "ExampleNodePub send msg to " << pub;
         auto send_msg = std::make_shared<myframe::Msg>();
         send_msg->SetTransMode(myframe::Msg::TransMode::kDDS);
-        mailbox->Send(pub_list_[i], send_msg);
+        mailbox->Send(pub, std::move(send_msg));
       }
       Timeout("1000ms", 100);
     }
