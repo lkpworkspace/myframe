@@ -464,59 +464,59 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
     return;
   }
   // trans func
-  static auto trans2actor = [this](std::shared_ptr<Msg> msg) {
-    if (actor_ctx_mgr_->HasActor(msg->GetDst())) {
-      actor_ctx_mgr_->DispatchMsg(std::move(msg));
+  static auto trans2actor = [this](std::shared_ptr<Msg> m) {
+    if (actor_ctx_mgr_->HasActor(m->GetDst())) {
+      actor_ctx_mgr_->DispatchMsg(std::move(m));
     }
   };
-  static auto trans2worker = [this](std::shared_ptr<Msg> msg) {
-    if (ev_mgr_->Has(msg->GetDst())) {
-      worker_ctx_mgr_->DispatchWorkerMsg(std::move(msg));
+  static auto trans2worker = [this](std::shared_ptr<Msg> m) {
+    if (ev_mgr_->Has(m->GetDst())) {
+      worker_ctx_mgr_->DispatchWorkerMsg(std::move(m));
     }
   };
-  static auto trans2ev = [this](std::shared_ptr<Msg> msg) {
+  static auto trans2ev = [this](std::shared_ptr<Msg> m) {
     if (name_list_[1] == "conn") {
-      auto handle = ev_mgr_->ToHandle(msg->GetDst());
-      ev_conn_mgr_->Notify(handle, std::move(msg));
+      auto handle = ev_mgr_->ToHandle(m->GetDst());
+      ev_conn_mgr_->Notify(handle, std::move(m));
     } else {
-      LOG(ERROR) << "Unknown msg " << *msg;
+      LOG(ERROR) << "Unknown msg " << *m;
     }
   };
-  static auto trans2dds = [this](std::shared_ptr<Msg> msg) {
+  static auto trans2dds = [this](std::shared_ptr<Msg> m) {
     if (node_addr_.empty()) {
       return;
     }
     if (node_addr_.substr(0, 5) == "actor") {
-      actor_ctx_mgr_->DispatchMsg(msg, node_addr_);
+      actor_ctx_mgr_->DispatchMsg(m, node_addr_);
     } else if (node_addr_.substr(0, 6) == "worker") {
-      worker_ctx_mgr_->DispatchWorkerMsg(msg, node_addr_);
+      worker_ctx_mgr_->DispatchWorkerMsg(m, node_addr_);
     } else {
-      LOG(ERROR) << "Unknown msg " << *msg;
+      LOG(ERROR) << "Unknown msg " << *m;
     }
   };
-  static auto trans2hybird1 = [&, this](std::shared_ptr<Msg> msg) {
+  static auto trans2hybird1 = [&, this](std::shared_ptr<Msg> m) {
     if (node_addr_.empty()) {
-      trans2actor(std::move(msg));
+      trans2actor(std::move(m));
       return;
     }
-    trans2actor(msg);
-    trans2dds(std::move(msg));
+    trans2actor(m);
+    trans2dds(std::move(m));
   };
-  static auto trans2hybird2 = [&, this](std::shared_ptr<Msg> msg) {
+  static auto trans2hybird2 = [&, this](std::shared_ptr<Msg> m) {
     if (node_addr_.empty()) {
-      trans2worker(std::move(msg));
+      trans2worker(std::move(m));
       return;
     }
-    trans2worker(msg);
-    trans2dds(std::move(msg));
+    trans2worker(m);
+    trans2dds(std::move(m));
   };
-  static auto trans2hybird3 = [&, this](std::shared_ptr<Msg> msg) {
+  static auto trans2hybird3 = [&, this](std::shared_ptr<Msg> m) {
     if (node_addr_.empty()) {
-      trans2ev(std::move(msg));
+      trans2ev(std::move(m));
       return;
     }
-    trans2ev(msg);
-    trans2dds(std::move(msg));
+    trans2ev(m);
+    trans2dds(std::move(m));
   };
   // trans vec
   static std::vector<
