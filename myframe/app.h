@@ -92,6 +92,8 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   int GetDefaultPendingQueueSize() const;
   int GetDefaultRunQueueSize() const;
 
+  State GetState() const;
+
  private:
   bool HasUserInst(const std::string& name);
   std::shared_ptr<WorkerTimer> GetTimerWorker();

@@ -574,7 +574,7 @@ void App::CheckStopWorkers() {
   VLOG(1) << "check stop worker";
   worker_ctx_mgr_->WeakupWorker();
 
-  LOG_IF(INFO, worker_ctx_mgr_->IdleWorkerSize() == 0)
+  LOG_IF(WARNING, worker_ctx_mgr_->IdleWorkerSize() == 0)
       << "worker busy, wait for idle worker...";
   std::shared_ptr<ActorContext> actor_ctx = nullptr;
   std::shared_ptr<WorkerContext> worker_ctx = nullptr;
@@ -626,6 +626,7 @@ void App::ProcessMain(std::shared_ptr<Msg> msg) {
   if (cmd == MAIN_CMD_ALL_USER_MOD_ADDR) {
     resp_msg->SetSrc(MAIN_ADDR);
     resp_msg->SetDst(src);
+    resp_msg->SetType(MAIN_CMD_ALL_USER_MOD_ADDR);
     std::string mod_addr_list;
     GetAllUserModAddr(&mod_addr_list);
     resp_msg->SetData(mod_addr_list);
@@ -634,9 +635,16 @@ void App::ProcessMain(std::shared_ptr<Msg> msg) {
     return;
   }
   if (src.substr(0, 6) == "worker") {
-    worker_ctx_mgr_->DispatchWorkerMsg(resp_msg);
+    worker_ctx_mgr_->DispatchWorkerMsg(std::move(resp_msg));
   } else if (src.substr(0, 5) == "actor") {
-    actor_ctx_mgr_->DispatchMsg(resp_msg);
+    actor_ctx_mgr_->DispatchMsg(std::move(resp_msg));
+  } else if (src.substr(0, 5) == "event") {
+    if (src.substr(6, 4) == "conn") {
+      auto handle = ev_mgr_->ToHandle(src);
+      ev_conn_mgr_->Notify(handle, std::move(resp_msg));
+    } else {
+      LOG(ERROR) << "Unknown msg " << *msg;
+    }
   } else {
     LOG(ERROR) << "unknow msg " << *msg;
   }
@@ -875,6 +883,10 @@ int App::GetDefaultPendingQueueSize() const {
 
 int App::GetDefaultRunQueueSize() const {
   return default_run_queue_size_;
+}
+
+App::State App::GetState() const {
+  return state_.load();
 }
 
 }  // namespace myframe
