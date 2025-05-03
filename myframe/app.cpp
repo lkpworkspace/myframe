@@ -650,15 +650,21 @@ void App::ProcessMain(std::shared_ptr<Msg> msg) {
   }
 }
 
-void App::GetAllUserModAddr(std::string* info) {
+std::vector<std::string> App::GetAllUserModAddr() const {
   auto res_actor = actor_ctx_mgr_->GetAllActorAddr();
   auto res_worker = worker_ctx_mgr_->GetAllUserWorkerAddr();
+  std::vector<std::string> addr_list;
+  addr_list.reserve(res_actor.size() + res_worker.size());
+  addr_list.insert(addr_list.end(), res_actor.begin(), res_actor.end());
+  addr_list.insert(addr_list.end(), res_worker.begin(), res_worker.end());
+  return addr_list;
+}
+
+void App::GetAllUserModAddr(std::string* info) {
+  auto addr_list = GetAllUserModAddr();
   std::stringstream ss;
-  for (std::size_t i = 0; i < res_actor.size(); ++i) {
-    ss << res_actor[i] << "\n";
-  }
-  for (std::size_t i = 0; i < res_worker.size(); ++i) {
-    ss << res_worker[i] << "\n";
+  for (std::size_t i = 0; i < addr_list.size(); ++i) {
+    ss << addr_list[i] << "\n";
   }
   info->clear();
   info->append(ss.str());

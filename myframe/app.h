@@ -93,6 +93,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   int GetDefaultRunQueueSize() const;
 
   State GetState() const;
+  std::vector<std::string> GetAllUserModAddr() const;
 
  private:
   bool HasUserInst(const std::string& name);
