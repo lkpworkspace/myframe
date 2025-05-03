@@ -137,7 +137,7 @@ void ActorContextManager::PushContext(std::shared_ptr<ActorContext> ctx) {
 }
 
 void ActorContextManager::ClearContext() {
-  std::shared_lock<std::shared_mutex> lk(rw_);
+  std::unique_lock<std::shared_mutex> lk(rw_);
   ctxs_.clear();
 }
 
