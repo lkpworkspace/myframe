@@ -126,8 +126,6 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
   void ProcessUserEvent(std::shared_ptr<WorkerContext>);
   void ProcessEventConn(std::shared_ptr<EventConn>);
-  void ProcessMain(std::shared_ptr<Msg>);
-  void GetAllUserModAddr(std::string* info);
 
   stdfs::path lib_dir_;
   std::vector<std::string_view> name_list_;

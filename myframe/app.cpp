@@ -452,11 +452,6 @@ bool App::StartTimerWorker() {
 void App::DispatchMsg(std::shared_ptr<Msg> msg) {
   std::lock_guard<std::recursive_mutex> lock(local_mtx_);
   VLOG(1) << *msg;
-  /// 处理框架消息
-  if (msg->GetDst() == MAIN_ADDR) {
-    ProcessMain(std::move(msg));
-    return;
-  }
   /// 消息分发
   Common::SplitMsgName(msg->GetDst(), &name_list_);
   if (name_list_.size() != 3) {
@@ -613,43 +608,6 @@ void App::CheckStopWorkers() {
   }
 }
 
-// Tips: 发送给框架的事件都应该立即处理完成，不应该影响调度
-void App::ProcessMain(std::shared_ptr<Msg> msg) {
-  // 接收发送给框架消息，处理并回复
-  auto src = msg->GetSrc();
-  auto cmd = msg->GetData();
-  if (cmd.empty()) {
-    LOG(WARNING) << "unknown MAIN_CMD " << cmd;
-    return;
-  }
-  auto resp_msg = std::make_shared<Msg>();
-  if (cmd == MAIN_CMD_ALL_USER_MOD_ADDR) {
-    resp_msg->SetSrc(MAIN_ADDR);
-    resp_msg->SetDst(src);
-    resp_msg->SetType(MAIN_CMD_ALL_USER_MOD_ADDR);
-    std::string mod_addr_list;
-    GetAllUserModAddr(&mod_addr_list);
-    resp_msg->SetData(mod_addr_list);
-  } else {
-    LOG(WARNING) << "unknown MAIN_CMD " << cmd;
-    return;
-  }
-  if (src.substr(0, 6) == "worker") {
-    worker_ctx_mgr_->DispatchWorkerMsg(std::move(resp_msg));
-  } else if (src.substr(0, 5) == "actor") {
-    actor_ctx_mgr_->DispatchMsg(std::move(resp_msg));
-  } else if (src.substr(0, 5) == "event") {
-    if (src.substr(6, 4) == "conn") {
-      auto handle = ev_mgr_->ToHandle(src);
-      ev_conn_mgr_->Notify(handle, std::move(resp_msg));
-    } else {
-      LOG(ERROR) << "Unknown msg " << *msg;
-    }
-  } else {
-    LOG(ERROR) << "unknow msg " << *msg;
-  }
-}
-
 std::vector<std::string> App::GetAllUserModAddr() const {
   auto res_actor = actor_ctx_mgr_->GetAllActorAddr();
   auto res_worker = worker_ctx_mgr_->GetAllUserWorkerAddr();
@@ -658,16 +616,6 @@ std::vector<std::string> App::GetAllUserModAddr() const {
   addr_list.insert(addr_list.end(), res_actor.begin(), res_actor.end());
   addr_list.insert(addr_list.end(), res_worker.begin(), res_worker.end());
   return addr_list;
-}
-
-void App::GetAllUserModAddr(std::string* info) {
-  auto addr_list = GetAllUserModAddr();
-  std::stringstream ss;
-  for (std::size_t i = 0; i < addr_list.size(); ++i) {
-    ss << addr_list[i] << "\n";
-  }
-  info->clear();
-  info->append(ss.str());
 }
 
 void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {

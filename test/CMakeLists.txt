@@ -24,11 +24,6 @@ target_link_libraries(app_send_test
     myframe
 )
 
-add_executable(app_get_all_addr_test app_get_all_addr_test.cpp)
-target_link_libraries(app_get_all_addr_test
-    myframe
-)
-
 add_executable(app_send_req_test app_send_req_test.cpp)
 target_link_libraries(app_send_req_test
     myframe
@@ -66,7 +61,6 @@ INSTALL(TARGETS
     actor_run_queue_test
     app_send_test
     app_send_req_test
-    app_get_all_addr_test
     performance_trans1_cost_test
     performance_trans10_cost_test
     performance_trans1_fullspeed_test
