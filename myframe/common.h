@@ -32,6 +32,7 @@ class MYFRAME_EXPORT Common final {
   static bool IsAbsolutePath(const std::string& path);
 
   static Json::Value LoadJsonFromFile(const std::string& json_file);
+  static Json::Value LoadJsonFromString(const std::string& json_str);
 
   static void SplitMsgName(
     const std::string& name,

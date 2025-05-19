@@ -63,8 +63,6 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
 
   bool LoadServiceFromFile(const std::string& file);
 
-  bool LoadServiceFromJsonStr(const std::string& service);
-
   bool LoadServiceFromJson(const Json::Value& service);
 
   bool AddActor(

@@ -54,6 +54,15 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
   return root;
 }
 
+Json::Value Common::LoadJsonFromString(const std::string& json_str) {
+  Json::Value root;
+  Json::Reader reader(Json::Features::strictMode());
+  if (!reader.parse(json_str, root)) {
+    return Json::Value::nullSingleton();
+  }
+  return root;
+}
+
 stdfs::path Common::GetWorkRoot() {
   char path_buf[MYFRAME_MAX_PATH];
   memset(path_buf, 0, MYFRAME_MAX_PATH);

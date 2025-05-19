@@ -116,16 +116,6 @@ bool App::LoadServiceFromFile(const std::string& file) {
   return LoadServiceFromJson(root);
 }
 
-bool App::LoadServiceFromJsonStr(const std::string& service) {
-  Json::Value root;
-  Json::Reader reader(Json::Features::strictMode());
-  if (!reader.parse(service, root)) {
-    LOG(ERROR) << "parse service string failed";
-    return false;
-  }
-  return LoadServiceFromJson(root);
-}
-
 bool App::LoadServiceFromJson(const Json::Value& service) {
   if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before LoadServiceFromJson()";
