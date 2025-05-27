@@ -48,6 +48,7 @@ file(GLOB header_files
   event.h
   worker.h
   mod_manager.h
+  shared_library.h
   app.h
 )
 install(FILES 
