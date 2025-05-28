@@ -7,6 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/common.h"
 #include <string.h>
 #include <utility>
+#include <regex>
 
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
@@ -340,6 +341,20 @@ int Common::SetThreadSchedPriority(std::thread* t, SchedPriority sp) {
     return -1;
   }
   return 0;
+#endif
+}
+
+std::string Common::GetLibName(const std::string& name) {
+  std::regex lib_regex(".*\\.(dll|so|dylib)$");
+  if (std::regex_match(name, lib_regex)) {
+    return name;
+  }
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  return "lib" + name + ".so";
+#elif defined(MYFRAME_OS_WINDOWS)
+  return name + ".dll";
+#elif defined(MYFRAME_OS_MACOSX)
+  return "lib" + name + ".dylib";
 #endif
 }
 

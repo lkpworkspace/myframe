@@ -7,7 +7,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/app.h"
 
-#include <regex>
 #include <utility>
 
 #include "myframe/log.h"
@@ -143,7 +142,7 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
       return false;
     }
     lib_name = service["lib"].asString();
-    lib_name = GetLibName(lib_name);
+    lib_name = Common::GetLibName(lib_name);
     if (!mods_->LoadMod((lib_dir_ / lib_name).string())) {
       LOG(ERROR) << "load lib "
         << (lib_dir_ / lib_name).string() << " failed, skip";
@@ -802,23 +801,6 @@ bool App::HasUserInst(const std::string& name) {
     }
   }
   return false;
-}
-
-// 支持配置文件中的动态库的简略写法,比如:
-//   libdemo.so 可以简写成 demo
-//   demo.dll 可以简写成 demo
-std::string App::GetLibName(const std::string& name) {
-  std::regex lib_regex(".*\\.(dll|so|dylib)$");
-  if (std::regex_match(name, lib_regex)) {
-    return name;
-  }
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-  return "lib" + name + ".so";
-#elif defined(MYFRAME_OS_WINDOWS)
-  return name + ".dll";
-#elif defined(MYFRAME_OS_MACOSX)
-  return "lib" + name + ".dylib";
-#endif
 }
 
 int App::GetDefaultPendingQueueSize() const {
