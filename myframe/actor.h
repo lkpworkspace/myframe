@@ -25,7 +25,6 @@ class App;
 class MYFRAME_EXPORT Actor {
   friend class App;
   friend class ActorContext;
-  friend class ModLib;
   friend class ModManager;
 
  public:
@@ -115,19 +114,16 @@ class MYFRAME_EXPORT Actor {
   std::shared_ptr<App> GetApp();
 
  private:
-  bool IsFromLib() const;
   void SetModName(const std::string& name);
   void SetTypeName(const std::string& name);
   void SetInstName(const std::string& name);
-  void SetConfig(const Json::Value& conf);
 
   void SetContext(ActorContext*);
 
-  bool is_from_lib_{ false };
   std::string mod_name_;
-  std::string actor_name_;
+  std::string class_name_;
   std::string instance_name_;
-  Json::Value config_;
+
   ActorContext* ctx_{ nullptr };
 
   DISALLOW_COPY_AND_ASSIGN(Actor)

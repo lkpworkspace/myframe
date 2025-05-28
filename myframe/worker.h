@@ -22,7 +22,6 @@ class App;
 class WorkerContext;
 class MYFRAME_EXPORT Worker {
   friend class App;
-  friend class ModLib;
   friend class ModManager;
   friend class WorkerContext;
 
@@ -112,14 +111,12 @@ class MYFRAME_EXPORT Worker {
   void SetModName(const std::string&);
   void SetTypeName(const std::string&);
   void SetInstName(const std::string&);
-  void SetConfig(const Json::Value&);
 
   void SetContext(WorkerContext*);
 
   std::string mod_name_;
-  std::string worker_name_;
+  std::string class_name_;
   std::string inst_name_;
-  Json::Value config_;
 
   WorkerContext* ctx_{ nullptr };
 

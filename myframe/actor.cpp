@@ -19,19 +19,12 @@ namespace myframe {
 Actor::~Actor() {}
 
 void Actor::SetModName(const std::string& name) {
-  if (mod_name_ == "class") {
-    is_from_lib_ = false;
-  } else {
-    is_from_lib_ = true;
-  }
   mod_name_ = name;
 }
 
 const std::string& Actor::GetModName() const {
   return mod_name_;
 }
-
-bool Actor::IsFromLib() const { return is_from_lib_; }
 
 Mailbox* Actor::GetMailbox() {
   if (ctx_ == nullptr) {
@@ -40,15 +33,15 @@ Mailbox* Actor::GetMailbox() {
   return ctx_->GetMailbox();
 }
 
-const std::string& Actor::GetTypeName() const { return actor_name_; }
+const std::string& Actor::GetTypeName() const { return class_name_; }
 
 const std::string& Actor::GetInstName() const { return instance_name_; }
 
 const std::string Actor::GetActorName() const {
-  return "actor." + actor_name_ + "." + instance_name_;
+  return "actor." + class_name_ + "." + instance_name_;
 }
 
-void Actor::SetTypeName(const std::string& name) { actor_name_ = name; }
+void Actor::SetTypeName(const std::string& name) { class_name_ = name; }
 
 void Actor::SetInstName(const std::string& name) { instance_name_ = name; }
 
@@ -92,11 +85,7 @@ bool Actor::Subscribe(
 void Actor::SetContext(ActorContext* c) { ctx_ = c; }
 
 const Json::Value* Actor::GetConfig() const {
-  return &config_;
-}
-
-void Actor::SetConfig(const Json::Value& conf) {
-  config_ = conf;
+  return ctx_->GetConfig();
 }
 
 std::shared_ptr<App> Actor::GetApp() {

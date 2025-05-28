@@ -32,6 +32,11 @@ WorkerContext::~WorkerContext() {
   LOG(INFO) << worker_->GetWorkerName() << " deconstruct";
 }
 
+bool WorkerContext::Init(const Json::Value& conf) {
+  config_ = conf;
+  return true;
+}
+
 ev_handle_t WorkerContext::GetHandle() const {
   return cmd_channel_->GetMainHandle();
 }
@@ -109,6 +114,10 @@ CmdChannel* WorkerContext::GetCmdChannel() {
 
 std::shared_ptr<App> WorkerContext::GetApp() {
   return app_.lock();
+}
+
+const Json::Value* WorkerContext::GetConfig() const {
+  return &config_;
 }
 
 std::ostream& operator<<(std::ostream& out, WorkerContext& ctx) {

@@ -12,6 +12,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <string>
 #include <thread>
 
+#include <json/json.h>
+
 #include "myframe/macros.h"
 #include "myframe/event.h"
 #include "myframe/mailbox.h"
@@ -33,6 +35,8 @@ class WorkerContext final : public Event {
     std::shared_ptr<Worker> worker,
     std::shared_ptr<Poller> poller);
   virtual ~WorkerContext();
+
+  bool Init(const Json::Value& conf);
 
   /// thread 相关函数
   void Start();
@@ -72,6 +76,8 @@ class WorkerContext final : public Event {
 
   std::shared_ptr<App> GetApp();
 
+  const Json::Value* GetConfig() const;
+
  private:
   void ListenThread();
   void Initialize();
@@ -80,6 +86,9 @@ class WorkerContext final : public Event {
   std::atomic_bool runing_;
   CtrlOwner ctrl_owner_{ CtrlOwner::kWorker };
   bool in_msg_wait_queue_{ false };
+
+  /// config
+  Json::Value config_;
 
   /// worker
   std::shared_ptr<Worker> worker_;

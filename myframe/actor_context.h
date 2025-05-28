@@ -10,6 +10,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 #include <string>
 
+#include <json/json.h>
+
 #include "myframe/macros.h"
 #include "myframe/mailbox.h"
 
@@ -21,9 +23,6 @@ class Actor;
 class WorkerCommon;
 class ActorContext final {
   friend std::ostream& operator<<(std::ostream& out, const ActorContext& ctx);
-  friend class ActorContextManager;
-  friend class WorkerCommon;
-  friend class App;
 
  public:
   ActorContext(std::shared_ptr<App> app, std::shared_ptr<Actor> actor);
@@ -31,7 +30,7 @@ class ActorContext final {
 
   Mailbox* GetMailbox();
 
-  int Init(const char* param);
+  int Init(const char* param, const Json::Value& conf);
 
   void Proc(const std::shared_ptr<const Msg>& msg);
 
@@ -44,12 +43,16 @@ class ActorContext final {
   std::shared_ptr<Actor> GetActor() { return actor_; }
   std::shared_ptr<App> GetApp();
 
+  const Json::Value* GetConfig() const;
+
  private:
   Mailbox mailbox_;
   /* 该actor的是否在工作线程的标志 */
   bool in_worker_;
   /* actor是否在消息队列中 */
   bool in_wait_que_;
+  Json::Value config_;
+
   std::shared_ptr<Actor> actor_;
   std::weak_ptr<App> app_;
 

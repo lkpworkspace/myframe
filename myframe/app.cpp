@@ -280,7 +280,6 @@ bool App::AddActor(
     return false;
   }
   actor->SetInstName(inst_name);
-  actor->SetConfig(config);
 
   auto actor_name = actor->GetActorName();
   if (actor->GetTypeName() == "node") {
@@ -295,7 +294,7 @@ bool App::AddActor(
     }
   }
   auto ctx = std::make_shared<ActorContext>(shared_from_this(), actor);
-  if (ctx->Init(params.c_str())) {
+  if (ctx->Init(params.c_str(), config)) {
     LOG(ERROR) << "init " << actor_name << " fail";
     return false;
   }
@@ -345,10 +344,14 @@ bool App::AddWorker(
     LOG(ERROR) << "program quiting or quit";
     return false;
   }
+  worker->SetInstName(inst_name);
   auto worker_ctx = std::make_shared<WorkerContext>(
     shared_from_this(), worker, poller_);
-  worker->SetInstName(inst_name);
-  worker->SetConfig(config);
+  if (!worker_ctx->Init(config)) {
+    LOG(ERROR) << "worker context init failed";
+    return false;
+  }
+
   if (worker->GetTypeName() == "node") {
     std::lock_guard<std::recursive_mutex> lock(local_mtx_);
     if (node_addr_.empty()) {

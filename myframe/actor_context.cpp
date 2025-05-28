@@ -23,19 +23,6 @@ ActorContext::ActorContext(
     , in_wait_que_(false)
     , actor_(actor)
     , app_(app) {
-  actor_->SetContext(this);
-  mailbox_.SetAddr(actor_->GetActorName());
-  int pending_queue_size = app->GetDefaultPendingQueueSize();
-  int run_queue_size = app->GetDefaultRunQueueSize();
-  auto cfg = actor_->GetConfig();
-  if (cfg->isMember("pending_queue_size")) {
-    pending_queue_size = cfg->get("pending_queue_size", -1).asInt();
-  }
-  if (cfg->isMember("run_queue_size")) {
-    run_queue_size = cfg->get("run_queue_size", -1).asInt();
-  }
-  mailbox_.SetPendingQueueSize(pending_queue_size);
-  mailbox_.SetRunQueueSize(run_queue_size);
   LOG(INFO) << mailbox_.Addr() << " context create";
 }
 
@@ -45,7 +32,21 @@ ActorContext::~ActorContext() {
 
 std::shared_ptr<App> ActorContext::GetApp() { return app_.lock(); }
 
-int ActorContext::Init(const char* param) {
+int ActorContext::Init(const char* param, const Json::Value& conf) {
+  actor_->SetContext(this);
+  mailbox_.SetAddr(actor_->GetActorName());
+  config_ = conf;
+  auto app = GetApp();
+  int pending_queue_size = app->GetDefaultPendingQueueSize();
+  int run_queue_size = app->GetDefaultRunQueueSize();
+  if (config_.isMember("pending_queue_size")) {
+    pending_queue_size = config_.get("pending_queue_size", -1).asInt();
+  }
+  if (config_.isMember("run_queue_size")) {
+    run_queue_size = config_.get("run_queue_size", -1).asInt();
+  }
+  mailbox_.SetPendingQueueSize(pending_queue_size);
+  mailbox_.SetRunQueueSize(run_queue_size);
   return actor_->Init(param);
 }
 
@@ -55,6 +56,10 @@ Mailbox* ActorContext::GetMailbox() {
 
 void ActorContext::Proc(const std::shared_ptr<const Msg>& msg) {
   actor_->Proc(msg);
+}
+
+const Json::Value* ActorContext::GetConfig() const {
+  return &config_;
 }
 
 std::ostream& operator<<(std::ostream& out, const ActorContext& ctx) {
