@@ -96,7 +96,7 @@ int App::LoadServiceFromDir(const std::string& path) {
     LOG(WARNING)
       << "Can't find service conf file,"
       << " skip load from service conf file";
-    return false;
+    return -1;
   }
   int load_service_cnt = 0;
   for (const auto& it : service_list) {
@@ -135,7 +135,7 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
   }
 
   // add actor
-  for (int i = 0; i < actors.size(); ++i) {
+  for (size_t i = 0; i < actors.size(); ++i) {
     const auto& p = actors[i];
     const auto& inst = p.first;
     auto actor = p.second;
@@ -154,7 +154,7 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
   }
 
   // add worker
-  for (int i = 0; i < workers.size(); ++i) {
+  for (size_t i = 0; i < workers.size(); ++i) {
     const auto& p = workers[i];
     const auto& inst = p.first;
     auto worker = p.second;

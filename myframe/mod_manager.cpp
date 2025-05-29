@@ -262,7 +262,8 @@ bool ModManager::LoadActors(
     }
     auto actor_inst = CreateActorInst(mod_name, class_name);
     if (actor_inst == nullptr) {
-      LOG(ERROR) << "Create actor " << mod_name << "." << class_name << " failed";
+      LOG(ERROR) << "Create actor "
+        << mod_name << "." << class_name << " failed";
       return false;
     }
     actor_inst->SetInstName(inst_name);
