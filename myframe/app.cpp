@@ -125,143 +125,49 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
     LOG(ERROR) << "program quiting or quit";
     return false;
   }
-  if (service.isNull()) {
-    LOG(ERROR) << "parse service json failed, skip";
-    return false;
-  }
-  if (!service.isMember("type") || !service["type"].isString()) {
-    LOG(ERROR) << "key \"type\": no key or not string, skip";
-    return false;
-  }
-  const auto& type = service["type"].asString();
-  std::string lib_name;
-  // load library
-  if (type == "library") {
-    if (!service.isMember("lib") || !service["lib"].isString()) {
-      LOG(ERROR) << " key \"lib\": no key or not string, skip";
-      return false;
-    }
-    lib_name = service["lib"].asString();
-    lib_name = Common::GetLibName(lib_name);
-    if (!mods_->LoadMod((lib_dir_ / lib_name).string())) {
-      LOG(ERROR) << "load lib "
-        << (lib_dir_ / lib_name).string() << " failed, skip";
-      return false;
-    }
-  }
-  bool res = true;
-  // load actor
-  if (service.isMember("actor") && service["actor"].isObject()) {
-    const auto& actor_list = service["actor"];
-    Json::Value::Members actor_name_list = actor_list.getMemberNames();
-    for (auto inst_name_it = actor_name_list.begin();
-          inst_name_it != actor_name_list.end(); ++inst_name_it) {
-      LOG(INFO) << "search actor " << *inst_name_it << " ...";
-      if (type == "library") {
-        res = LoadActors(lib_name, *inst_name_it, actor_list);
-      } else if (type == "class") {
-        res = LoadActors("class", *inst_name_it, actor_list);
-      } else {
-        LOG(ERROR) << "Unknown type " << type;
-        res = false;
-      }
-      if (!res) {
-        return res;
-      }
-    }
-  }
-  // load worker
-  if (service.isMember("worker") && service["worker"].isObject()) {
-    const auto& worker_list = service["worker"];
-    Json::Value::Members worker_name_list = worker_list.getMemberNames();
-    for (auto inst_name_it = worker_name_list.begin();
-          inst_name_it != worker_name_list.end(); ++inst_name_it) {
-      LOG(INFO) << "search worker " << *inst_name_it << " ...";
-      if (type == "library") {
-        res = LoadWorkers(lib_name, *inst_name_it, worker_list);
-      } else if (type == "class") {
-        res = LoadWorkers("class", *inst_name_it, worker_list);
-      } else {
-        LOG(ERROR) << "Unknown type " << type;
-        res = false;
-      }
-      if (!res) {
-        return res;
-      }
-    }  // end for
-  }  // end load worker
-  return res;
-}
 
-bool App::LoadActors(
-  const std::string& mod_name,
-  const std::string& actor_name,
-  const Json::Value& actor_list) {
-  const auto& insts = actor_list[actor_name];
-  for (const auto& inst : insts) {
-    std::string inst_name;
+  // load service
+  std::vector<std::pair<Json::Value, std::shared_ptr<Actor>>> actors;
+  std::vector<std::pair<Json::Value, std::shared_ptr<Worker>>> workers;
+  if (!mods_->LoadService(lib_dir_, service, &actors, &workers)) {
+    LOG(ERROR) << "load service failed " << service.toStyledString();
+    return false;
+  }
+
+  // add actor
+  for (int i = 0; i < actors.size(); ++i) {
+    const auto& p = actors[i];
+    const auto& inst = p.first;
+    auto actor = p.second;
+
     std::string inst_param;
     Json::Value cfg;
-    LOG(INFO)
-      << "create actor instance \"" << actor_name
-      << "\": " << inst.toStyledString();
-    if (!inst.isMember("instance_name")) {
-      LOG(ERROR)
-        << "actor " << actor_name
-        << " key \"instance_name\": no key, skip";
-      return false;
-    }
-    inst_name = inst["instance_name"].asString();
     if (inst.isMember("instance_params")) {
       inst_param = inst["instance_params"].asString();
     }
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto actor_inst = mods_->CreateActorInst(mod_name, actor_name);
-    if (actor_inst == nullptr) {
-      LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
-      return false;
-    }
-    if (!AddActor(inst_name, inst_param, actor_inst, cfg)) {
+    if (!AddActor(actor->GetInstName(), inst_param, actor, cfg)) {
       return false;
     }
   }
-  return true;
-}
 
-bool App::LoadWorkers(
-  const std::string& mod_name,
-  const std::string& worker_name,
-  const Json::Value& worker_list) {
-  const auto& insts = worker_list[worker_name];
-  for (const auto& inst : insts) {
-    std::string inst_name;
+  // add worker
+  for (int i = 0; i < workers.size(); ++i) {
+    const auto& p = workers[i];
+    const auto& inst = p.first;
+    auto worker = p.second;
+
     Json::Value cfg;
-    LOG(INFO)
-      << "create worker instance \"" << worker_name
-      << "\": " << inst.toStyledString();
-    if (!inst.isMember("instance_name")) {
-      LOG(ERROR)
-        << "worker " << worker_name
-        << " key \"instance_name\": no key, skip";
-      return false;
-    }
-    inst_name = inst["instance_name"].asString();
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto worker = mods_->CreateWorkerInst(mod_name, worker_name);
-    if (worker == nullptr) {
-      LOG(ERROR)
-        << "create worker " << mod_name << "." << worker_name << "."
-        << inst_name << " failed, continue";
-      return false;
-    }
-    if (!AddWorker(inst_name, worker, cfg)) {
+    if (!AddWorker(worker->GetInstName(), worker, cfg)) {
       return false;
     }
   }
+
   return true;
 }
 
@@ -298,7 +204,7 @@ bool App::AddActor(
     LOG(ERROR) << "init " << actor_name << " fail";
     return false;
   }
-  actor_ctx_mgr_->RegContext(ctx);
+  actor_ctx_mgr_->Add(ctx);
   std::lock_guard<std::recursive_mutex> lock(local_mtx_);
   // 接收缓存中发给自己的消息
   for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
@@ -316,7 +222,9 @@ bool App::AddActor(
   if (state_.load() != State::kRunning) {
     auto send_list = ctx->GetMailbox()->GetSendList();
     for (auto it = send_list->begin(); it != send_list->end();) {
-      if (!HasUserInst((*it)->GetDst())) {
+      if (!HasUserInst((*it)->GetDst())
+          || (*it)->GetTransMode() == Msg::TransMode::kDDS
+          || (*it)->GetTransMode() == Msg::TransMode::kHybrid) {
         LOG(WARNING) << "can't found " << (*it)->GetDst()
           << ", cache this msg";
         cache_msgs_.push_back(*it);

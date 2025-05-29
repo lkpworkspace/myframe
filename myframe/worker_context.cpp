@@ -33,6 +33,7 @@ WorkerContext::~WorkerContext() {
 }
 
 bool WorkerContext::Init(const Json::Value& conf) {
+  LOG(INFO) << worker_->GetWorkerName() << " context init";
   config_ = conf;
   return true;
 }

@@ -23,7 +23,6 @@ ActorContext::ActorContext(
     , in_wait_que_(false)
     , actor_(actor)
     , app_(app) {
-  LOG(INFO) << mailbox_.Addr() << " context create";
 }
 
 ActorContext::~ActorContext() {
@@ -47,6 +46,7 @@ int ActorContext::Init(const char* param, const Json::Value& conf) {
   }
   mailbox_.SetPendingQueueSize(pending_queue_size);
   mailbox_.SetRunQueueSize(run_queue_size);
+  LOG(INFO) << mailbox_.Addr() << " context init";
   return actor_->Init(param);
 }
 

@@ -39,14 +39,13 @@ void ActorContextManager::DispatchMsg(
   PushContext(std::move(ctx));
 }
 
-bool ActorContextManager::RegContext(std::shared_ptr<ActorContext> ctx) {
+bool ActorContextManager::Add(std::shared_ptr<ActorContext> ctx) {
   std::unique_lock<std::shared_mutex> lk(rw_);
   if (ctxs_.find(ctx->GetActor()->GetActorName()) != ctxs_.end()) {
     LOG(WARNING) << "reg the same actor name: "
                  << ctx->GetActor()->GetActorName();
     return false;
   }
-  LOG(INFO) << "reg actor " << ctx->GetActor()->GetActorName();
   ctxs_[ctx->GetActor()->GetActorName()] = std::move(ctx);
   return true;
 }
