@@ -2,9 +2,9 @@
   "type":"library",
   "lib":"example_worker_quit",
   "worker":{
-      "example_worker_quit":[
+      "ExampleWorkerQuit":[
           {
-              "instance_name":"#1"
+              "instance_name":"1"
           }
       ]
   }

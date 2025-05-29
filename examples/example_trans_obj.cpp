@@ -49,7 +49,7 @@ class ExampleWorkerTransObj : public myframe::Worker {
       std::to_string(a_),
       std::to_string(b_));
     auto mailbox = GetMailbox();
-    mailbox->Send("actor.example_actor_trans_obj.#1", obj);
+    mailbox->Send("actor.ExampleActorTransObj.1", obj);
     DispatchMsg();
     a_++;
     b_++;
@@ -62,7 +62,7 @@ class ExampleWorkerTransObj : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_actor_trans_obj") {
+  if (actor_name == "ExampleActorTransObj") {
     return std::make_shared<ExampleActorTransObj>();
   }
   return nullptr;
@@ -71,7 +71,7 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
-  if (worker_name == "example_worker_trans_obj") {
+  if (worker_name == "ExampleWorkerTransObj") {
     return std::make_shared<ExampleWorkerTransObj>();
   }
   return nullptr;

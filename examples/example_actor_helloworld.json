@@ -2,9 +2,9 @@
     "type":"library",
     "lib":"example_actor_helloworld",
     "actor":{
-        "example":[
+        "ExampleActorHelloWorld":[
             {
-                "instance_name":"helloworld",
+                "instance_name":"1",
                 "instance_params":""
             }
         ]

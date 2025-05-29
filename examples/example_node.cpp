@@ -11,7 +11,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 
-const char g_topic[] = "actor.node_pub.1";
+const char g_topic[] = "actor.ExampleNodePub.1";
 
 /**
 模拟进程间/机器间通信的节点组件
@@ -157,10 +157,10 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
   if (actor_name == "node") {
     return std::make_shared<ExampleNode>();
   }
-  if (actor_name == "node_pub") {
+  if (actor_name == "ExampleNodePub") {
     return std::make_shared<ExampleNodePub>();
   }
-  if (actor_name == "node_sub") {
+  if (actor_name == "ExampleNodeSub") {
     return std::make_shared<ExampleNodeSub>();
   }
   return nullptr;

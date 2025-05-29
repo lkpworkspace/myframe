@@ -47,7 +47,7 @@ class ExampleWorkerConfig : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_actor_config") {
+  if (actor_name == "ExampleActorConfig") {
     return std::make_shared<ExampleActorConfig>();
   }
   return nullptr;
@@ -56,7 +56,7 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
-  if (worker_name == "example_worker_config") {
+  if (worker_name == "ExampleWorkerConfig") {
     return std::make_shared<ExampleWorkerConfig>();
   }
   return nullptr;

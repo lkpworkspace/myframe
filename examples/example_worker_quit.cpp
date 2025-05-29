@@ -26,7 +26,7 @@ class ExampleWorkerQuit : public myframe::Worker {
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
-  if (worker_name == "example_worker_quit") {
+  if (worker_name == "ExampleWorkerQuit") {
     return std::make_shared<ExampleWorkerQuit>();
   }
   return nullptr;

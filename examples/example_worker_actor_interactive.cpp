@@ -38,7 +38,7 @@ class ExampleWorkerInteractive : public myframe::Worker {
     auto mailbox = GetMailbox();
     auto send_msg =
         std::make_shared<myframe::Msg>("this is ExampleWorkerInteractive req");
-    mailbox->Send("actor.example_actor_interactive.#1", send_msg);
+    mailbox->Send("actor.ExampleActorInteractive.1", send_msg);
     if (-1 == DispatchAndWaitMsg()) {
       return;
     }
@@ -56,7 +56,7 @@ class ExampleWorkerInteractive : public myframe::Worker {
 /* 创建actor实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_actor_interactive") {
+  if (actor_name == "ExampleActorInteractive") {
     return std::make_shared<ExampleActorInteractive>();
   }
   return nullptr;
@@ -65,7 +65,7 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
-  if (worker_name == "example_worker_interactive") {
+  if (worker_name == "ExampleWorkerInteractive") {
     return std::make_shared<ExampleWorkerInteractive>();
   }
   return nullptr;

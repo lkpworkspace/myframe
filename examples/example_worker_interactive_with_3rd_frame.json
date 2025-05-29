@@ -2,17 +2,17 @@
     "type":"library",
     "lib":"example_worker_interactive_with_3rd_frame",
     "actor":{
-        "example_actor_interactive_with_3rd_frame":[
+        "ExampleActorInteractiveWith3rdFrame":[
             {
-                "instance_name":"#1",
+                "instance_name":"1",
                 "instance_params":""
             }
         ]
     },
     "worker":{
-        "example_worker_interactive_with_3rd_frame":[
+        "ExampleWorkerInteractiveWith3rdFrame":[
             {
-                "instance_name":"#1"
+                "instance_name":"1"
             }
         ]
     }
