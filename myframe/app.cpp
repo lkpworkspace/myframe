@@ -661,8 +661,10 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
 }
 
 int App::Exec() {
-  if (state_.load() != State::kInitialized) {
-    LOG(ERROR) << "not init";
+  // 已经初始化或者加载service失败正在退出才能执行Exec函数
+  if (state_.load() != State::kInitialized
+      && state_.load() != State::kQuitting) {
+    LOG(ERROR) << "not init or quiting";
     return -1;
   }
   int time_wait_ms = 100;
