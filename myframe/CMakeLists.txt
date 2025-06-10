@@ -45,11 +45,15 @@ else ()
     JsonCpp::JsonCpp
   )
 endif ()
+
 if (glog_lib_type STREQUAL "STATIC_LIBRARY" OR jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
-  target_link_options(${PROJECT_NAME}
-    PRIVATE
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:LINKER:--exclude-libs,ALL>"
-  )
+  get_target_property(${PROJECT_NAME}_lib_type ${PROJECT_NAME} TYPE)
+  if (${PROJECT_NAME}_lib_type STREQUAL "SHARED_LIBRARY")
+    target_link_options(${PROJECT_NAME}
+      PRIVATE
+      "$<$<CXX_COMPILER_ID:GNU,Clang>:LINKER:--exclude-libs,ALL>"
+    )
+  endif ()
 endif ()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
