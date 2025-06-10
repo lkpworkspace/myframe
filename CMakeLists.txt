@@ -12,6 +12,7 @@ option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
 option(MYFRAME_INSTALL_TEMPLATE "Install template project" ON)
+option(MYFRAME_INSTALL_LAUNCHER "Install launcher program" ON)
 
 ### cmake module
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -59,7 +60,9 @@ get_target_property(jsoncpp_lib_type JsonCpp::JsonCpp TYPE)
 
 ### sub directory
 add_subdirectory(myframe)
-add_subdirectory(launcher)
+if (MYFRAME_INSTALL_LAUNCHER)
+  add_subdirectory(launcher)
+endif()
 if (MYFRAME_GENERATE_EXAMPLE)
   add_subdirectory(examples)
 endif()
