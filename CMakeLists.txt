@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 if (POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
-project(myframe VERSION 0.9.8)
+project(myframe
+  VERSION 0.9.8
+  LANGUAGES CXX
+)
 
 ### option
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
@@ -50,6 +53,9 @@ set(MYFRAME_CONF_DIR "conf")
 find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(glog REQUIRED)
+
+get_target_property(glog_lib_type glog::glog TYPE)
+get_target_property(jsoncpp_lib_type JsonCpp::JsonCpp TYPE)
 
 ### sub directory
 add_subdirectory(myframe)

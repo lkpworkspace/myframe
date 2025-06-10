@@ -2,6 +2,18 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 add_compile_definitions(${PROJECT_NAME}_EXPORTS)
 
+### link static lib
+if (glog_lib_type STREQUAL "STATIC_LIBRARY")
+  link_libraries(
+    glog::glog
+  )
+endif ()
+if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
+  link_libraries(
+    JsonCpp::JsonCpp
+  )
+endif ()
+
 ### actor
 add_library(example_actor_helloworld SHARED example_actor_helloworld.cpp)
 target_link_libraries(example_actor_helloworld ${PROJECT_NAME})

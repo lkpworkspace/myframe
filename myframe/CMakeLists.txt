@@ -7,7 +7,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_D
 aux_source_directory(. __srcs)
 
 ### lib
-add_library(${PROJECT_NAME} SHARED ${__srcs})
+add_library(${PROJECT_NAME} ${__srcs})
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
@@ -19,9 +19,39 @@ target_link_libraries(${PROJECT_NAME}
   ${CMAKE_DL_LIBS}
   PUBLIC
   Threads::Threads
-  glog::glog
-  JsonCpp::JsonCpp
 )
+
+if (glog_lib_type STREQUAL "STATIC_LIBRARY")
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    glog::glog
+  )
+else ()
+  set(glog_DEPENDENCY "find_dependency (glog REQUIRED)")
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    glog::glog
+  )
+endif ()
+if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    JsonCpp::JsonCpp
+  )
+else ()
+  set(jsoncpp_DEPENDENCY "find_dependency (jsoncpp REQUIRED)")
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    JsonCpp::JsonCpp
+  )
+endif ()
+if (glog_lib_type STREQUAL "STATIC_LIBRARY" OR jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
+  target_link_options(${PROJECT_NAME}
+    PRIVATE
+    "$<$<CXX_COMPILER_ID:GNU,Clang>:LINKER:--exclude-libs,ALL>"
+  )
+endif ()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 
