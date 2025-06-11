@@ -27,7 +27,7 @@ if (glog_lib_type STREQUAL "STATIC_LIBRARY")
     glog::glog
   )
 else ()
-  set(glog_DEPENDENCY "find_dependency (glog REQUIRED)")
+  set(glog_DEPENDENCY "find_dependency (glog)")
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
     glog::glog
@@ -39,7 +39,7 @@ if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
     JsonCpp::JsonCpp
   )
 else ()
-  set(jsoncpp_DEPENDENCY "find_dependency (jsoncpp REQUIRED)")
+  set(jsoncpp_DEPENDENCY "find_dependency (jsoncpp)")
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
     JsonCpp::JsonCpp
