@@ -3,6 +3,18 @@ cmake_minimum_required(VERSION 3.10)
 ### configure file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h @ONLY)
 
+### link static libs
+if (glog_lib_type STREQUAL "STATIC_LIBRARY")
+  link_libraries(
+    glog::glog
+  )
+endif ()
+if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
+  link_libraries(
+    JsonCpp::JsonCpp
+  )
+endif ()
+
 ### test bin
 add_executable(hello_test hello_test.cpp)
 target_link_libraries(hello_test

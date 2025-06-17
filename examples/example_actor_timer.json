@@ -2,9 +2,9 @@
     "type":"library",
     "lib":"example_actor_timer",
     "actor":{
-        "example_actor_timer":[
+        "ExampleActorTimer":[
             {
-                "instance_name":"echo_per_one_second",
+                "instance_name":"1",
                 "instance_params":""
             }
         ]

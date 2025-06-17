@@ -28,7 +28,7 @@ class ExampleActorConcurrent : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    if (msg->GetSrc() == "actor.example_actor_concurrent_trigger.#1") {
+    if (msg->GetSrc() == "actor.ExampleActorConcurrentTrigger.1") {
       int cost_ms = random(100, 500);
       LOG(INFO) << "-----> " << GetActorName() << " begin runing...";
       std::this_thread::sleep_for(std::chrono::milliseconds(cost_ms));
@@ -45,9 +45,9 @@ class ExampleActorConcurrentTrigger : public myframe::Actor {
   int Init(const char* param) override {
     (void)param;
     state_ = {
-        {"actor.example_actor_concurrent.#1", false},
-        {"actor.example_actor_concurrent.#2", false},
-        {"actor.example_actor_concurrent.#3", false},
+        {"actor.ExampleActorConcurrent.1", false},
+        {"actor.ExampleActorConcurrent.2", false},
+        {"actor.ExampleActorConcurrent.3", false},
     };
     LOG(INFO) << "begin concurrent task...";
     for (auto it : state_) {
@@ -79,10 +79,10 @@ class ExampleActorConcurrentTrigger : public myframe::Actor {
 
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_actor_concurrent") {
+  if (actor_name == "ExampleActorConcurrent") {
     return std::make_shared<ExampleActorConcurrent>();
   }
-  if (actor_name == "example_actor_concurrent_trigger") {
+  if (actor_name == "ExampleActorConcurrentTrigger") {
     return std::make_shared<ExampleActorConcurrentTrigger>();
   }
   return nullptr;

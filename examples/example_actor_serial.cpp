@@ -25,7 +25,7 @@ class ExampleActorSerial1 : public myframe::Actor {
   int Init(const char* param) override {
     (void)param;
     auto mailbox = GetMailbox();
-    mailbox->Send("actor.example_serial1.#1",
+    mailbox->Send("actor.ExampleActorSerial1.1",
       std::make_shared<myframe::Msg>(""));
     return 0;
   }
@@ -38,7 +38,7 @@ class ExampleActorSerial1 : public myframe::Actor {
     LOG(INFO) << "-----> " << GetActorName() << " process end, cost " << cost_ms
               << " ms";
     auto mailbox = GetMailbox();
-    mailbox->Send("actor.example_serial2.#1",
+    mailbox->Send("actor.ExampleActorSerial2.1",
       std::make_shared<myframe::Msg>(""));
   }
 };
@@ -58,7 +58,7 @@ class ExampleActorSerial2 : public myframe::Actor {
     LOG(INFO) << "-----> " << GetActorName() << " process end, cost " << cost_ms
               << " ms";
     auto mailbox = GetMailbox();
-    mailbox->Send("actor.example_serial3.#1",
+    mailbox->Send("actor.ExampleActorSerial3.1",
       std::make_shared<myframe::Msg>(""));
   }
 };
@@ -82,13 +82,13 @@ class ExampleActorSerial3 : public myframe::Actor {
 
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_serial1") {
+  if (actor_name == "ExampleActorSerial1") {
     return std::make_shared<ExampleActorSerial1>();
   }
-  if (actor_name == "example_serial2") {
+  if (actor_name == "ExampleActorSerial2") {
     return std::make_shared<ExampleActorSerial2>();
   }
-  if (actor_name == "example_serial3") {
+  if (actor_name == "ExampleActorSerial3") {
     return std::make_shared<ExampleActorSerial3>();
   }
   return nullptr;

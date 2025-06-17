@@ -2,15 +2,15 @@
     "type":"library",
     "lib":"example_actor_subscribe",
     "actor":{
-        "example_b_pub":[
+        "ExampleActorPub":[
             {
-                "instance_name":"#1",
+                "instance_name":"1",
                 "instance_params":""
             }
         ],
-        "example_a_sub":[
+        "ExampleActorSub":[
             {
-                "instance_name":"#1",
+                "instance_name":"1",
                 "instance_params":""
             }
         ]

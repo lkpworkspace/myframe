@@ -7,7 +7,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 #include "myframe/app.h"
 
-#include <regex>
 #include <utility>
 
 #include "myframe/log.h"
@@ -53,6 +52,7 @@ App::App()
   , ev_mgr_(new EventManager())
   , ev_conn_mgr_(new EventConnManager(ev_mgr_, poller_))
   , worker_ctx_mgr_(new WorkerContextManager(ev_mgr_)) {
+  name_list_.reserve(3);
   LOG(INFO) << "myframe version: " << MYFRAME_VERSION;
 }
 
@@ -96,7 +96,7 @@ int App::LoadServiceFromDir(const std::string& path) {
     LOG(WARNING)
       << "Can't find service conf file,"
       << " skip load from service conf file";
-    return false;
+    return -1;
   }
   int load_service_cnt = 0;
   for (const auto& it : service_list) {
@@ -115,16 +115,6 @@ bool App::LoadServiceFromFile(const std::string& file) {
   return LoadServiceFromJson(root);
 }
 
-bool App::LoadServiceFromJsonStr(const std::string& service) {
-  Json::Value root;
-  Json::Reader reader(Json::Features::strictMode());
-  if (!reader.parse(service, root)) {
-    LOG(ERROR) << "parse service string failed";
-    return false;
-  }
-  return LoadServiceFromJson(root);
-}
-
 bool App::LoadServiceFromJson(const Json::Value& service) {
   if (state_.load() == State::kUninitialized) {
     LOG(ERROR) << "not init, please call Init() before LoadServiceFromJson()";
@@ -135,143 +125,49 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
     LOG(ERROR) << "program quiting or quit";
     return false;
   }
-  if (service.isNull()) {
-    LOG(ERROR) << "parse service json failed, skip";
-    return false;
-  }
-  if (!service.isMember("type") || !service["type"].isString()) {
-    LOG(ERROR) << "key \"type\": no key or not string, skip";
-    return false;
-  }
-  const auto& type = service["type"].asString();
-  std::string lib_name;
-  // load library
-  if (type == "library") {
-    if (!service.isMember("lib") || !service["lib"].isString()) {
-      LOG(ERROR) << " key \"lib\": no key or not string, skip";
-      return false;
-    }
-    lib_name = service["lib"].asString();
-    lib_name = GetLibName(lib_name);
-    if (!mods_->LoadMod((lib_dir_ / lib_name).string())) {
-      LOG(ERROR) << "load lib "
-        << (lib_dir_ / lib_name).string() << " failed, skip";
-      return false;
-    }
-  }
-  bool res = true;
-  // load actor
-  if (service.isMember("actor") && service["actor"].isObject()) {
-    const auto& actor_list = service["actor"];
-    Json::Value::Members actor_name_list = actor_list.getMemberNames();
-    for (auto inst_name_it = actor_name_list.begin();
-          inst_name_it != actor_name_list.end(); ++inst_name_it) {
-      LOG(INFO) << "search actor " << *inst_name_it << " ...";
-      if (type == "library") {
-        res = LoadActors(lib_name, *inst_name_it, actor_list);
-      } else if (type == "class") {
-        res = LoadActors("class", *inst_name_it, actor_list);
-      } else {
-        LOG(ERROR) << "Unknown type " << type;
-        res = false;
-      }
-      if (!res) {
-        return res;
-      }
-    }
-  }
-  // load worker
-  if (service.isMember("worker") && service["worker"].isObject()) {
-    const auto& worker_list = service["worker"];
-    Json::Value::Members worker_name_list = worker_list.getMemberNames();
-    for (auto inst_name_it = worker_name_list.begin();
-          inst_name_it != worker_name_list.end(); ++inst_name_it) {
-      LOG(INFO) << "search worker " << *inst_name_it << " ...";
-      if (type == "library") {
-        res = LoadWorkers(lib_name, *inst_name_it, worker_list);
-      } else if (type == "class") {
-        res = LoadWorkers("class", *inst_name_it, worker_list);
-      } else {
-        LOG(ERROR) << "Unknown type " << type;
-        res = false;
-      }
-      if (!res) {
-        return res;
-      }
-    }  // end for
-  }  // end load worker
-  return res;
-}
 
-bool App::LoadActors(
-  const std::string& mod_name,
-  const std::string& actor_name,
-  const Json::Value& actor_list) {
-  const auto& insts = actor_list[actor_name];
-  for (const auto& inst : insts) {
-    std::string inst_name;
+  // load service
+  std::vector<std::pair<Json::Value, std::shared_ptr<Actor>>> actors;
+  std::vector<std::pair<Json::Value, std::shared_ptr<Worker>>> workers;
+  if (!mods_->LoadService(lib_dir_, service, &actors, &workers)) {
+    LOG(ERROR) << "load service failed " << service.toStyledString();
+    return false;
+  }
+
+  // add actor
+  for (size_t i = 0; i < actors.size(); ++i) {
+    const auto& p = actors[i];
+    const auto& inst = p.first;
+    auto actor = p.second;
+
     std::string inst_param;
     Json::Value cfg;
-    LOG(INFO)
-      << "create actor instance \"" << actor_name
-      << "\": " << inst.toStyledString();
-    if (!inst.isMember("instance_name")) {
-      LOG(ERROR)
-        << "actor " << actor_name
-        << " key \"instance_name\": no key, skip";
-      return false;
-    }
-    inst_name = inst["instance_name"].asString();
     if (inst.isMember("instance_params")) {
       inst_param = inst["instance_params"].asString();
     }
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto actor_inst = mods_->CreateActorInst(mod_name, actor_name);
-    if (actor_inst == nullptr) {
-      LOG(ERROR) << "Create mod " << mod_name << "." << actor_name << " failed";
-      return false;
-    }
-    if (!AddActor(inst_name, inst_param, actor_inst, cfg)) {
+    if (!AddActor(actor->GetInstName(), inst_param, actor, cfg)) {
       return false;
     }
   }
-  return true;
-}
 
-bool App::LoadWorkers(
-  const std::string& mod_name,
-  const std::string& worker_name,
-  const Json::Value& worker_list) {
-  const auto& insts = worker_list[worker_name];
-  for (const auto& inst : insts) {
-    std::string inst_name;
+  // add worker
+  for (size_t i = 0; i < workers.size(); ++i) {
+    const auto& p = workers[i];
+    const auto& inst = p.first;
+    auto worker = p.second;
+
     Json::Value cfg;
-    LOG(INFO)
-      << "create worker instance \"" << worker_name
-      << "\": " << inst.toStyledString();
-    if (!inst.isMember("instance_name")) {
-      LOG(ERROR)
-        << "worker " << worker_name
-        << " key \"instance_name\": no key, skip";
-      return false;
-    }
-    inst_name = inst["instance_name"].asString();
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto worker = mods_->CreateWorkerInst(mod_name, worker_name);
-    if (worker == nullptr) {
-      LOG(ERROR)
-        << "create worker " << mod_name << "." << worker_name << "."
-        << inst_name << " failed, continue";
-      return false;
-    }
-    if (!AddWorker(inst_name, worker, cfg)) {
+    if (!AddWorker(worker->GetInstName(), worker, cfg)) {
       return false;
     }
   }
+
   return true;
 }
 
@@ -290,7 +186,6 @@ bool App::AddActor(
     return false;
   }
   actor->SetInstName(inst_name);
-  actor->SetConfig(config);
 
   auto actor_name = actor->GetActorName();
   if (actor->GetTypeName() == "node") {
@@ -305,11 +200,11 @@ bool App::AddActor(
     }
   }
   auto ctx = std::make_shared<ActorContext>(shared_from_this(), actor);
-  if (ctx->Init(params.c_str())) {
+  if (ctx->Init(params.c_str(), config)) {
     LOG(ERROR) << "init " << actor_name << " fail";
     return false;
   }
-  actor_ctx_mgr_->RegContext(ctx);
+  actor_ctx_mgr_->Add(ctx);
   std::lock_guard<std::recursive_mutex> lock(local_mtx_);
   // 接收缓存中发给自己的消息
   for (auto it = cache_msgs_.begin(); it != cache_msgs_.end();) {
@@ -327,7 +222,9 @@ bool App::AddActor(
   if (state_.load() != State::kRunning) {
     auto send_list = ctx->GetMailbox()->GetSendList();
     for (auto it = send_list->begin(); it != send_list->end();) {
-      if (!HasUserInst((*it)->GetDst())) {
+      if (!HasUserInst((*it)->GetDst())
+          || (*it)->GetTransMode() == Msg::TransMode::kDDS
+          || (*it)->GetTransMode() == Msg::TransMode::kHybrid) {
         LOG(WARNING) << "can't found " << (*it)->GetDst()
           << ", cache this msg";
         cache_msgs_.push_back(*it);
@@ -355,10 +252,14 @@ bool App::AddWorker(
     LOG(ERROR) << "program quiting or quit";
     return false;
   }
+  worker->SetInstName(inst_name);
   auto worker_ctx = std::make_shared<WorkerContext>(
     shared_from_this(), worker, poller_);
-  worker->SetInstName(inst_name);
-  worker->SetConfig(config);
+  if (!worker_ctx->Init(config)) {
+    LOG(ERROR) << "worker context init failed";
+    return false;
+  }
+
   if (worker->GetTypeName() == "node") {
     std::lock_guard<std::recursive_mutex> lock(local_mtx_);
     if (node_addr_.empty()) {
@@ -452,45 +353,99 @@ bool App::StartTimerWorker() {
 void App::DispatchMsg(std::shared_ptr<Msg> msg) {
   std::lock_guard<std::recursive_mutex> lock(local_mtx_);
   VLOG(1) << *msg;
-  /// 处理框架消息
-  if (msg->GetDst() == MAIN_ADDR) {
-    ProcessMain(std::move(msg));
-    return;
-  }
   /// 消息分发
-  auto name_list = Common::SplitMsgName(msg->GetDst());
-  if (name_list.size() < 2) {
+  Common::SplitMsgName(msg->GetDst(), &name_list_);
+  if (name_list_.size() != 3) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
   }
-  if (name_list[0] == "worker"
-      && ev_mgr_->Has(msg->GetDst())) {
-    // dispatch to user worker
-    worker_ctx_mgr_->DispatchWorkerMsg(msg);
-  } else if (name_list[0] == "actor"
-      && actor_ctx_mgr_->HasActor(msg->GetDst())) {
-    // dispatch to actor
-    actor_ctx_mgr_->DispatchMsg(msg);
-  } else if (name_list[0] == "event") {
-    if (name_list[1] == "conn") {
-      // dispatch to event conn
-      auto handle = ev_mgr_->ToHandle(msg->GetDst());
-      ev_conn_mgr_->Notify(handle, msg);
-    } else {
-      LOG(ERROR) << "Unknown msg " << *msg;
+  // trans func
+  static auto trans2actor = [this](std::shared_ptr<Msg> m) {
+    if (actor_ctx_mgr_->HasActor(m->GetDst())) {
+      actor_ctx_mgr_->DispatchMsg(std::move(m));
     }
-  } else if (!node_addr_.empty()) {
-    // dispatch to node
+  };
+  static auto trans2worker = [this](std::shared_ptr<Msg> m) {
+    if (ev_mgr_->Has(m->GetDst())) {
+      worker_ctx_mgr_->DispatchWorkerMsg(std::move(m));
+    }
+  };
+  static auto trans2ev = [this](std::shared_ptr<Msg> m) {
+    if (name_list_[1] == "conn") {
+      auto handle = ev_mgr_->ToHandle(m->GetDst());
+      ev_conn_mgr_->Notify(handle, std::move(m));
+    } else {
+      LOG(ERROR) << "Unknown msg " << *m;
+    }
+  };
+  static auto trans2dds = [this](std::shared_ptr<Msg> m) {
+    if (node_addr_.empty()) {
+      return;
+    }
     if (node_addr_.substr(0, 5) == "actor") {
-      actor_ctx_mgr_->DispatchMsg(msg, node_addr_);
+      actor_ctx_mgr_->DispatchMsg(m, node_addr_);
     } else if (node_addr_.substr(0, 6) == "worker") {
-      worker_ctx_mgr_->DispatchWorkerMsg(msg, node_addr_);
+      worker_ctx_mgr_->DispatchWorkerMsg(m, node_addr_);
     } else {
-      LOG(ERROR) << "Unknown msg " << *msg;
+      LOG(ERROR) << "Unknown msg " << *m;
     }
-  } else {
-    LOG(ERROR) << "Unknown msg " << *msg;
+  };
+  static auto trans2hybird1 = [&, this](std::shared_ptr<Msg> m) {
+    if (node_addr_.empty()) {
+      trans2actor(std::move(m));
+      return;
+    }
+    trans2actor(m);
+    trans2dds(std::move(m));
+  };
+  static auto trans2hybird2 = [&, this](std::shared_ptr<Msg> m) {
+    if (node_addr_.empty()) {
+      trans2worker(std::move(m));
+      return;
+    }
+    trans2worker(m);
+    trans2dds(std::move(m));
+  };
+  static auto trans2hybird3 = [&, this](std::shared_ptr<Msg> m) {
+    if (node_addr_.empty()) {
+      trans2ev(std::move(m));
+      return;
+    }
+    trans2ev(m);
+    trans2dds(std::move(m));
+  };
+  // trans vec
+  static std::vector<
+    std::vector<
+      std::function<void(std::shared_ptr<Msg>)>>> trans_map = {
+    // kIntra, kDDS, kHybird
+    {trans2actor, trans2dds, trans2hybird1},  // actor
+    {trans2worker, trans2dds, trans2hybird2},  // worker
+    {trans2ev, trans2dds, trans2hybird3}  // connevent
+  };
+  // trans
+  int trans_idx1 = -1;
+  int trans_idx2 = -1;
+  if (name_list_[0] == "actor") {
+    trans_idx1 = 0;
+  } else if (name_list_[0] == "worker") {
+    trans_idx1 = 1;
+  } else if (name_list_[0] == "event") {
+    trans_idx1 = 2;
   }
+  auto trans_mode = msg->GetTransMode();
+  if (trans_mode == Msg::TransMode::kIntra) {
+    trans_idx2 = 0;
+  } else if (trans_mode == Msg::TransMode::kDDS) {
+    trans_idx2 = 1;
+  } else if (trans_mode == Msg::TransMode::kHybrid) {
+    trans_idx2 = 2;
+  }
+  if (trans_idx1 == -1 || trans_idx2 == -1) {
+    LOG(ERROR) << "Unknown msg " << *msg;
+    return;
+  }
+  trans_map[trans_idx1][trans_idx2](std::move(msg));
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
@@ -515,7 +470,7 @@ void App::CheckStopWorkers() {
   VLOG(1) << "check stop worker";
   worker_ctx_mgr_->WeakupWorker();
 
-  LOG_IF(INFO, worker_ctx_mgr_->IdleWorkerSize() == 0)
+  LOG_IF(WARNING, worker_ctx_mgr_->IdleWorkerSize() == 0)
       << "worker busy, wait for idle worker...";
   std::shared_ptr<ActorContext> actor_ctx = nullptr;
   std::shared_ptr<WorkerContext> worker_ctx = nullptr;
@@ -554,47 +509,14 @@ void App::CheckStopWorkers() {
   }
 }
 
-// Tips: 发送给框架的事件都应该立即处理完成，不应该影响调度
-void App::ProcessMain(std::shared_ptr<Msg> msg) {
-  // 接收发送给框架消息，处理并回复
-  auto src = msg->GetSrc();
-  auto cmd = msg->GetData();
-  if (cmd.empty()) {
-    LOG(WARNING) << "unknown MAIN_CMD " << cmd;
-    return;
-  }
-  auto resp_msg = std::make_shared<Msg>();
-  if (cmd == MAIN_CMD_ALL_USER_MOD_ADDR) {
-    resp_msg->SetSrc(MAIN_ADDR);
-    resp_msg->SetDst(src);
-    std::string mod_addr_list;
-    GetAllUserModAddr(&mod_addr_list);
-    resp_msg->SetData(mod_addr_list);
-  } else {
-    LOG(WARNING) << "unknown MAIN_CMD " << cmd;
-    return;
-  }
-  if (src.substr(0, 6) == "worker") {
-    worker_ctx_mgr_->DispatchWorkerMsg(resp_msg);
-  } else if (src.substr(0, 5) == "actor") {
-    actor_ctx_mgr_->DispatchMsg(resp_msg);
-  } else {
-    LOG(ERROR) << "unknow msg " << *msg;
-  }
-}
-
-void App::GetAllUserModAddr(std::string* info) {
+std::vector<std::string> App::GetAllUserModAddr() const {
   auto res_actor = actor_ctx_mgr_->GetAllActorAddr();
   auto res_worker = worker_ctx_mgr_->GetAllUserWorkerAddr();
-  std::stringstream ss;
-  for (std::size_t i = 0; i < res_actor.size(); ++i) {
-    ss << res_actor[i] << "\n";
-  }
-  for (std::size_t i = 0; i < res_worker.size(); ++i) {
-    ss << res_worker[i] << "\n";
-  }
-  info->clear();
-  info->append(ss.str());
+  std::vector<std::string> addr_list;
+  addr_list.reserve(res_actor.size() + res_worker.size());
+  addr_list.insert(addr_list.end(), res_actor.begin(), res_actor.end());
+  addr_list.insert(addr_list.end(), res_worker.begin(), res_worker.end());
+  return addr_list;
 }
 
 void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
@@ -740,8 +662,10 @@ void App::ProcessEvent(const std::vector<ev_handle_t>& evs) {
 }
 
 int App::Exec() {
-  if (state_.load() != State::kInitialized) {
-    LOG(ERROR) << "not init";
+  // 已经初始化或者加载service失败正在退出才能执行Exec函数
+  if (state_.load() != State::kInitialized
+      && state_.load() != State::kQuitting) {
+    LOG(ERROR) << "not init or quiting";
     return -1;
   }
   int time_wait_ms = 100;
@@ -793,29 +717,16 @@ bool App::HasUserInst(const std::string& name) {
   return false;
 }
 
-// 支持配置文件中的动态库的简略写法,比如:
-//   libdemo.so 可以简写成 demo
-//   demo.dll 可以简写成 demo
-std::string App::GetLibName(const std::string& name) {
-  std::regex lib_regex(".*\\.(dll|so|dylib)$");
-  if (std::regex_match(name, lib_regex)) {
-    return name;
-  }
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
-  return "lib" + name + ".so";
-#elif defined(MYFRAME_OS_WINDOWS)
-  return name + ".dll";
-#elif defined(MYFRAME_OS_MACOSX)
-  return "lib" + name + ".dylib";
-#endif
-}
-
 int App::GetDefaultPendingQueueSize() const {
   return default_pending_queue_size_;
 }
 
 int App::GetDefaultRunQueueSize() const {
   return default_run_queue_size_;
+}
+
+App::State App::GetState() const {
+  return state_.load();
 }
 
 }  // namespace myframe

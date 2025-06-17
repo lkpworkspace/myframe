@@ -31,7 +31,7 @@ class ExampleWorkerTalk : public myframe::Worker {
 /* 创建worker实例函数 */
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
     const std::string& worker_name) {
-  if (worker_name == "example_worker_talk") {
+  if (worker_name == "ExampleWorkerTalk") {
     return std::make_shared<ExampleWorkerTalk>();
   }
   return nullptr;

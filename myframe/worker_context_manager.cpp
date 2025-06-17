@@ -122,7 +122,7 @@ void WorkerContextManager::WaitAllWorkerQuit() {
 }
 
 void WorkerContextManager::ClearStopWorker() {
-  std::shared_lock<std::shared_mutex> lk(rw_);
+  std::unique_lock<std::shared_mutex> lk(rw_);
   stoped_workers_ctx_.clear();
 }
 

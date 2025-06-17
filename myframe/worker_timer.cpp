@@ -85,6 +85,7 @@ void TimerManager::_Dispath(List* cur) {
     msg->SetDst(timer->actor_name_);
     msg->SetDesc(timer->timer_name_);
     msg->SetType("TIMER");
+    msg->SetTransMode(Msg::TransMode::kIntra);
     delete begin;
     timeout_list_.push_back(std::move(msg));
     begin = temp;

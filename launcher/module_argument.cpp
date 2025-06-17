@@ -20,21 +20,21 @@ ModuleArgument::ModuleArgument(
     const std::string& default_sys_conf_dir) {
   default_sys_conf_dir_ = myframe::Common::GetAbsolutePath(
     default_sys_conf_dir);
-  parser_.add<std::string>("process_name", 'p',
+  parser_.add<std::string>("process-name", 'p',
     "The name of this launcher process, "
     "and it is also the name of log, "
     "default value is launcher_${PID}\n",
     false, "");
-  parser_.add<std::string>("sys_conf", 's',
+  parser_.add<std::string>("sys-conf", 's',
     "framework config file",
     false, "");
   parser_.add<std::string>("dir", 'd',
     "module config dir",
     false, "");
-  parser_.add<std::string>("log_dir", 0,
+  parser_.add<std::string>("log-dir", 0,
     "framework log dir",
     false, "");
-  parser_.add<std::string>("lib_dir", 0,
+  parser_.add<std::string>("lib-dir", 0,
     "framework lib dir",
     false, "");
   parser_.footer("module_config_file ...");
@@ -56,13 +56,13 @@ void ModuleArgument::ParseArgument(
   // check args
   parser_.parse_check(argc, argv);
 
-  auto process_name = parser_.get<std::string>("process_name");
+  auto process_name = parser_.get<std::string>("process-name");
   if (!process_name.empty()) {
     process_name_ = process_name;
   }
 
   // 命令行参数优先级大于配置文件优先级
-  auto sys_conf = parser_.get<std::string>("sys_conf");
+  auto sys_conf = parser_.get<std::string>("sys-conf");
   if (!sys_conf.empty()) {
     if (!ParseSysConf(sys_conf)) {
       std::cerr << "parse sys conf failed!!" << std::endl;
@@ -75,12 +75,12 @@ void ModuleArgument::ParseArgument(
     conf_dir_ = dir;
   }
 
-  auto log_dir = parser_.get<std::string>("log_dir");
+  auto log_dir = parser_.get<std::string>("log-dir");
   if (!log_dir.empty()) {
     log_dir_ = log_dir;
   }
 
-  auto lib_dir = parser_.get<std::string>("lib_dir");
+  auto lib_dir = parser_.get<std::string>("lib-dir");
   if (!lib_dir.empty()) {
     lib_dir_ = lib_dir;
   }

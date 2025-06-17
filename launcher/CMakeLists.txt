@@ -9,7 +9,20 @@ aux_source_directory(. __srcs)
 
 ### bin
 add_executable(${DIR_NAME} ${__srcs})
-target_link_libraries(${DIR_NAME} ${PROJECT_NAME})
+target_link_libraries(${DIR_NAME} PRIVATE ${PROJECT_NAME})
+
+if (glog_lib_type STREQUAL "STATIC_LIBRARY")
+  target_link_libraries(${DIR_NAME}
+    PRIVATE
+    glog::glog
+  )
+endif ()
+if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
+  target_link_libraries(${DIR_NAME}
+    PRIVATE
+    JsonCpp::JsonCpp
+  )
+endif ()
 
 ### install
 install(TARGETS ${DIR_NAME}

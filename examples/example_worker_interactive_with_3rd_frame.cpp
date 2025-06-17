@@ -161,7 +161,7 @@ class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
       seq_num_++;
       LOG(INFO) << "actor pub " << seq_num_;
       mailbox->Send(
-        "worker.example_worker_interactive_with_3rd_frame.#1",
+        "worker.ExampleWorkerInteractiveWith3rdFrame.1",
         std::make_shared<myframe::Msg>(std::to_string(seq_num_)));
       Timeout("100ms", 10);
     }
@@ -177,9 +177,9 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Worker> worker_create(
 #if !(defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
     || defined(MYFRAME_USE_CV)
   (void)worker_name;
-  LOG(ERROR) << "Unsupport example_worker_interactive_with_3rd_frame";
+  LOG(ERROR) << "Unsupport ExampleWorkerInteractiveWith3rdFrame";
 #else
-  if (worker_name == "example_worker_interactive_with_3rd_frame") {
+  if (worker_name == "ExampleWorkerInteractiveWith3rdFrame") {
     return std::make_shared<ExampleWorkerInteractiveWith3rdFrame>();
   }
 #endif
@@ -192,9 +192,9 @@ extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
 #if !(defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)) \
     || defined(MYFRAME_USE_CV)
   (void)actor_name;
-  LOG(ERROR) << "Unsupport example_actor_interactive_with_3rd_frame";
+  LOG(ERROR) << "Unsupport ExampleActorInteractiveWith3rdFrame";
 #else
-  if (actor_name == "example_actor_interactive_with_3rd_frame") {
+  if (actor_name == "ExampleActorInteractiveWith3rdFrame") {
     return std::make_shared<ExampleActorInteractiveWith3rdFrame>();
   }
 #endif

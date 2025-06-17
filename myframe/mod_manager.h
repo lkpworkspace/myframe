@@ -6,15 +6,18 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
+#include <utility>
+#include <string>
 #include <mutex>
 #include <shared_mutex>
 #include <functional>
 #include <memory>
+#include <vector>
 #include <unordered_map>
-#include <string>
 
 #include "myframe/export.h"
 #include "myframe/macros.h"
+#include "myframe/common.h"
 
 namespace myframe {
 
@@ -26,8 +29,6 @@ class MYFRAME_EXPORT ModManager final {
   ModManager();
   virtual ~ModManager();
 
-  bool LoadMod(const std::string& dl_path);
-
   bool RegActor(
     const std::string& class_name,
     std::function<std::shared_ptr<Actor>(const std::string&)> func);
@@ -38,13 +39,33 @@ class MYFRAME_EXPORT ModManager final {
 
   std::shared_ptr<Actor> CreateActorInst(
     const std::string& mod_or_class_name,
-    const std::string& actor_name);
+    const std::string& class_name);
 
   std::shared_ptr<Worker> CreateWorkerInst(
     const std::string& mod_or_class_name,
-    const std::string& worker_name);
+    const std::string& class_name);
+
+  bool LoadService(
+    const stdfs::path& lib_dir,
+    const Json::Value& service,
+    std::vector<std::pair<Json::Value, std::shared_ptr<Actor>>>* actors,
+    std::vector<std::pair<Json::Value, std::shared_ptr<Worker>>>* workers);
 
  private:
+  bool LoadMod(const std::string& dl_path);
+
+  bool LoadActors(
+    const std::string& mod_name,
+    const std::string& class_name,
+    const Json::Value& actor_list,
+    std::vector<std::pair<Json::Value, std::shared_ptr<Actor>>>* actors);
+
+  bool LoadWorkers(
+    const std::string& mod_name,
+    const std::string& class_name,
+    const Json::Value& worker_list,
+    std::vector<std::pair<Json::Value, std::shared_ptr<Worker>>>* workers);
+
   std::unordered_map<
       std::string, std::function<std::shared_ptr<Actor>(const std::string&)>>
       class_actors_;

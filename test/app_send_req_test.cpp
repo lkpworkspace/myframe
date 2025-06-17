@@ -72,11 +72,18 @@ int main() {
   std::vector<std::thread> th_vec;
   for (int i = 0; i < th_cnt; ++i) {
     th_vec.push_back(std::thread([&, i](){
+      while (app->GetState() != myframe::App::State::kRunning) {
+        std::this_thread::sleep_for(
+          std::chrono::milliseconds(100));
+      }
       int cnt = send_cnt;
       while (cnt--) {
         auto msg = std::make_shared<myframe::Msg>("hello");
         msg->SetDst("actor.EchoActorTest.1");
         auto resp = app->SendRequest(std::move(msg));
+        if (resp == nullptr) {
+          continue;
+        }
         LOG(INFO) << "thread " << i << " resp: " << resp->GetData();
       }
       std::lock_guard<std::mutex> g(mtx);

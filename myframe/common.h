@@ -32,8 +32,11 @@ class MYFRAME_EXPORT Common final {
   static bool IsAbsolutePath(const std::string& path);
 
   static Json::Value LoadJsonFromFile(const std::string& json_file);
+  static Json::Value LoadJsonFromString(const std::string& json_str);
 
-  static std::vector<std::string_view> SplitMsgName(const std::string& name);
+  static void SplitMsgName(
+    const std::string& name,
+    std::vector<std::string_view>* tokens);
 
   static int SetThreadAffinity(std::thread* t, int cpu_core);
   static int SetThreadName(std::thread* t, const std::string& name);
@@ -44,6 +47,11 @@ class MYFRAME_EXPORT Common final {
   };
   static int SetProcessSchedPriority(SchedPriority);
   static int SetThreadSchedPriority(std::thread*, SchedPriority);
+
+  // 支持配置文件中的动态库的简略写法,比如:
+  //   libdemo.so 可以简写成 demo
+  //   demo.dll 可以简写成 demo
+  static std::string GetLibName(const std::string& name);
 };
 
 }  // namespace myframe

@@ -7,6 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/common.h"
 #include <string.h>
 #include <utility>
+#include <regex>
 
 #include "myframe/platform.h"
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
@@ -51,6 +52,15 @@ Json::Value Common::LoadJsonFromFile(const std::string& json_file) {
     return Json::Value::nullSingleton();
   }
   ifs.close();
+  return root;
+}
+
+Json::Value Common::LoadJsonFromString(const std::string& json_str) {
+  Json::Value root;
+  Json::Reader reader(Json::Features::strictMode());
+  if (!reader.parse(json_str, root)) {
+    return Json::Value::nullSingleton();
+  }
   return root;
 }
 
@@ -110,21 +120,24 @@ bool Common::IsAbsolutePath(const std::string& path) {
   return false;
 }
 
-std::vector<std::string_view> Common::SplitMsgName(const std::string& name) {
-  std::vector<std::string_view> tokens;
-  tokens.reserve(3);
+void Common::SplitMsgName(
+  const std::string& name,
+  std::vector<std::string_view>* tokens) {
+  if (tokens == nullptr) {
+    return;
+  }
+  tokens->clear();
   size_t name_sz = name.size();
   size_t start_pos = 0;
   for (size_t i = 0; i < name_sz; ++i) {
     if (name[i] == '.') {
-      tokens.emplace_back(&name[start_pos], i - start_pos);
+      tokens->emplace_back(&name[start_pos], i - start_pos);
       start_pos = i + 1;
     }
     if (i == name_sz - 1) {
-      tokens.emplace_back(&name[start_pos], i - start_pos + 1);
+      tokens->emplace_back(&name[start_pos], i - start_pos + 1);
     }
   }
-  return tokens;
 }
 
 // 可以通过std::thread::hardware_concurrency()获得核心数
@@ -328,6 +341,20 @@ int Common::SetThreadSchedPriority(std::thread* t, SchedPriority sp) {
     return -1;
   }
   return 0;
+#endif
+}
+
+std::string Common::GetLibName(const std::string& name) {
+  std::regex lib_regex(".*\\.(dll|so|dylib)$");
+  if (std::regex_match(name, lib_regex)) {
+    return name;
+  }
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
+  return "lib" + name + ".so";
+#elif defined(MYFRAME_OS_WINDOWS)
+  return name + ".dll";
+#elif defined(MYFRAME_OS_MACOSX)
+  return "lib" + name + ".dylib";
 #endif
 }
 

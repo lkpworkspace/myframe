@@ -63,8 +63,6 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
 
   bool LoadServiceFromFile(const std::string& file);
 
-  bool LoadServiceFromJsonStr(const std::string& service);
-
   bool LoadServiceFromJson(const Json::Value& service);
 
   bool AddActor(
@@ -92,6 +90,9 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   int GetDefaultPendingQueueSize() const;
   int GetDefaultRunQueueSize() const;
 
+  State GetState() const;
+  std::vector<std::string> GetAllUserModAddr() const;
+
  private:
   bool HasUserInst(const std::string& name);
   std::shared_ptr<WorkerTimer> GetTimerWorker();
@@ -104,7 +105,6 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
     const std::string& mod_name,
     const std::string& worker_name,
     const Json::Value& worker_list);
-  std::string GetLibName(const std::string& name);
 
   /// worker
   bool StartCommonWorker(int worker_count);
@@ -123,10 +123,9 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   void ProcessTimerEvent(std::shared_ptr<WorkerContext>);
   void ProcessUserEvent(std::shared_ptr<WorkerContext>);
   void ProcessEventConn(std::shared_ptr<EventConn>);
-  void ProcessMain(std::shared_ptr<Msg>);
-  void GetAllUserModAddr(std::string* info);
 
   stdfs::path lib_dir_;
+  std::vector<std::string_view> name_list_;
   /// node地址
   std::string node_addr_;
   ///

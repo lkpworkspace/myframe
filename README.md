@@ -9,10 +9,9 @@ worker自驱动，可以通过消息与actor交互;
 适用于构建中大型项目.  
 
 ## 开发/运行环境
-| C++ 标准支持   |
+| C++ 标准   |
 | -------------- |
 | C++17          |
-| C++20          |
 
 | 操作系统支持   |
 | -------------- |
@@ -28,10 +27,10 @@ worker自驱动，可以通过消息与actor交互;
 ## 快速本地构建
 ```sh
 # 下载/构建/安装依赖库
-cmake -S 3rd -B build_3rd -DCMAKE_INSTALL_PREFIX="./output"
+cmake -S 3rd -B build_3rd -DCMAKE_INSTALL_PREFIX=output
 cmake --build build_3rd -j --config Release
 # 构建安装
-cmake -S . -B build_proj -DCMAKE_INSTALL_PREFIX="./output" -DCMAKE_PREFIX_PATH="./output"
+cmake -S . -B build_proj -DCMAKE_INSTALL_PREFIX=output -DCMAKE_PREFIX_PATH=output -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
 cmake --build build_proj -j --config Release --target install
 ```
 

@@ -53,7 +53,7 @@ class ExampleThreadQuit : public myframe::Actor {
 
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_thread_quit") {
+  if (actor_name == "ExampleThreadQuit") {
     return std::make_shared<ExampleThreadQuit>();
   }
   return nullptr;

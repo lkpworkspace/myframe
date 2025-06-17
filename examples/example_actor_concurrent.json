@@ -2,25 +2,25 @@
     "type":"library",
     "lib":"example_actor_concurrent",
     "actor":{
-        "example_actor_concurrent_trigger":[
+        "ExampleActorConcurrentTrigger":[
             {
-                "instance_name":"#1",
+                "instance_name":"1",
                 "instance_params":""
             }
         ],
-        "example_actor_concurrent":[
+        "ExampleActorConcurrent":[
             {
-                "instance_name":"#1",
+                "instance_name":"1",
                 "instance_params":""
             },
             {
-                "instance_name":"#2",
+                "instance_name":"2",
                 "instance_params":""
             },
             {
-                "instance_name":"#3",
+                "instance_name":"3",
                 "instance_params":""
             }
-        ]       
+        ]
     }
 }

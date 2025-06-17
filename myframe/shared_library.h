@@ -10,10 +10,11 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <memory>
 
 #include "myframe/macros.h"
+#include "myframe/export.h"
 
 namespace myframe {
 
-class SharedLibrary {
+class MYFRAME_EXPORT SharedLibrary {
  public:
   enum class Flags : int {
     // On platforms that use dlopen(), use RTLD_GLOBAL. This is the default

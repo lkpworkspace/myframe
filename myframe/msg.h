@@ -14,28 +14,27 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-/* 发送给框架的地址 */
-const char* const MAIN_ADDR = "main";
-
-/**
- * 发送给框架的命令
- * 发送示例:
- *  auto mailbox = GetMailbox();
- *  auto msg = std::make_shared<Msg>(MAIN_CMD_ALL_USER_MOD_ADDR);
- *  mailbox->Send(MAIN_ADDR, msg);
- * MAIN_CMD_ALL_USER_MOD_ADDR:
- *  返回用户所有模块列表
- *  通过msg->GetData()获得列表
- *  格式为 地址1\n地址2\n地址3
- */
-const char* const MAIN_CMD_ALL_USER_MOD_ADDR = "kAllUserModAddr";
-
 class MYFRAME_EXPORT Msg final {
  public:
+  enum class TransMode : int {
+    kHybrid = 0,
+    kIntra = 1,
+    kDDS = 2,
+  };
+
   Msg() = default;
   Msg(const char* data);
   Msg(const char* data, int len);
   Msg(const std::string& data);
+  Msg(Msg&& o);
+  Msg(const Msg& o);
+
+  /**
+   * @brief 获得消息分发模式
+   * @note 来源：actor/worker/timer
+   * @return 消息分发模式
+   */
+  TransMode GetTransMode() const { return trans_mode_; }
 
   /**
    * @brief 获得消息源地址
@@ -72,6 +71,7 @@ class MYFRAME_EXPORT Msg final {
     return std::any_cast<T>(any_data_);
   }
 
+  void SetTransMode(TransMode tans_mode) { trans_mode_ = tans_mode; }
   void SetSrc(const std::string& src) { src_ = src; }
   void SetDst(const std::string& dst) { dst_ = dst; }
   void SetType(const std::string& type) { type_ = type; }
@@ -80,6 +80,9 @@ class MYFRAME_EXPORT Msg final {
   void SetData(const std::string& data);
   void SetAnyData(const std::any& any_data);
 
+  Msg& operator=(Msg&& o) noexcept;
+  Msg& operator=(const Msg& o) noexcept;
+
  private:
   std::string src_;
   std::string dst_;
@@ -87,6 +90,7 @@ class MYFRAME_EXPORT Msg final {
   std::string desc_;
   std::string data_;
   std::any any_data_;
+  TransMode trans_mode_{TransMode::kIntra};
 };
 
 MYFRAME_EXPORT std::ostream& operator<<(std::ostream& out, const Msg& msg);

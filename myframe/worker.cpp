@@ -18,13 +18,13 @@ namespace myframe {
 Worker::~Worker() {}
 
 const std::string Worker::GetWorkerName() const {
-  return "worker." + worker_name_ + "." + inst_name_;
+  return "worker." + class_name_ + "." + inst_name_;
 }
 const std::string& Worker::GetModName() const { return mod_name_; }
-const std::string& Worker::GetTypeName() const { return worker_name_; }
+const std::string& Worker::GetTypeName() const { return class_name_; }
 const std::string& Worker::GetInstName() const { return inst_name_; }
 void Worker::SetModName(const std::string& name) { mod_name_ = name; }
-void Worker::SetTypeName(const std::string& name) { worker_name_ = name; }
+void Worker::SetTypeName(const std::string& name) { class_name_ = name; }
 void Worker::SetInstName(const std::string& name) { inst_name_ = name; }
 
 void Worker::Stop() {
@@ -73,12 +73,8 @@ CmdChannel* Worker::GetCmdChannel() {
   return ctx_->GetCmdChannel();
 }
 
-void Worker::SetConfig(const Json::Value& conf) {
-  config_ = conf;
-}
-
 const Json::Value* Worker::GetConfig() const {
-  return &config_;
+  return ctx_->GetConfig();
 }
 
 void Worker::SetContext(WorkerContext* ctx) {

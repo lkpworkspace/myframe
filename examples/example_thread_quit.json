@@ -2,7 +2,7 @@
     "type":"library",
     "lib":"example_thread_quit",
     "actor":{
-        "example_thread_quit":[
+        "ExampleThreadQuit":[
             {
                 "instance_name":"1",
                 "instance_params":""

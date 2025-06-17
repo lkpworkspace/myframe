@@ -43,7 +43,7 @@ class ExampleActorSub : public myframe::Actor {
  public:
   int Init(const char* param) override {
     (void)param;
-    Subscribe("actor.example_b_pub.#1");
+    Subscribe("actor.ExampleActorPub.1");
     return 0;
   }
 
@@ -54,10 +54,10 @@ class ExampleActorSub : public myframe::Actor {
 
 extern "C" MYFRAME_EXPORT std::shared_ptr<myframe::Actor> actor_create(
     const std::string& actor_name) {
-  if (actor_name == "example_b_pub") {
+  if (actor_name == "ExampleActorPub") {
     return std::make_shared<ExampleActorPub>();
   }
-  if (actor_name == "example_a_sub") {
+  if (actor_name == "ExampleActorSub") {
     return std::make_shared<ExampleActorSub>();
   }
   return nullptr;

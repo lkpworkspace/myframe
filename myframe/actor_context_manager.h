@@ -26,8 +26,7 @@ class ActorContextManager final {
   ActorContextManager();
   virtual ~ActorContextManager();
 
-  /* 注册actor */
-  bool RegContext(std::shared_ptr<ActorContext> ctx);
+  bool Add(std::shared_ptr<ActorContext> ctx);
 
   void DispatchMsg(
     std::shared_ptr<Msg> msg,
