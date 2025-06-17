@@ -4,20 +4,17 @@
     "actor":{
         "ExampleActorSerial1":[
             {
-                "instance_name":"1",
-                "instance_params":""
+                "instance_name":"1"
             }
         ],
         "ExampleActorSerial2":[
             {
-                "instance_name":"1",
-                "instance_params":""
+                "instance_name":"1"
             }
         ],
         "ExampleActorSerial3":[
             {
-                "instance_name":"1",
-                "instance_params":""
+                "instance_name":"1"
             }
         ]
     }

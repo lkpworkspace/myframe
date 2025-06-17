@@ -22,8 +22,7 @@ int random(int min, int max) {
 
 class ExampleActorSerial1 : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     auto mailbox = GetMailbox();
     mailbox->Send("actor.ExampleActorSerial1.1",
       std::make_shared<myframe::Msg>(""));
@@ -45,8 +44,7 @@ class ExampleActorSerial1 : public myframe::Actor {
 
 class ExampleActorSerial2 : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     return 0;
   }
 
@@ -65,8 +63,7 @@ class ExampleActorSerial2 : public myframe::Actor {
 
 class ExampleActorSerial3 : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     return 0;
   }
 

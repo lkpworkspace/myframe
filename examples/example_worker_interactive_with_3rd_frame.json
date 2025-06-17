@@ -4,8 +4,7 @@
     "actor":{
         "ExampleActorInteractiveWith3rdFrame":[
             {
-                "instance_name":"1",
-                "instance_params":""
+                "instance_name":"1"
             }
         ]
     },

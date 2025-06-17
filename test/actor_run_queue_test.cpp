@@ -27,8 +27,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 */
 class RunQueueTest : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     for (int i = 0; i < send_cnt_; ++i) {
         auto msg = std::make_shared<myframe::Msg>("hello");
         GetMailbox()->Send(GetActorName(), std::move(msg));
@@ -82,8 +81,8 @@ int main() {
   mod->RegActor("RunQueueTest", [](const std::string&) {
       return std::make_shared<RunQueueTest>();
   });
-  auto actor = mod->CreateActorInst("class", "RunQueueTest");
-  app->AddActor("1", "", actor);
+  auto actor = mod->CreateActorInst("class", "RunQueueTest", "1");
+  app->AddActor(actor);
 
   return app->Exec();
 }

@@ -149,8 +149,7 @@ class ExampleWorkerInteractiveWith3rdFrame : public myframe::Worker {
 
 class ExampleActorInteractiveWith3rdFrame : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     Timeout("100ms", 10);
     return 0;
   }

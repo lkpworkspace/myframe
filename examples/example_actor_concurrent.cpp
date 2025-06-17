@@ -22,8 +22,7 @@ class ExampleActorConcurrent : public myframe::Actor {
     return distrib(engine);
   }
 
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     return 0;
   }
 
@@ -42,8 +41,7 @@ class ExampleActorConcurrent : public myframe::Actor {
 
 class ExampleActorConcurrentTrigger : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     state_ = {
         {"actor.ExampleActorConcurrent.1", false},
         {"actor.ExampleActorConcurrent.2", false},

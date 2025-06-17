@@ -15,8 +15,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 class ExampleActorPub : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     Timeout("1000ms", 100);
     return 0;
   }
@@ -41,8 +40,7 @@ class ExampleActorPub : public myframe::Actor {
 
 class ExampleActorSub : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     Subscribe("actor.ExampleActorPub.1");
     return 0;
   }

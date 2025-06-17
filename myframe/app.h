@@ -66,13 +66,10 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   bool LoadServiceFromJson(const Json::Value& service);
 
   bool AddActor(
-    const std::string& inst_name,
-    const std::string& params,
     std::shared_ptr<Actor> actor,
     const Json::Value& config = Json::Value::nullSingleton());
 
   bool AddWorker(
-    const std::string& inst_name,
     std::shared_ptr<Worker> worker,
     const Json::Value& config = Json::Value::nullSingleton());
 

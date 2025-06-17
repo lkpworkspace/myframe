@@ -15,8 +15,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 class Hello : public myframe::Actor {
  public:
   /* actor模块加载完毕后调用 */
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     /* 构造 hello,world 消息发送给自己 */
     auto mailbox = GetMailbox();
     mailbox->Send(
@@ -46,8 +45,8 @@ int main() {
   mod->RegActor("Hello", [](const std::string&) {
       return std::make_shared<Hello>();
   });
-  auto actor = mod->CreateActorInst("class", "Hello");
-  app->AddActor("1", "", actor);
+  auto actor = mod->CreateActorInst("class", "Hello", "1");
+  app->AddActor(actor);
 
   return app->Exec();
 }

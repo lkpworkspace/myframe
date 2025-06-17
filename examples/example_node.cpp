@@ -23,8 +23,7 @@ class ExampleNode : public myframe::Actor {
     // ...
   }
 
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     // 启动订阅监听程序
     //   收到消息调用OnSubMsg()回调函数将消息发送给framework的组件
 
@@ -106,8 +105,7 @@ class ExampleNode : public myframe::Actor {
 */
 class ExampleNodePub : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     Timeout("1000ms", 100);
     return 0;
   }
@@ -141,8 +139,7 @@ class ExampleNodePub : public myframe::Actor {
 */
 class ExampleNodeSub : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     Subscribe(g_topic, "TEXT", myframe::Msg::TransMode::kDDS);
     return 0;
   }

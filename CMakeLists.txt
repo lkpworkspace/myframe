@@ -3,7 +3,7 @@ if (POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
 project(myframe
-  VERSION 0.9.8
+  VERSION 0.9.9
   LANGUAGES CXX
 )
 

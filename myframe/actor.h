@@ -50,12 +50,10 @@ class MYFRAME_EXPORT Actor {
  protected:
   /**
    * Init() - actor初始化调用的初始化函数
-   * @c:      actor指针
-   * @param:  actor参数
    *
    * @return:         成功 0， 失败 -1
    */
-  virtual int Init(const char* param) = 0;
+  virtual int Init() = 0;
 
   /**
    * Proc() - 消息处理函数
