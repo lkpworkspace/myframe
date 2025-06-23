@@ -56,6 +56,17 @@ if (glog_lib_type STREQUAL "STATIC_LIBRARY" OR jsoncpp_lib_type STREQUAL "STATIC
   endif ()
 endif ()
 
+if (MYFRAME_ENABLE_ASAN)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE
+    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
+  )
+  target_link_options(${PROJECT_NAME}
+    PRIVATE
+    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
+  )
+endif ()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 
