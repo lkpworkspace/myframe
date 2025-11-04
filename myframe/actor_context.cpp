@@ -31,7 +31,7 @@ ActorContext::~ActorContext() {
 
 std::shared_ptr<App> ActorContext::GetApp() { return app_.lock(); }
 
-int ActorContext::Init(const char* param, const Json::Value& conf) {
+int ActorContext::Init(const Json::Value& conf) {
   actor_->SetContext(this);
   mailbox_.SetAddr(actor_->GetActorName());
   config_ = conf;
@@ -47,7 +47,7 @@ int ActorContext::Init(const char* param, const Json::Value& conf) {
   mailbox_.SetPendingQueueSize(pending_queue_size);
   mailbox_.SetRunQueueSize(run_queue_size);
   LOG(INFO) << mailbox_.Addr() << " context init";
-  return actor_->Init(param);
+  return actor_->Init();
 }
 
 Mailbox* ActorContext::GetMailbox() {

@@ -24,8 +24,8 @@ class Trans10ActorCostTest : public myframe::Actor {
  public:
   Trans10ActorCostTest() : msg_(8192, 'y') {}
 
-  int Init(const char* param) override {
-    task_num_ = std::stoi(param);
+  int Init() override {
+    task_num_ = GetConfig()->get("task_num", 0).asInt();
     // 启动测试
     if (task_num_ == 0) {
       cost_us_list_.reserve(6000);
@@ -120,8 +120,11 @@ int main() {
       return std::make_shared<Trans10ActorCostTest>();
   });
   for (int i = 0; i < 10; ++i) {
-      auto actor = mod->CreateActorInst("class", "Trans10ActorCostTest");
-      app->AddActor(std::to_string(i), std::to_string(i), actor);
+      auto actor = mod->CreateActorInst("class",
+        "Trans10ActorCostTest", std::to_string(i));
+      Json::Value conf;
+      conf["task_num"] = i;
+      app->AddActor(actor, conf);
   }
 
   return app->Exec();

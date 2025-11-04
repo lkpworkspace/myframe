@@ -39,11 +39,13 @@ class MYFRAME_EXPORT ModManager final {
 
   std::shared_ptr<Actor> CreateActorInst(
     const std::string& mod_or_class_name,
-    const std::string& class_name);
+    const std::string& class_name,
+    const std::string& inst_name);
 
   std::shared_ptr<Worker> CreateWorkerInst(
     const std::string& mod_or_class_name,
-    const std::string& class_name);
+    const std::string& class_name,
+    const std::string& inst_name);
 
   bool LoadService(
     const stdfs::path& lib_dir,

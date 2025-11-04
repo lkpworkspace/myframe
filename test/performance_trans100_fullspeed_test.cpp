@@ -23,8 +23,7 @@ class FullSpeed100ActorTransTest : public myframe::Actor {
  public:
   FullSpeed100ActorTransTest() : msg_(8192, 'k') {}
 
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     LOG(INFO) << "init full speed 100 actor trans ";
     // 启动测试
     msg_cnt_per_sec_list_.reserve(64);
@@ -107,8 +106,9 @@ int main() {
     return std::make_shared<FullSpeed100ActorTransTest>();
   });
   for (int i = 0; i < 100; ++i) {
-    auto actor = mod->CreateActorInst("class", "FullSpeed100ActorTransTest");
-    app->AddActor(std::to_string(i), std::to_string(i), actor);
+    auto actor = mod->CreateActorInst("class",
+      "FullSpeed100ActorTransTest", std::to_string(i));
+    app->AddActor(actor);
   }
 
   LOG(INFO) << "FullSpeed100ActorTransTest begin...";

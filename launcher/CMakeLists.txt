@@ -24,6 +24,17 @@ if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
   )
 endif ()
 
+if (MYFRAME_ENABLE_ASAN)
+  target_compile_options(${DIR_NAME}
+    PRIVATE
+    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
+  )
+  target_link_options(${DIR_NAME}
+    PRIVATE
+    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
+  )
+endif ()
+
 ### install
 install(TARGETS ${DIR_NAME}
   LIBRARY DESTINATION ${MYFRAME_LIB_DIR}

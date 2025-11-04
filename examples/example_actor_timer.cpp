@@ -11,8 +11,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 class ExampleActorTimer : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     /* 设置超时时间为 100 * 10 ms */
     Timeout("1000ms", 10);
     return 0;

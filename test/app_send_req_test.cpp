@@ -21,8 +21,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 class EchoActorTest : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     LOG(INFO) << "init EchoActorTest";
     return 0;
   }
@@ -61,8 +60,8 @@ int main() {
   mod->RegActor("EchoActorTest", [](const std::string&) {
       return std::make_shared<EchoActorTest>();
   });
-  auto actor = mod->CreateActorInst("class", "EchoActorTest");
-  app->AddActor("1", "", actor);
+  auto actor = mod->CreateActorInst("class", "EchoActorTest", "1");
+  app->AddActor(actor);
 
   // 压力测试SendRequest函数
   std::mutex mtx;

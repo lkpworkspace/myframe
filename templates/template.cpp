@@ -16,8 +16,7 @@ Author: likepeng <likepeng0418@163.com>
 
 class @template_name@Actor : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     return 0;
   }
 

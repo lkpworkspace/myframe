@@ -4,14 +4,12 @@
     "actor":{
         "ExampleActorPub":[
             {
-                "instance_name":"1",
-                "instance_params":""
+                "instance_name":"1"
             }
         ],
         "ExampleActorSub":[
             {
-                "instance_name":"1",
-                "instance_params":""
+                "instance_name":"1"
             }
         ]
     }

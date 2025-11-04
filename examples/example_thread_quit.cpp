@@ -24,8 +24,7 @@ class ExampleThreadQuit : public myframe::Actor {
     LOG(INFO) << "thread quit example quit";
   }
 
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     th_run_.store(true);
     th_ = std::thread([this](){
       while (th_run_.load()) {

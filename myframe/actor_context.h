@@ -30,7 +30,7 @@ class ActorContext final {
 
   Mailbox* GetMailbox();
 
-  int Init(const char* param, const Json::Value& conf);
+  int Init(const Json::Value& conf);
 
   void Proc(const std::shared_ptr<const Msg>& msg);
 

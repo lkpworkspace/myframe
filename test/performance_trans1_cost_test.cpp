@@ -23,8 +23,7 @@ class TransMsgCostTest : public myframe::Actor {
  public:
   TransMsgCostTest() : msg_(8192, 'x') {}
 
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     LOG(INFO) << "runing TransMsgCostTest...";
     cost_us_list_.reserve(6000);
     last_ = std::chrono::high_resolution_clock::now();
@@ -97,8 +96,8 @@ int main() {
   mod->RegActor("TransMsgCostTest", [](const std::string&) {
     return std::make_shared<TransMsgCostTest>();
   });
-  auto actor = mod->CreateActorInst("class", "TransMsgCostTest");
-  app->AddActor("#1", "", actor);
+  auto actor = mod->CreateActorInst("class", "TransMsgCostTest", "1");
+  app->AddActor(actor);
 
   return app->Exec();
 }

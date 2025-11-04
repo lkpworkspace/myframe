@@ -140,15 +140,11 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
     const auto& inst = p.first;
     auto actor = p.second;
 
-    std::string inst_param;
     Json::Value cfg;
-    if (inst.isMember("instance_params")) {
-      inst_param = inst["instance_params"].asString();
-    }
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    if (!AddActor(actor->GetInstName(), inst_param, actor, cfg)) {
+    if (!AddActor(actor, cfg)) {
       return false;
     }
   }
@@ -163,7 +159,7 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    if (!AddWorker(worker->GetInstName(), worker, cfg)) {
+    if (!AddWorker(worker, cfg)) {
       return false;
     }
   }
@@ -172,8 +168,6 @@ bool App::LoadServiceFromJson(const Json::Value& service) {
 }
 
 bool App::AddActor(
-  const std::string& inst_name,
-  const std::string& params,
   std::shared_ptr<Actor> actor,
   const Json::Value& config) {
   if (state_.load() == State::kUninitialized) {
@@ -185,7 +179,6 @@ bool App::AddActor(
     LOG(ERROR) << "program quiting or quit";
     return false;
   }
-  actor->SetInstName(inst_name);
 
   auto actor_name = actor->GetActorName();
   if (actor->GetTypeName() == "node") {
@@ -200,7 +193,7 @@ bool App::AddActor(
     }
   }
   auto ctx = std::make_shared<ActorContext>(shared_from_this(), actor);
-  if (ctx->Init(params.c_str(), config)) {
+  if (ctx->Init(config)) {
     LOG(ERROR) << "init " << actor_name << " fail";
     return false;
   }
@@ -240,7 +233,6 @@ bool App::AddActor(
 }
 
 bool App::AddWorker(
-  const std::string& inst_name,
   std::shared_ptr<Worker> worker,
   const Json::Value& config) {
   if (state_.load() == State::kUninitialized) {
@@ -252,7 +244,6 @@ bool App::AddWorker(
     LOG(ERROR) << "program quiting or quit";
     return false;
   }
-  worker->SetInstName(inst_name);
   auto worker_ctx = std::make_shared<WorkerContext>(
     shared_from_this(), worker, poller_);
   if (!worker_ctx->Init(config)) {
@@ -328,7 +319,8 @@ bool App::StartCommonWorker(int worker_count) {
     auto worker = std::make_shared<WorkerCommon>();
     worker->SetModName("class");
     worker->SetTypeName("C");
-    if (!AddWorker(std::to_string(i), worker)) {
+    worker->SetInstName(std::to_string(i));
+    if (!AddWorker(worker)) {
       LOG(ERROR) << "start common worker " << i << " failed";
       continue;
     }
@@ -342,7 +334,8 @@ bool App::StartTimerWorker() {
   auto worker = std::make_shared<WorkerTimer>();
   worker->SetModName("class");
   worker->SetTypeName("T");
-  if (!AddWorker("1", worker)) {
+  worker->SetInstName("1");
+  if (!AddWorker(worker)) {
     LOG(ERROR) << "start timer worker failed";
     return false;
   }

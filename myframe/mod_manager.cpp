@@ -70,7 +70,9 @@ bool ModManager::RegWorker(
 }
 
 std::shared_ptr<Actor> ModManager::CreateActorInst(
-  const std::string& mod_or_class_name, const std::string& class_name) {
+  const std::string& mod_or_class_name,
+  const std::string& class_name,
+  const std::string& inst_name) {
   {
     std::shared_lock<std::shared_mutex> lk(mods_rw_);
     if (mods_.find(mod_or_class_name) != mods_.end()) {
@@ -93,6 +95,7 @@ std::shared_ptr<Actor> ModManager::CreateActorInst(
       }
       actor->SetModName(mod_or_class_name);
       actor->SetTypeName(class_name);
+      actor->SetInstName(inst_name);
       return actor;
     }
   }
@@ -103,13 +106,16 @@ std::shared_ptr<Actor> ModManager::CreateActorInst(
     auto actor = class_actors_[class_name](class_name);
     actor->SetModName(mod_or_class_name);
     actor->SetTypeName(class_name);
+    actor->SetInstName(inst_name);
     return actor;
   }
   return nullptr;
 }
 
 std::shared_ptr<Worker> ModManager::CreateWorkerInst(
-  const std::string& mod_or_class_name, const std::string& class_name) {
+  const std::string& mod_or_class_name,
+  const std::string& class_name,
+  const std::string& inst_name) {
   {
     std::shared_lock<std::shared_mutex> lk(mods_rw_);
     if (mods_.find(mod_or_class_name) != mods_.end()) {
@@ -132,6 +138,7 @@ std::shared_ptr<Worker> ModManager::CreateWorkerInst(
       }
       worker->SetModName(mod_or_class_name);
       worker->SetTypeName(class_name);
+      worker->SetInstName(inst_name);
       return worker;
     }
   }
@@ -142,6 +149,7 @@ std::shared_ptr<Worker> ModManager::CreateWorkerInst(
     auto worker = class_workers_[class_name](class_name);
     worker->SetModName(mod_or_class_name);
     worker->SetTypeName(class_name);
+    worker->SetInstName(inst_name);
     return worker;
   }
   return nullptr;
@@ -242,7 +250,6 @@ bool ModManager::LoadActors(
   const auto& insts = actor_list[class_name];
   for (const auto& inst : insts) {
     std::string inst_name;
-    std::string inst_param;
     Json::Value cfg;
     LOG(INFO)
       << "create actor instance \"" << class_name
@@ -254,19 +261,15 @@ bool ModManager::LoadActors(
       return false;
     }
     inst_name = inst["instance_name"].asString();
-    if (inst.isMember("instance_params")) {
-      inst_param = inst["instance_params"].asString();
-    }
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto actor_inst = CreateActorInst(mod_name, class_name);
+    auto actor_inst = CreateActorInst(mod_name, class_name, inst_name);
     if (actor_inst == nullptr) {
       LOG(ERROR) << "Create actor "
         << mod_name << "." << class_name << " failed";
       return false;
     }
-    actor_inst->SetInstName(inst_name);
     actors->emplace_back(inst, actor_inst);
   }
   return true;
@@ -294,14 +297,13 @@ bool ModManager::LoadWorkers(
     if (inst.isMember("instance_config")) {
       cfg = inst["instance_config"];
     }
-    auto worker = CreateWorkerInst(mod_name, class_name);
+    auto worker = CreateWorkerInst(mod_name, class_name, inst_name);
     if (worker == nullptr) {
       LOG(ERROR)
         << "Create worker " << mod_name << "." << class_name << "."
         << inst_name << " failed";
       return false;
     }
-    worker->SetInstName(inst_name);
     workers->emplace_back(inst, worker);
   }
   return true;

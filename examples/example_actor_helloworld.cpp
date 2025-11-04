@@ -15,8 +15,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 class ExampleActorHelloWorld : public myframe::Actor {
  public:
   /* actor模块加载完毕后调用 */
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     auto mailbox = GetMailbox();
     /* 构造 hello,world 消息发送给自己 */
     mailbox->Send(mailbox->Addr(), std::string("hello,world"));

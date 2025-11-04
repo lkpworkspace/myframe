@@ -15,8 +15,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 /// 回显worker发来的消息
 class ExampleActorInteractive : public myframe::Actor {
  public:
-  int Init(const char* param) override {
-    (void)param;
+  int Init() override {
     return 0;
   }
 
