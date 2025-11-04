@@ -110,6 +110,7 @@ jobs:
       - name: Configure
         run: |
           cmake -S . -B build_${{matrix.build_type}} \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_CXX_STANDARD=${{matrix.std}} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
