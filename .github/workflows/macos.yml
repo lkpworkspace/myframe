@@ -23,7 +23,7 @@ jobs:
 
       - name: Setup Dependencies
         run: |
-          brew install ninja
+          brew install ninja cmake
 
       - name: Cache jsoncpp
         id: cache-jsoncpp
@@ -72,6 +72,7 @@ jobs:
         if: steps.cache-gflags.outputs.cache-hit != 'true'
         run: |
           cmake -S gflags-2.2.2 -B build-gflags \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags \
