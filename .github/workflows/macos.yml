@@ -97,6 +97,7 @@ jobs:
         if: steps.cache-glog.outputs.cache-hit != 'true'
         run: |
           cmake -S glog-0.6.0 -B build-glog \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
             -DWITH_PKGCONFIG=OFF \
