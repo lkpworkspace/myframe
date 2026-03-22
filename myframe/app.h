@@ -18,6 +18,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/event.h"
 #include "myframe/export.h"
 #include "myframe/common.h"
+#include "myframe/arguments.h"
 
 namespace myframe {
 
@@ -51,13 +52,7 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   App();
   virtual ~App();
 
-  bool Init(
-    const std::string& lib_dir,
-    int thread_pool_size = 4,
-    int event_conn_size = 2,
-    int warning_msg_size = 10,
-    int default_pending_queue_size = -1,
-    int default_run_queue_size = 2);
+  bool Init(const Arguments& args);
 
   int LoadServiceFromDir(const std::string& path);
 

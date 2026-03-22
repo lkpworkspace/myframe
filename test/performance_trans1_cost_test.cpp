@@ -81,7 +81,14 @@ int main() {
   myframe::InitLog(log_dir, "performance_trans1_cost_test");
 
   auto app = std::make_shared<myframe::App>();
-  if (false == app->Init(lib_dir, 4)) {
+  myframe::Arguments args;
+  args.SetString(MYFRAME_SERVICE_LIB_DIR, lib_dir);
+  args.SetInt(MYFRAME_THREAD_POOL_SIZE, 4);
+  args.SetInt(MYFRAME_EVENT_CONNE_SIZE, 2);
+  args.SetInt(MYFRAME_WARNING_MSG_SIZE, 10);
+  args.SetInt(MYFRAME_PENDING_QUEUE_SIZE, -1);
+  args.SetInt(MYFRAME_RUN_QUEUE_SIZE, 2);
+  if (false == app->Init(args)) {
     LOG(ERROR) << "Init failed";
     return -1;
   }

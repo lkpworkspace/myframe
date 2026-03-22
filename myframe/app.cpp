@@ -60,19 +60,55 @@ App::~App() {
   LOG(INFO) << "app deconstruct";
 }
 
-bool App::Init(
-  const std::string& lib_dir,
-  int thread_pool_size,
-  int event_conn_size,
-  int warning_msg_size,
-  int default_pending_queue_size,
-  int default_run_queue_size) {
+bool App::Init(const Arguments& args) {
   if (state_.load() != State::kUninitialized) {
     return true;
   }
+  #if defined(MYFRAME_OS_WINDOWS)
+    std::string lib_dir = "bin";
+  #else
+    std::string lib_dir = "lib";
+  #endif
+  int thread_pool_size = 4;
+  int event_conn_size = 2;
+  int warning_msg_size = 10;
+  int default_pending_queue_size = -1;
+  int default_run_queue_size = 2;
+  for (const auto& arg : args) {
+    if (arg.type == Argument::ArgType::kArgString) {
+      if (arg.key == MYFRAME_SERVICE_LIB_DIR) {
+        lib_dir = arg.value_str;
+      }
+    }
+    if (arg.type == Argument::ArgType::kArgInteger) {
+      int value_int = arg.value_int;
+      if (arg.key == MYFRAME_THREAD_POOL_SIZE) {
+        thread_pool_size = value_int;
+      }
+      if (arg.key == MYFRAME_WARNING_MSG_SIZE) {
+        warning_msg_size = value_int;
+      }
+      if (arg.key == MYFRAME_PENDING_QUEUE_SIZE) {
+        default_pending_queue_size = value_int;
+      }
+      if (arg.key == MYFRAME_RUN_QUEUE_SIZE) {
+        default_run_queue_size = value_int;
+      }
+      if (arg.key == MYFRAME_EVENT_CONNE_SIZE) {
+        event_conn_size = value_int;
+      }
+    }
+  }
+
+  // LOG(INFO) << "lib dir: " << lib_dir;
+  // LOG(INFO) << "thread pool size: " << thread_pool_size;
+  // LOG(INFO) << "event conn size: " << event_conn_size;
+  // LOG(INFO) << "warning msg size: " << warning_msg_size;
+  // LOG(INFO) << "default pending queue size: " << default_pending_queue_size;
+  // LOG(INFO) << "default run queue size: " << default_run_queue_size;
 
   bool ret = true;
-  lib_dir_ = lib_dir;
+  lib_dir_ = myframe::Common::GetAbsolutePath(lib_dir);
   warning_msg_size_.store(warning_msg_size);
   default_pending_queue_size_ = default_pending_queue_size;
   default_run_queue_size_ = default_run_queue_size;

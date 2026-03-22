@@ -93,6 +93,7 @@ install(FILES
 if (MYFRAME_INSTALL_TEMPLATE)
   install(PROGRAMS
     "tools/gen_mod_proj.py"
+    "tools/setup.sh"
     DESTINATION ${MYFRAME_BIN_DIR}
   )
   install(DIRECTORY templates DESTINATION .)
