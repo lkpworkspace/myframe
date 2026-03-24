@@ -17,6 +17,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #elif defined(MYFRAME_OS_WINDOWS)
 #include <Windows.h>
 #elif defined(MYFRAME_OS_MACOSX)
+#include <dlfcn.h>
 #include <mach-o/dyld.h>
 #include <mach/mach.h>
 #else
@@ -107,9 +108,11 @@ stdfs::path Common::GetCurrExePath() {
 
 stdfs::path Common::GetCurrLibPath() {
   stdfs::path p;
-#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID) || defined(MYFRAME_OS_MACOSX)
+#if defined(MYFRAME_OS_LINUX) || \
+    defined(MYFRAME_OS_ANDROID) || \
+    defined(MYFRAME_OS_MACOSX)
   Dl_info info;
-  if (dladdr((void*)&Common::GetCurrLibPath, &info)) {
+  if (dladdr(reinterpret_cast<void*>(&Common::GetCurrLibPath), &info)) {
     p = info.dli_fname;
   } else {
     return "";
@@ -117,20 +120,20 @@ stdfs::path Common::GetCurrLibPath() {
 #elif defined(MYFRAME_OS_WINDOWS)
   HMODULE h = NULL;
   auto ret = GetModuleHandleEx(
-    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
     GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-    (LPCSTR)&Common::GetCurrLibPath,
+    reinterpret_cast<LPCSTR>(&Common::GetCurrLibPath),
     &h);
   if (ret == FALSE) {
     return "";
   }
   char path_buf[MYFRAME_MAX_PATH];
   memset(path_buf, 0, MYFRAME_MAX_PATH);
-  auto ret = GetModuleFileName(h, path_buf, MYFRAME_MAX_PATH);
-  if (ret == 0) {
+  auto ret_sz = GetModuleFileName(h, path_buf, MYFRAME_MAX_PATH);
+  if (ret_sz == 0) {
     return "";
   }
-  if (static_cast<std::size_t>(ret) >= MYFRAME_MAX_PATH) {
+  if (static_cast<std::size_t>(ret_sz) >= MYFRAME_MAX_PATH) {
     path_buf[MYFRAME_MAX_PATH - 1] = '\0';
   }
   p = path_buf;

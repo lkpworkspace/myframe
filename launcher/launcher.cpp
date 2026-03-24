@@ -81,7 +81,8 @@ int main(int argc, char** argv) {
   args.SetInt(MYFRAME_THREAD_POOL_SIZE, module_args.GetThreadPoolSize());
   args.SetInt(MYFRAME_EVENT_CONNE_SIZE, module_args.GetConnEventSize());
   args.SetInt(MYFRAME_WARNING_MSG_SIZE, module_args.GetWarningMsgSize());
-  args.SetInt(MYFRAME_PENDING_QUEUE_SIZE, module_args.GetDefaultPendingQueueSize());
+  args.SetInt(MYFRAME_PENDING_QUEUE_SIZE,
+    module_args.GetDefaultPendingQueueSize());
   args.SetInt(MYFRAME_RUN_QUEUE_SIZE, module_args.GetDefaultRunQueueSize());
   LOG(INFO) << "\n" << args.DebugString();
   if (false == g_app->Init(args)) {
