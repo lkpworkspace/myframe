@@ -13,6 +13,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
 #include <sched.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #elif defined(MYFRAME_OS_WINDOWS)
 #include <Windows.h>
 #elif defined(MYFRAME_OS_MACOSX)
@@ -65,6 +66,14 @@ Json::Value Common::LoadJsonFromString(const std::string& json_str) {
 }
 
 stdfs::path Common::GetWorkRoot() {
+  auto p = GetCurrLibPath();
+  if (p.has_parent_path()) {
+    p = p.parent_path();
+  }
+  return p;
+}
+
+stdfs::path Common::GetCurrExePath() {
   char path_buf[MYFRAME_MAX_PATH];
   memset(path_buf, 0, MYFRAME_MAX_PATH);
 #if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID)
@@ -92,9 +101,44 @@ stdfs::path Common::GetWorkRoot() {
   stdfs::path p(path_buf);
   if (p.has_parent_path()) {
     p = p.parent_path();
-    if (p.has_parent_path()) {
-      p = p.parent_path();
-    }
+  }
+  return p;
+}
+
+stdfs::path Common::GetCurrLibPath() {
+  stdfs::path p;
+#if defined(MYFRAME_OS_LINUX) || defined(MYFRAME_OS_ANDROID) || defined(MYFRAME_OS_MACOSX)
+  Dl_info info;
+  if (dladdr((void*)&Common::GetCurrLibPath, &info)) {
+    p = info.dli_fname;
+  } else {
+    return "";
+  }
+#elif defined(MYFRAME_OS_WINDOWS)
+  HMODULE h = NULL;
+  auto ret = GetModuleHandleEx(
+    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+    (LPCSTR)&Common::GetCurrLibPath,
+    &h);
+  if (ret == FALSE) {
+    return "";
+  }
+  char path_buf[MYFRAME_MAX_PATH];
+  memset(path_buf, 0, MYFRAME_MAX_PATH);
+  auto ret = GetModuleFileName(h, path_buf, MYFRAME_MAX_PATH);
+  if (ret == 0) {
+    return "";
+  }
+  if (static_cast<std::size_t>(ret) >= MYFRAME_MAX_PATH) {
+    path_buf[MYFRAME_MAX_PATH - 1] = '\0';
+  }
+  p = path_buf;
+#else
+  #error "Platform not supported"
+#endif
+  if (p.has_parent_path()) {
+    p = p.parent_path();
   }
   return p;
 }

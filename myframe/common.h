@@ -52,6 +52,8 @@ class MYFRAME_EXPORT Common final {
   //   libdemo.so 可以简写成 demo
   //   demo.dll 可以简写成 demo
   static std::string GetLibName(const std::string& name);
+  static stdfs::path GetCurrLibPath();
+  static stdfs::path GetCurrExePath();
 };
 
 }  // namespace myframe
