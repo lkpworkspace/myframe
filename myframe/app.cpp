@@ -76,25 +76,25 @@ bool App::Init(const Arguments& args) {
   int default_run_queue_size = 2;
   for (const auto& arg : args) {
     if (arg.type == Argument::ArgType::kArgString) {
-      if (arg.key == MYFRAME_SERVICE_LIB_DIR) {
+      if (arg.key == MYFRAME_KEY_SERVICE_LIB_DIR) {
         lib_dir = arg.value_str;
       }
     }
     if (arg.type == Argument::ArgType::kArgInteger) {
       int value_int = arg.value_int;
-      if (arg.key == MYFRAME_THREAD_POOL_SIZE) {
+      if (arg.key == MYFRAME_KEY_THREAD_POOL_SIZE) {
         thread_pool_size = value_int;
       }
-      if (arg.key == MYFRAME_WARNING_MSG_SIZE) {
+      if (arg.key == MYFRAME_KEY_WARNING_MSG_SIZE) {
         warning_msg_size = value_int;
       }
-      if (arg.key == MYFRAME_PENDING_QUEUE_SIZE) {
+      if (arg.key == MYFRAME_KEY_PENDING_QUEUE_SIZE) {
         default_pending_queue_size = value_int;
       }
-      if (arg.key == MYFRAME_RUN_QUEUE_SIZE) {
+      if (arg.key == MYFRAME_KEY_RUN_QUEUE_SIZE) {
         default_run_queue_size = value_int;
       }
-      if (arg.key == MYFRAME_EVENT_CONNE_SIZE) {
+      if (arg.key == MYFRAME_KEY_EVENT_CONNE_SIZE) {
         event_conn_size = value_int;
       }
     }

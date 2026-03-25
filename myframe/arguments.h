@@ -30,23 +30,23 @@ class MYFRAME_EXPORT Argument {
 
 class MYFRAME_EXPORT Arguments : public std::vector<Argument> {
  public:
-  void SetString(const std::string& key, const std::string& value);
+  void SetStr(const std::string& key, const std::string& value);
 
   void SetInt(const std::string& key, int value);
 
   std::string DebugString();
 };
 
-#define MYFRAME_SERVICE_LIB_DIR "app.lib_dir"
+#define MYFRAME_KEY_SERVICE_LIB_DIR "app.lib_dir"
 
-#define MYFRAME_THREAD_POOL_SIZE "app.thread_pool_size"
+#define MYFRAME_KEY_THREAD_POOL_SIZE "app.thread_pool_size"
 
-#define MYFRAME_WARNING_MSG_SIZE "app.warning_msg_size"
+#define MYFRAME_KEY_WARNING_MSG_SIZE "app.warning_msg_size"
 
-#define MYFRAME_PENDING_QUEUE_SIZE "app.pending_queue_size"
+#define MYFRAME_KEY_PENDING_QUEUE_SIZE "app.pending_queue_size"
 
-#define MYFRAME_RUN_QUEUE_SIZE "app.run_queue_size"
+#define MYFRAME_KEY_RUN_QUEUE_SIZE "app.run_queue_size"
 
-#define MYFRAME_EVENT_CONNE_SIZE "app.event_conn_size"
+#define MYFRAME_KEY_EVENT_CONNE_SIZE "app.event_conn_size"
 
 }  // namespace myframe

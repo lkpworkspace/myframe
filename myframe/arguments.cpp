@@ -23,7 +23,7 @@ std::string Argument::DebugString() {
   return ss.str();
 }
 
-void Arguments::SetString(const std::string& key, const std::string& value) {
+void Arguments::SetStr(const std::string& key, const std::string& value) {
   Argument arg;
   arg.type = Argument::ArgType::kArgString;
   arg.key = key;
