@@ -11,7 +11,7 @@ project(pymyframe)
 include(${SWIG_USE_FILE})
 
 set(dot_i_srcs
-  swig/test.i
+  swig/pymyframe.i
 )
 set_property(SOURCE ${dot_i_srcs} PROPERTY CPLUSPLUS ON)
 swig_add_library(${PROJECT_NAME}
@@ -20,15 +20,18 @@ swig_add_library(${PROJECT_NAME}
   SOURCES ${dot_i_srcs}
 )
 set_property(TARGET ${PROJECT_NAME} PROPERTY SWIG_INCLUDE_DIRECTORIES
+  ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 target_include_directories(${PROJECT_NAME}
   PRIVATE
+  ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${Python_INCLUDE_DIRS}
 )
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
+  myframe
   ${Python_LIBRARIES}
 )
 
@@ -40,8 +43,9 @@ install(TARGETS
 )
 file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/__init__.py")
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/myframe.py"
+  "${CMAKE_CURRENT_BINARY_DIR}/pymyframe.py"
   "${CMAKE_CURRENT_BINARY_DIR}/__init__.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/launcher.py"
   PERMISSIONS
   OWNER_READ OWNER_WRITE
   GROUP_READ
