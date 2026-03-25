@@ -18,7 +18,7 @@ class AppConf {
   friend class App;
  public:
   AppConf() {
-    log_dir_ = myframe::Common::GetAbsolutePath(log_dir_);
+    log_dir_ = myframe::Common::GetAbsolutePath(log_dir_).string();
     std::cout << "appconf construct\n";
   }
   ~AppConf() {
@@ -31,11 +31,11 @@ class AppConf {
 
   void setLibDir(const std::string& dir) {
     args_.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR,
-      myframe::Common::GetAbsolutePath(dir));
+      myframe::Common::GetAbsolutePath(dir).string());
   }
 
   void setLogDir(const std::string& dir) {
-    log_dir_ = myframe::Common::GetAbsolutePath(dir);
+    log_dir_ = myframe::Common::GetAbsolutePath(dir).string();
   }
 
   void setLogMaxSizeMB(int sz) {
@@ -95,8 +95,7 @@ class App {
       return false;
     }
     return app_->LoadServiceFromDir(
-      myframe::Common::GetAbsolutePath(path)
-    );
+      myframe::Common::GetAbsolutePath(path).string());
   }
 
   bool loadServiceFromFile(const std::string& filepath) {
@@ -104,8 +103,7 @@ class App {
       return false;
     }
     return app_->LoadServiceFromFile(
-      myframe::Common::GetAbsolutePath(filepath)
-    );
+      myframe::Common::GetAbsolutePath(filepath).string());
   }
 
   // int send(msg);
