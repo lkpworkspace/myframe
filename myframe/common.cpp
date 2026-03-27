@@ -34,10 +34,14 @@ namespace myframe {
 std::vector<stdfs::path> Common::GetDirFiles(const std::string& conf_path) {
   std::vector<stdfs::path> res;
   stdfs::path path(conf_path);
-  for (auto const& dir_entry : stdfs::directory_iterator{path}) {
-    if (dir_entry.is_regular_file()) {
-      res.emplace_back(dir_entry.path());
+  try {
+    for (auto const& dir_entry : stdfs::directory_iterator{path}) {
+      if (dir_entry.is_regular_file()) {
+        res.emplace_back(dir_entry.path());
+      }
     }
+  } catch(const std::exception &e) {
+    return res;
   }
   return res;
 }

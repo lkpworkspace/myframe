@@ -125,13 +125,16 @@ class App {
     return app_->Send(msg.msg_);
   }
 
+  // TODO(likepeng)
   // msg sendRequest(msg);
 
   bool addActor(PyObject* py_actor_obj, const std::string& py_actor_conf) {
+    if (app_ == nullptr) {
+      return false;
+    }
     if (!py_actor_obj) {
       return false;
     }
-
     // 解析配置
     auto json_obj = myframe::Common::LoadJsonFromString(py_actor_conf);
     if (json_obj.isNull()) {
