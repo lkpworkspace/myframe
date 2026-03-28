@@ -52,13 +52,31 @@ class PyActor : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) {
-    PyGILState_STATE gstate = PyGILState_Ensure();
     // 封装python Msg
-    pymyframe::Msg* m = new pymyframe::Msg(GetActorName(), msg->GetData());
+    pymyframe::Msg* m = new pymyframe::Msg();
+    myframe::Msg::TransMode msg_tm = msg->GetTransMode();
+    pymyframe::Msg::TransMode pymsg_tm;
+    if (msg_tm == myframe::Msg::TransMode::kHybrid) {
+      pymsg_tm = pymyframe::Msg::TransMode::HYBRID;
+    } else if (msg_tm == myframe::Msg::TransMode::kDDS) {
+      pymsg_tm = pymyframe::Msg::TransMode::DDS;
+    } else {
+      pymsg_tm = pymyframe::Msg::TransMode::INTRA;
+    }
+    m->setTransMode(pymsg_tm);
+    m->setSrc(msg->GetSrc());
+    m->setDst(msg->GetDst());
+    m->setType(msg->GetType());
+    m->setDesc(msg->GetDesc());
+    m->setData(msg->GetData());
+
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    // 创建python msg对象
     PyObject* py_msg = SWIG_NewPointerObj(
       reinterpret_cast<void*>(m),
       SWIGTYPE_p_pymyframe__Msg,
       SWIG_POINTER_OWN);  // 获得所有权
+
     // 调用python proc
     PyObject* py_res = PyObject_CallMethod(
       pyactor_,

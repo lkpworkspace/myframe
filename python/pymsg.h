@@ -69,7 +69,7 @@ class Msg {
   void setDst(const std::string& dst) { msg_->SetDst(dst); }
   void setType(const std::string& type) { msg_->SetType(type); }
   void setDesc(const std::string& desc) { msg_->SetDesc(desc); }
-  void setData(const std::string& data) {msg_->SetData(data); }
+  void setData(const std::string& data) { msg_->SetData(data); }
 
  private:
   std::shared_ptr<myframe::Msg> msg_;

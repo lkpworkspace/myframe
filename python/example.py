@@ -15,7 +15,7 @@ class Actor:
 
     # 接收 pymyframe.Msg
     def proc(self, msg):
-        print(f"actor get msg: {msg.getData()}")
+        print(f"{msg.getDst()} get msg from {msg.getSrc()}: {msg.getData()}")
 
 # 初始化
 app = myframe.App()
@@ -52,7 +52,7 @@ app.start()
 while True:
     time.sleep(1)
 
-    msg_text = "hello, world"
+    msg_text = "hello,world"
     print(f"mainthread send msg: {msg_text}")
 
     msg = myframe.Msg()
