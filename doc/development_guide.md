@@ -21,7 +21,10 @@
       "HelloActor": [
         {
           "instance_name": "1",
-          "instance_params": ""
+          "instance_config": {
+            "pending_queue_size":-1,
+            "run_queue_size":2
+          }
         }
       ]
     },
@@ -44,6 +47,8 @@
     - 可以写简略库名，比如 Hello
     - 也可以写库的全名，比如libHello.so, Hello,dll
   - 创建1个actor实例，名称是 actor.HelloActor.1
+    - pending_queue_size是这个等待队列长度,-1是无限制
+    - run_queue_size是设置每次执行消费最大消息数量, -1是无限制
   - 创建1个worker实例，名称是 worker.HelloReceiver.1
   - 创建1个worker实例，名称是 worker.HelloSender.1
 
