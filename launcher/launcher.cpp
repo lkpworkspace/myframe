@@ -76,13 +76,16 @@ int main(int argc, char** argv) {
 
   // 初始化并启动线程
   g_app = std::make_shared<myframe::App>();
-  if (false == g_app->Init(
-    lib_dir.string(),
-    module_args.GetThreadPoolSize(),
-    module_args.GetConnEventSize(),
-    module_args.GetWarningMsgSize(),
-    module_args.GetDefaultPendingQueueSize(),
-    module_args.GetDefaultRunQueueSize())) {
+  myframe::Arguments args;
+  args.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR, lib_dir.string());
+  args.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, module_args.GetThreadPoolSize());
+  args.SetInt(MYFRAME_KEY_EVENT_CONNE_SIZE, module_args.GetConnEventSize());
+  args.SetInt(MYFRAME_KEY_WARNING_MSG_SIZE, module_args.GetWarningMsgSize());
+  args.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE,
+    module_args.GetDefaultPendingQueueSize());
+  args.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, module_args.GetDefaultRunQueueSize());
+  LOG(INFO) << "\n" << args.DebugString();
+  if (false == g_app->Init(args)) {
     LOG(ERROR) << "Init failed";
     return -1;
   }

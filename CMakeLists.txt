@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-if (POLICY CMP0091)
+# Allow the user to specify the MSVC runtime
+if (POLICY CMP0091) # >= 3.15
   cmake_policy(SET CMP0091 NEW)
 endif()
 project(myframe
-  VERSION 0.9.9
+  VERSION 1.0.0
   LANGUAGES CXX
 )
 
@@ -14,6 +15,7 @@ option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
 option(MYFRAME_INSTALL_TEMPLATE "Install template project" ON)
 option(MYFRAME_INSTALL_LAUNCHER "Install launcher program" ON)
 option(MYFRAME_ENABLE_ASAN "Enable ASAN" OFF)
+option(MYFRAME_ENABLE_PYBIND "Enable Python bindings" OFF)
 
 ### cmake module
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -50,11 +52,16 @@ set(MYFRAME_LIB_DIR "lib")
 set(MYFRAME_LOG_DIR "log")
 set(MYFRAME_SERVICE_DIR "service")
 set(MYFRAME_CONF_DIR "conf")
+set(MYFRAME_PYTHON_DIR "lib/python")
 
 ### deps libs
 find_package(Threads REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(glog REQUIRED)
+if (MYFRAME_ENABLE_PYBIND)
+  find_package(SWIG REQUIRED)
+  find_package(Python COMPONENTS Development REQUIRED)
+endif()
 
 get_target_property(glog_lib_type glog::glog TYPE)
 get_target_property(jsoncpp_lib_type JsonCpp::JsonCpp TYPE)
@@ -69,6 +76,9 @@ if (MYFRAME_GENERATE_EXAMPLE)
 endif()
 if (MYFRAME_GENERATE_TEST)
   add_subdirectory(test)
+endif()
+if (MYFRAME_ENABLE_PYBIND)
+  add_subdirectory(python)
 endif()
 
 ### install file/dir
@@ -87,6 +97,10 @@ if (MYFRAME_INSTALL_TEMPLATE)
   )
   install(DIRECTORY templates DESTINATION .)
 endif()
+install(PROGRAMS
+  "tools/myframe_setup.sh"
+  DESTINATION ${MYFRAME_BIN_DIR}
+)
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
 install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_DIR})
 

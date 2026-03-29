@@ -84,6 +84,7 @@ file(GLOB header_files
   export.h
   macros.h
   common.h
+  arguments.h
   log.h
   msg.h
   mailbox.h
