@@ -17,9 +17,9 @@ namespace myframe {
 class MYFRAME_EXPORT Msg final {
  public:
   enum class TransMode : int {
-    kHybrid = 0,
-    kIntra = 1,
-    kDDS = 2,
+    kHybrid = 0,  // 混合模式
+    kIntra = 1,  // 进程内传递
+    kDDS = 2,  // 进程间/机器间传递
   };
 
   Msg() = default;
@@ -42,7 +42,20 @@ class MYFRAME_EXPORT Msg final {
    * @return const std::string& 源地址
    */
   const std::string& GetSrc() const { return src_; }
+
+  /**
+   * @brief 获得消息目的地址
+   * @note 来源：actor/worker/timer
+   * @return const std::string& 目的地址
+   */
   const std::string& GetDst() const { return dst_; }
+
+  /**
+   * @brief 消息名称
+   * @note 自定义，用于区分传递给同一个actor的不同消息
+   * @return const std::string& 消息名称
+   */
+  const std::string& GetName() const { return name_; }
 
   /**
    * @brief 消息类型
@@ -54,8 +67,9 @@ class MYFRAME_EXPORT Msg final {
 
   /**
    * @brief 消息描述
-   * @note 目前timer使用到该函数，见 Actor::Timeout()
-   *
+   * @note 目前Actor的Timeout和Subscribe有使用到，
+   * 见 Actor::Timeout() / Actor::Subscribe()，
+   * 也可以自定义
    * @return const std::string& 消息描述
    */
   const std::string& GetDesc() const { return desc_; }
@@ -74,6 +88,7 @@ class MYFRAME_EXPORT Msg final {
   void SetTransMode(TransMode tans_mode) { trans_mode_ = tans_mode; }
   void SetSrc(const std::string& src) { src_ = src; }
   void SetDst(const std::string& dst) { dst_ = dst; }
+  void SetName(const std::string& name) { name_ = name; }
   void SetType(const std::string& type) { type_ = type; }
   void SetDesc(const std::string& desc) { desc_ = desc; }
   void SetData(const char* data, unsigned int len);
@@ -86,6 +101,7 @@ class MYFRAME_EXPORT Msg final {
  private:
   std::string src_;
   std::string dst_;
+  std::string name_;
   std::string type_;
   std::string desc_;
   std::string data_;

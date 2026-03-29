@@ -87,18 +87,18 @@ class MYFRAME_EXPORT Actor {
   /**
    * Subscribe() - 订阅actor的消息
    * @addr: 订阅actor的地址
-   * @msg_type: 订阅消息类型
+   * @msg_desc: 订阅消息描述
    * @mode: 订阅消息影响范围
    *
    *     被订阅的组件需要在Proc函数中处理订阅消息，消息格式：
-   *        msg->GetType() == "SUBSCRIBE" 确认是订阅消息
-   *        msg->GetDesc() == <msg_type> 确认消息类型
    *        msg->GetSrc() 确定是订阅组件地址
+   *        msg->GetType() == "SUBSCRIBE" 确认是订阅消息
+   *        msg->GetDesc() == <msg_desc> 确认消息描述
    * @return: 成功返回true,失败返回false
    */
   bool Subscribe(
     const std::string& addr,
-    const std::string& msg_type = "",
+    const std::string& msg_desc = "",
     const Msg::TransMode mode = Msg::TransMode::kIntra);
 
   /**

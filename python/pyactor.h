@@ -66,6 +66,7 @@ class PyActor : public myframe::Actor {
     m->setTransMode(pymsg_tm);
     m->setSrc(msg->GetSrc());
     m->setDst(msg->GetDst());
+    m->setName(msg->GetName());
     m->setType(msg->GetType());
     m->setDesc(msg->GetDesc());
     m->setData(msg->GetData());
