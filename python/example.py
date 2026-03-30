@@ -20,12 +20,12 @@ class TestRecv(myframe.Actor):
 class TestTimer(myframe.Actor):
     def init(self):
         print(f"{self.getActorName()} init")
-        self.timeout("a", 1000)
+        self.timeout("timer", 1000)
         return 0
 
     def proc(self, msg):
         print(f"TestTimer: {msg.debugString()}, data: {msg.getData()}")
-        self.timeout("a", 1000)
+        self.timeout("timer", 1000)
 
 # 创建actor对象订阅消息
 class TestPub(myframe.Actor):
@@ -77,6 +77,23 @@ if res == False:
 # if res == False:
 #     exit(-1)
 
+# res = app.loadServiceFromJsonStr(
+#     """
+#     {
+#         "type":"library",
+#         "lib":"example_actor_helloworld",
+#         "actor":{
+#             "ExampleActorHelloWorld":[
+#                 {
+#                     "instance_name":"1"
+#                 }
+#             ]
+#         }
+#     }
+#     """)
+# if res == False:
+#     exit(-1)
+
 # 添加actor对象到框架中
 # 注意不要销毁actor对象否则会导致调用异常
 
@@ -86,8 +103,7 @@ res = app.addActor(test_recv,
     {
         "instance_name":"test_recv"
     }
-    """
-)
+    """)
 if res == False:
     exit(-1)
 
@@ -97,8 +113,7 @@ res = app.addActor(test_timer,
     {
         "instance_name":"test_timer"
     }
-    """
-)
+    """)
 if res == False:
     exit(-1)
 
@@ -108,8 +123,7 @@ res = app.addActor(test_pub,
     {
         "instance_name":"test_pub"
     }
-    """
-)
+    """)
 if res == False:
     exit(-1)
 
@@ -119,8 +133,7 @@ res = app.addActor(test_sub,
     {
         "instance_name":"test_sub"
     }
-    """
-)
+    """)
 if res == False:
     exit(-1)
 

@@ -70,10 +70,16 @@ Msg& Msg::operator=(const Msg& o) noexcept {
 std::ostream& operator<<(std::ostream& out, const Msg& msg) {
   out << "[" << msg.GetSrc()
     << " to " << msg.GetDst()
-    << "] trans mode: " << static_cast<int>(msg.GetTransMode())
-    << ", name: " << msg.GetName()
-    << ", type: " << msg.GetType()
-    << ", desc: " << msg.GetDesc();
+    << "] TransMode: " << static_cast<int>(msg.GetTransMode());
+  if (!msg.GetName().empty()) {
+    out << ", Name: " << msg.GetName();
+  }
+  if (!msg.GetType().empty()) {
+    out << ", Type: " << msg.GetType();
+  }
+  if (!msg.GetDesc().empty()) {
+    out << ", Desc: " << msg.GetDesc();
+  }
   return out;
 }
 

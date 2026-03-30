@@ -118,6 +118,14 @@ class App {
       myframe::Common::GetAbsolutePath(filepath).string());
   }
 
+  bool loadServiceFromJsonStr(const std::string& json_str) {
+    if (app_ == nullptr) {
+      return false;
+    }
+    auto json_obj = myframe::Common::LoadJsonFromString(json_str);
+    return app_->LoadServiceFromJson(json_obj);
+  }
+
   int send(const pymyframe::Msg& msg) {
     if (app_ == nullptr) {
       return -1;
