@@ -5,108 +5,87 @@ All rights reserved.
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 #pragma once
-#include <Python.h>
 #include <string>
 #include <memory>
+#include <functional>
 #include "myframe/actor.h"
 #include "myframe/msg.h"
 #include "pymsg.h"
 
 namespace pymyframe {
 
-class PyActor : public myframe::Actor {
+class PyActor;
+class Actor {
+  friend class PyActor;
+
  public:
-  PyActor() {
-    // std::cout << "pyactor construct\n";
+  Actor() {
+    // std::cout << "pymyframe actor construct\n";
   }
 
-  virtual ~PyActor() {
-    // std::cout << GetActorName() << " deconstruct\n";
-    // Py_XDECREF(pyactor_);
-    // pyactor_ = nullptr;
+  virtual ~Actor() {
+    // std::cout << "pymyframe actor deconstruct\n";
   }
 
-  int Init() {
-    // std::cout << GetActorName() << " init\n";
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    // 调用python init
-    PyObject* py_res = PyObject_CallMethod(
-      pyactor_,
-      "init",
-      NULL);
-    if (!py_res) {
-      PyErr_Print();
-      PyGILState_Release(gstate);
-      return -1;
+  virtual int init() = 0;
+
+  virtual void proc(const pymyframe::Msg& msg) = 0;
+
+  int timeout(const std::string& timer_name, int ms) {
+    if (timeout_cb_) {
+      return timeout_cb_(timer_name, ms);
     }
-    auto res = PyLong_AsLong(py_res);
-    if (res == -1 && PyErr_Occurred()) {
-      Py_DECREF(py_res);
-      PyErr_Print();
-      PyGILState_Release(gstate);
-      return -1;
-    }
-    Py_DECREF(py_res);
-    PyGILState_Release(gstate);
-    return res;
+    return -1;
   }
 
-  void Proc(const std::shared_ptr<const myframe::Msg>& msg) {
-    // 封装python Msg
-    pymyframe::Msg* m = new pymyframe::Msg();
-    myframe::Msg::TransMode msg_tm = msg->GetTransMode();
-    pymyframe::Msg::TransMode pymsg_tm;
-    if (msg_tm == myframe::Msg::TransMode::kHybrid) {
-      pymsg_tm = pymyframe::Msg::TransMode::HYBRID;
-    } else if (msg_tm == myframe::Msg::TransMode::kDDS) {
-      pymsg_tm = pymyframe::Msg::TransMode::DDS;
-    } else {
-      pymsg_tm = pymyframe::Msg::TransMode::INTRA;
+  void send(const pymyframe::Msg& msg) {
+    if (send_cb_) {
+      send_cb_(msg);
     }
-    m->setTransMode(pymsg_tm);
-    m->setSrc(msg->GetSrc());
-    m->setDst(msg->GetDst());
-    m->setType(msg->GetType());
-    m->setDesc(msg->GetDesc());
-    m->setData(msg->GetData());
-
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    // 创建python msg对象
-    PyObject* py_msg = SWIG_NewPointerObj(
-      reinterpret_cast<void*>(m),
-      SWIGTYPE_p_pymyframe__Msg,
-      SWIG_POINTER_OWN);  // 获得所有权
-
-    // 调用python proc
-    PyObject* py_res = PyObject_CallMethod(
-      pyactor_,
-      "proc",
-      "N",  // 传递pyobject，并转移所有权
-      py_msg);
-    if (!py_res) {
-      PyErr_Print();
-      PyGILState_Release(gstate);
-      return;
-    }
-    Py_DECREF(py_res);
-    PyGILState_Release(gstate);
   }
 
-  void SetPyObj(PyObject* obj) {
-    // TODO(FIXME):
-    //    如果增加引用会导致应用无法正常退出
-    //    因为python判断pyapp持有pyactor引用时，
-    //    不会销毁pyapp从而导致应用直接退出，没有清理资源的步骤。
+  bool subscribe(
+    const std::string& addr,
+    const std::string& desc,
+    const Msg::TransMode mode = Msg::TransMode::INTRA) {
+    if (subscribe_cb_) {
+      return subscribe_cb_(addr, desc, mode);
+    }
+    return false;
+  }
 
-    // if (pyactor_) {
-    //   Py_DECREF(pyactor_);
-    // }
-    pyactor_ = obj;
-    // Py_INCREF(pyactor_);
+  const std::string getActorName() const {
+    if (get_actor_name_cb_) {
+      return get_actor_name_cb_();
+    }
+    return "";
   }
 
  private:
-  PyObject* pyactor_{nullptr};
+  void setTimeoutCallback(std::function<int(const std::string&, int)> cb) {
+    timeout_cb_ = cb;
+  }
+
+  void setSendCallback(std::function<void(const pymyframe::Msg& msg)> cb) {
+    send_cb_ = cb;
+  }
+
+  void setSubscribeCallback(
+    std::function<
+      bool(const std::string&, const std::string&, const Msg::TransMode)> cb) {
+    subscribe_cb_ = cb;
+  }
+
+  void setGetActorNameCallback(std::function<const std::string(void)> cb) {
+    get_actor_name_cb_ = cb;
+  }
+
+  std::function<int(const std::string&, int)> timeout_cb_;
+  std::function<void(const pymyframe::Msg& msg)> send_cb_;
+  std::function<
+    bool(const std::string&, const std::string&, const Msg::TransMode)>
+      subscribe_cb_;
+  std::function<const std::string(void)> get_actor_name_cb_;
 };
 
 }  // namespace pymyframe

@@ -14,7 +14,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/app.h"
 #include "myframe/mod_manager.h"
 #include "pymsg.h"
-#include "pyactor.h"
+#include "pyactor_wrap.h"
 
 namespace pymyframe {
 
@@ -118,6 +118,14 @@ class App {
       myframe::Common::GetAbsolutePath(filepath).string());
   }
 
+  bool loadServiceFromJsonStr(const std::string& json_str) {
+    if (app_ == nullptr) {
+      return false;
+    }
+    auto json_obj = myframe::Common::LoadJsonFromString(json_str);
+    return app_->LoadServiceFromJson(json_obj);
+  }
+
   int send(const pymyframe::Msg& msg) {
     if (app_ == nullptr) {
       return -1;
@@ -128,7 +136,9 @@ class App {
   // TODO(likepeng)
   // msg sendRequest(msg);
 
-  bool addActor(PyObject* py_actor_obj, const std::string& py_actor_conf) {
+  bool addActor(
+      pymyframe::Actor* py_actor_obj,
+      const std::string& py_actor_conf) {
     if (app_ == nullptr) {
       return false;
     }
@@ -153,7 +163,7 @@ class App {
       return false;
     }
     auto pyactor = std::dynamic_pointer_cast<pymyframe::PyActor>(actor);
-    pyactor->SetPyObj(py_actor_obj);
+    pyactor->SetPyActor(py_actor_obj);
     return app_->AddActor(actor, json_obj);
   }
 

@@ -4,7 +4,7 @@ if (POLICY CMP0091) # >= 3.15
   cmake_policy(SET CMP0091 NEW)
 endif()
 project(myframe
-  VERSION 1.0.0
+  VERSION 1.0.1
   LANGUAGES CXX
 )
 

@@ -20,5 +20,13 @@ int main() {
   for (size_t i = 0; i < root_files.size(); ++i) {
     LOG(INFO) << "  " << root_files[i].string();
   }
+
+  std::string msg_name = "actor.class.inst.msg";
+  std::vector<std::string_view> name_list;
+  myframe::Common::SplitMsgName(msg_name, &name_list);
+  LOG(INFO) << "split msg (" << msg_name << "):";
+  for (size_t i = 0; i < name_list.size(); ++i) {
+    LOG(INFO) << "  " << name_list[i] << std::endl;
+  }
   return 0;
 }

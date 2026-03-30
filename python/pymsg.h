@@ -7,6 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #pragma once
 #include <string>
 #include <memory>
+#include <sstream>
 #include "myframe/msg.h"
 
 namespace pymyframe {
@@ -50,6 +51,7 @@ class Msg {
   }
   const std::string& getSrc() const { return msg_->GetSrc(); }
   const std::string& getDst() const { return msg_->GetDst(); }
+  const std::string& getName() const { return msg_->GetName(); }
   const std::string& getType() const { return msg_->GetType(); }
   const std::string& getDesc() const { return msg_->GetDesc(); }
   const std::string& getData() const { return msg_->GetData(); }
@@ -67,9 +69,16 @@ class Msg {
   }
   void setSrc(const std::string& src) { msg_->SetSrc(src); }
   void setDst(const std::string& dst) { msg_->SetDst(dst); }
+  void setName(const std::string& name) { msg_->SetName(name); }
   void setType(const std::string& type) { msg_->SetType(type); }
   void setDesc(const std::string& desc) { msg_->SetDesc(desc); }
   void setData(const std::string& data) { msg_->SetData(data); }
+
+  std::string debugString() {
+    std::stringstream ss;
+    ss << *msg_;
+    return ss.str();
+  }
 
  private:
   std::shared_ptr<myframe::Msg> msg_;

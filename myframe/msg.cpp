@@ -47,6 +47,7 @@ Msg& Msg::operator=(Msg&& o) noexcept {
   trans_mode_ = o.trans_mode_;
   src_ = std::move(o.src_);
   dst_ = std::move(o.dst_);
+  name_ = std::move(o.name_);
   type_ = std::move(o.type_);
   desc_ = std::move(o.desc_);
   data_ = std::move(o.data_);
@@ -58,6 +59,7 @@ Msg& Msg::operator=(const Msg& o) noexcept {
   trans_mode_ = o.trans_mode_;
   src_ = o.src_;
   dst_ = o.dst_;
+  name_ = o.name_;
   type_ = o.type_;
   desc_ = o.desc_;
   data_ = o.data_;
@@ -68,8 +70,16 @@ Msg& Msg::operator=(const Msg& o) noexcept {
 std::ostream& operator<<(std::ostream& out, const Msg& msg) {
   out << "[" << msg.GetSrc()
     << " to " << msg.GetDst()
-    << "] trans mode: " << static_cast<int>(msg.GetTransMode())
-    << ", type: " << msg.GetType();
+    << "] TransMode: " << static_cast<int>(msg.GetTransMode());
+  if (!msg.GetName().empty()) {
+    out << ", Name: " << msg.GetName();
+  }
+  if (!msg.GetType().empty()) {
+    out << ", Type: " << msg.GetType();
+  }
+  if (!msg.GetDesc().empty()) {
+    out << ", Desc: " << msg.GetDesc();
+  }
   return out;
 }
 

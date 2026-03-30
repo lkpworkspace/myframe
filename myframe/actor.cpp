@@ -65,7 +65,7 @@ int Actor::Timeout(const std::string& timer_name, int expired) {
 
 bool Actor::Subscribe(
   const std::string& addr,
-  const std::string& msg_type,
+  const std::string& msg_desc,
   const Msg::TransMode mode) {
   if (ctx_ == nullptr) {
     return false;
@@ -75,7 +75,7 @@ bool Actor::Subscribe(
   }
   auto msg = std::make_shared<Msg>();
   msg->SetType("SUBSCRIBE");
-  msg->SetDesc(msg_type);
+  msg->SetDesc(msg_desc);
   msg->SetTransMode(mode);
   auto mailbox = ctx_->GetMailbox();
   mailbox->Send(addr, std::move(msg));
