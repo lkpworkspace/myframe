@@ -7,6 +7,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #pragma once
 #include <string>
 #include <memory>
+#include <sstream>
 #include "myframe/msg.h"
 
 namespace pymyframe {
@@ -72,6 +73,12 @@ class Msg {
   void setType(const std::string& type) { msg_->SetType(type); }
   void setDesc(const std::string& desc) { msg_->SetDesc(desc); }
   void setData(const std::string& data) { msg_->SetData(data); }
+
+  std::string debugString() {
+    std::stringstream ss;
+    ss << *msg_;
+    return ss.str();
+  }
 
  private:
   std::shared_ptr<myframe::Msg> msg_;
