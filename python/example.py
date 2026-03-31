@@ -63,6 +63,7 @@ class TestSub(myframe.Actor):
 # 初始化
 app = myframe.App()
 app_conf = myframe.AppConf()
+app_conf.setLogDir("")
 res = app.init(app_conf)
 if res == False:
     exit(-1)

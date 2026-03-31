@@ -40,7 +40,11 @@ class AppConf {
   }
 
   void setLogDir(const std::string& dir) {
-    log_dir_ = myframe::Common::GetAbsolutePath(dir).string();
+    if (dir.empty()) {
+      log_dir_ = "";
+    } else {
+      log_dir_ = myframe::Common::GetAbsolutePath(dir).string();
+    }
   }
 
   void setLogMaxSizeMB(int sz) {
@@ -62,7 +66,7 @@ class AppConf {
  private:
   int log_max_size_{100};
   std::string log_dir_{"log"};
-  std::string process_name_{"launcher"};
+  std::string process_name_{"myframe"};
   myframe::Arguments args_;
 };
 
@@ -84,10 +88,12 @@ class App {
 
   bool init(const AppConf& conf) {
     // 初始化Log
-    myframe::InitLog(
-      conf.log_dir_,
-      conf.process_name_,
-      conf.log_max_size_);
+    if (!conf.log_dir_.empty()) {
+      myframe::InitLog(
+        conf.log_dir_,
+        conf.process_name_,
+        conf.log_max_size_);
+    }
     // 初始化App
     app_ = std::make_shared<myframe::App>();
     bool res = app_->Init(conf.args_);
