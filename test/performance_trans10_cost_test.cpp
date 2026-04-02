@@ -96,21 +96,12 @@ std::vector<int64_t> Trans10ActorCostTest::cost_us_list_;
 
 
 int main() {
-  auto lib_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
-
   myframe::InitLog(log_dir, "performance_trans10_cost_test");
 
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;
-  args.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR, lib_dir);
-  args.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, 4);
-  args.SetInt(MYFRAME_KEY_EVENT_CONNE_SIZE, 2);
-  args.SetInt(MYFRAME_KEY_WARNING_MSG_SIZE, 10);
-  args.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE, -1);
-  args.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, 2);
   if (false == app->Init(args)) {
     LOG(ERROR) << "Init failed";
     return -1;

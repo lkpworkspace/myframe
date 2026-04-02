@@ -21,21 +21,13 @@ class ExampleActorPub : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    if (msg->GetType() == "SUBSCRIBE") {
-      pub_list_.push_back(msg->GetSrc());
-      return;
-    }
-    if (msg->GetType() == "TIMER") {
-      auto mailbox = GetMailbox();
-      for (size_t i = 0; i < pub_list_.size(); ++i) {
-        mailbox->Send(pub_list_[i],
-          std::make_shared<myframe::Msg>("pub msg"));
-      }
+    if (msg->GetType() == MYFRAME_MSG_TYPE_TIMER) {
+      auto pub_msg = std::make_shared<myframe::Msg>();
+      pub_msg->SetData("hello, this is pub msg");
+      Publish(std::move(pub_msg));
       Timeout("1000ms", 100);
     }
   }
- private:
-  std::vector<std::string> pub_list_;
 };
 
 class ExampleActorSub : public myframe::Actor {

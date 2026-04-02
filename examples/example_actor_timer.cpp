@@ -18,7 +18,8 @@ class ExampleActorTimer : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    if (msg->GetType() == "TIMER" && msg->GetDesc() == "1000ms") {
+    if (msg->GetType() == MYFRAME_MSG_TYPE_TIMER &&
+        msg->GetDesc() == "1000ms") {
       /* 设置下一次超时时间 100 * 10 ms */
       Timeout("1000ms", 100);
       LOG(INFO) << *msg << ": " << "timeout";

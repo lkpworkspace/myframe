@@ -26,6 +26,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/worker_context_manager.h"
 #include "myframe/mod_manager.h"
 #include "myframe/poller.h"
+#include "myframe/msg_manager.h"
 
 namespace myframe {
 
@@ -46,7 +47,8 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : mods_(new ModManager())
+  : msg_mgr_(new MsgManager())
+  , mods_(new ModManager())
   , poller_(Poller::Create())
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_mgr_(new EventManager())
@@ -76,25 +78,25 @@ bool App::Init(const Arguments& args) {
   int default_run_queue_size = 2;
   for (const auto& arg : args) {
     if (arg.type == Argument::ArgType::kArgString) {
-      if (arg.key == MYFRAME_KEY_SERVICE_LIB_DIR) {
+      if (arg.key == MYFRAME_ARG_KEY_SERVICE_LIB_DIR) {
         lib_dir = arg.value_str;
       }
     }
     if (arg.type == Argument::ArgType::kArgInteger) {
       int value_int = arg.value_int;
-      if (arg.key == MYFRAME_KEY_THREAD_POOL_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_THREAD_POOL_SIZE) {
         thread_pool_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_WARNING_MSG_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_WARNING_MSG_SIZE) {
         warning_msg_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_PENDING_QUEUE_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_PENDING_QUEUE_SIZE) {
         default_pending_queue_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_RUN_QUEUE_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_RUN_QUEUE_SIZE) {
         default_run_queue_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_EVENT_CONNE_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_EVENT_CONNE_SIZE) {
         event_conn_size = value_int;
       }
     }
@@ -378,79 +380,90 @@ bool App::StartTimerWorker() {
   return true;
 }
 
-void App::DispatchMsg(std::shared_ptr<Msg> msg) {
-  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+void App::DispatchMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst,
+    Msg::TransMode trans_mode) {
   VLOG(1) << *msg;
+  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+  auto dst_addr = dst.empty() ? msg->GetDst() : dst;
   /// 消息分发
-  Common::SplitMsgName(msg->GetDst(), &name_list_);
+  Common::SplitMsgName(dst_addr, &name_list_);
   if (name_list_.size() != 3) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
   }
   // trans func
-  static auto trans2actor = [this](std::shared_ptr<Msg> m) {
-    if (actor_ctx_mgr_->HasActor(m->GetDst())) {
-      actor_ctx_mgr_->DispatchMsg(std::move(m));
-    }
-  };
-  static auto trans2worker = [this](std::shared_ptr<Msg> m) {
-    if (ev_mgr_->Has(m->GetDst())) {
-      worker_ctx_mgr_->DispatchWorkerMsg(std::move(m));
-    }
-  };
-  static auto trans2ev = [this](std::shared_ptr<Msg> m) {
-    if (name_list_[1] == "conn") {
-      auto handle = ev_mgr_->ToHandle(m->GetDst());
-      ev_conn_mgr_->Notify(handle, std::move(m));
-    } else {
-      LOG(ERROR) << "Unknown msg " << *m;
-    }
-  };
-  static auto trans2dds = [this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      return;
-    }
-    if (node_addr_.substr(0, 5) == "actor") {
-      actor_ctx_mgr_->DispatchMsg(m, node_addr_);
-    } else if (node_addr_.substr(0, 6) == "worker") {
-      worker_ctx_mgr_->DispatchWorkerMsg(m, node_addr_);
-    } else {
-      LOG(ERROR) << "Unknown msg " << *m;
-    }
-  };
-  static auto trans2hybird1 = [&, this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      trans2actor(std::move(m));
-      return;
-    }
-    trans2actor(m);
-    trans2dds(std::move(m));
-  };
-  static auto trans2hybird2 = [&, this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      trans2worker(std::move(m));
-      return;
-    }
-    trans2worker(m);
-    trans2dds(std::move(m));
-  };
-  static auto trans2hybird3 = [&, this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      trans2ev(std::move(m));
-      return;
-    }
-    trans2ev(m);
-    trans2dds(std::move(m));
-  };
+  static auto trans2actor =
+    [this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (actor_ctx_mgr_->HasActor(dst)) {
+        actor_ctx_mgr_->DispatchMsg(std::move(m), dst);
+      }
+    };
+  static auto trans2worker =
+    [this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (ev_mgr_->Has(dst)) {
+        worker_ctx_mgr_->DispatchWorkerMsg(std::move(m), dst);
+      }
+    };
+  static auto trans2ev =
+    [this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (name_list_[1] == "conn") {
+        auto handle = ev_mgr_->ToHandle(dst);
+        ev_conn_mgr_->Notify(handle, std::move(m));
+      } else {
+        LOG(ERROR) << "Unknown msg " << *m;
+      }
+    };
+  static auto trans2dds =
+    [this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (node_addr_.empty()) {
+        return;
+      }
+      if (node_addr_.substr(0, 5) == "actor") {
+        actor_ctx_mgr_->DispatchMsg(m, node_addr_);
+      } else if (node_addr_.substr(0, 6) == "worker") {
+        worker_ctx_mgr_->DispatchWorkerMsg(m, node_addr_);
+      } else {
+        LOG(ERROR) << "Unknown msg " << *m;
+      }
+    };
+  static auto trans2hybird1 =
+    [&, this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (node_addr_.empty()) {
+        trans2actor(std::move(m), dst);
+        return;
+      }
+      trans2actor(m, dst);
+      trans2dds(std::move(m), dst);
+    };
+  static auto trans2hybird2 =
+    [&, this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (node_addr_.empty()) {
+        trans2worker(std::move(m), dst);
+        return;
+      }
+      trans2worker(m, dst);
+      trans2dds(std::move(m), dst);
+    };
+  static auto trans2hybird3 =
+    [&, this](std::shared_ptr<Msg> m, const std::string& dst) {
+      if (node_addr_.empty()) {
+        trans2ev(std::move(m), dst);
+        return;
+      }
+      trans2ev(m, dst);
+      trans2dds(std::move(m), dst);
+    };
   // trans vec
   static std::vector<
-    std::vector<
-      std::function<void(std::shared_ptr<Msg>)>>> trans_map = {
-    // kIntra, kDDS, kHybird
-    {trans2actor, trans2dds, trans2hybird1},  // actor
-    {trans2worker, trans2dds, trans2hybird2},  // worker
-    {trans2ev, trans2dds, trans2hybird3}  // connevent
-  };
+    std::vector<std::function<void(std::shared_ptr<Msg>, const std::string&)>>>
+      trans_map = {
+        // kIntra, kDDS, kHybird
+        {trans2actor, trans2dds, trans2hybird1},  // actor
+        {trans2worker, trans2dds, trans2hybird2},  // worker
+        {trans2ev, trans2dds, trans2hybird3}  // connevent
+      };
   // trans
   int trans_idx1 = -1;
   int trans_idx2 = -1;
@@ -461,7 +474,6 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
   } else if (name_list_[0] == "event") {
     trans_idx1 = 2;
   }
-  auto trans_mode = msg->GetTransMode();
   if (trans_mode == Msg::TransMode::kIntra) {
     trans_idx2 = 0;
   } else if (trans_mode == Msg::TransMode::kDDS) {
@@ -473,7 +485,32 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
   }
-  trans_map[trans_idx1][trans_idx2](std::move(msg));
+  trans_map[trans_idx1][trans_idx2](std::move(msg), dst_addr);
+}
+
+void App::DispatchMsg(std::shared_ptr<Msg> msg) {
+  auto msg_type = msg->GetType();
+  if (msg_type == MYFRAME_MSG_TYPE_SUB) {  // 判断是订阅消息
+    if (msg_mgr_->AddSubInfo(msg)) {
+      DispatchMsg(std::move(msg), node_addr_, Msg::TransMode::kDDS);
+    }
+  } else if (msg_type == MYFRAME_MSG_TYPE_PUB) {  // 判断时发布消息
+    if (msg_mgr_->AddPubInfo(msg)) {
+      msg_mgr_->DispatchPubMsg(
+        std::move(msg),
+        [this](
+            std::shared_ptr<Msg> msg,
+            const std::string& dst,
+            Msg::TransMode trans_mode) {
+          auto dst_addr = dst.empty() ? node_addr_ : dst;
+          DispatchMsg(std::move(msg), dst_addr, trans_mode);
+        });
+    }
+  } else {  // 判断是普通消息
+    auto dst = msg->GetDst();
+    auto tm = msg->GetTransMode();
+    DispatchMsg(std::move(msg), dst, tm);
+  }
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {

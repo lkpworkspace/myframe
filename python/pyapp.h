@@ -35,7 +35,7 @@ class AppConf {
   }
 
   void setLibDir(const std::string& dir) {
-    args_.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR,
+    args_.SetStr(MYFRAME_ARG_KEY_SERVICE_LIB_DIR,
       myframe::Common::GetAbsolutePath(dir).string());
   }
 
@@ -52,15 +52,15 @@ class AppConf {
   }
 
   void setThreadPoolSize(int sz) {
-    args_.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, sz);
+    args_.SetInt(MYFRAME_ARG_KEY_THREAD_POOL_SIZE, sz);
   }
 
   void setPendingQueueSize(int sz) {
-    args_.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE, sz);
+    args_.SetInt(MYFRAME_ARG_KEY_PENDING_QUEUE_SIZE, sz);
   }
 
   void setRunQueueSize(int sz) {
-    args_.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, sz);
+    args_.SetInt(MYFRAME_ARG_KEY_RUN_QUEUE_SIZE, sz);
   }
 
  private:

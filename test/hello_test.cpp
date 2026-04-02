@@ -31,17 +31,9 @@ class Hello : public myframe::Actor {
 };
 
 int main() {
-  auto lib_dir =
-    myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
-
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;
-  args.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR, lib_dir);
-  args.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, 1);
-  args.SetInt(MYFRAME_KEY_EVENT_CONNE_SIZE, 2);
-  args.SetInt(MYFRAME_KEY_WARNING_MSG_SIZE, 10);
-  args.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE, -1);
-  args.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, 2);
+  args.SetInt(MYFRAME_ARG_KEY_THREAD_POOL_SIZE, 1);
   if (false == app->Init(args)) {
     std::cout << "Init failed\n";
     return -1;

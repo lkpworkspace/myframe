@@ -58,9 +58,19 @@ class PyActor : public myframe::Actor {
     });
     actor_->setSubscribeCallback([this](
         const std::string& addr,
-        const std::string& desc,
+        const std::string& msg_name,
         const Msg::TransMode tm) {
-      return Subscribe(addr, desc, TransModeConvert2(tm));
+      return Subscribe(addr, msg_name, TransModeConvert2(tm));
+    });
+    actor_->setPublishCallback([this](
+        const std::string& data,
+        const std::string& msg_name,
+        const Msg::TransMode tm) {
+      auto pub_msg = std::make_shared<myframe::Msg>();
+      pub_msg->SetName(msg_name);
+      pub_msg->SetData(data);
+      pub_msg->SetTransMode(TransModeConvert2(tm));
+      return Publish(std::move(pub_msg));
     });
     actor_->setGetActorNameCallback([this]() {
       return GetActorName();
