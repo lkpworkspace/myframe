@@ -417,6 +417,7 @@ void App::DispatchMsg(
     };
   static auto trans2dds =
     [this](std::shared_ptr<Msg> m, const std::string& d) {
+      (void)d;
       if (node_addr_.empty()) {
         return;
       }
