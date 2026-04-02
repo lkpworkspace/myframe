@@ -12,10 +12,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-Msg::Msg(const char* data) {
-  SetData(data, strlen(data));
-}
-
 Msg::Msg(const char* data, int len) {
   SetData(data, len);
 }

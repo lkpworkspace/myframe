@@ -23,7 +23,6 @@ class MYFRAME_EXPORT Msg final {
   };
 
   Msg() = default;
-  Msg(const char* data);
   Msg(const char* data, int len);
   Msg(const std::string& data);
   Msg(Msg&& o);
