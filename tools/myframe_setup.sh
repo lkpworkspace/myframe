@@ -6,6 +6,11 @@ MYFRAME_PARENT_DIR="$(cd "$MYFRAME_CURR_DIR/.." && pwd)"
 export LD_LIBRARY_PATH=${MYFRAME_PARENT_DIR}/lib:${LD_LIBRARY_PATH}
 export PYTHONPATH=${PYTHONPATH}:${MYFRAME_PARENT_DIR}/lib/python
 
+# export GLOG_v=1
+# export GLOG_vmodule="app=1,actor_context_manager=1,mod_manager=1,worker_context_manager=1"
+# export GLOG_minloglevel=0
+# export GLOG_logtostderr=false
+
 unset $MYFRAME_PARENT_DIR
 unset $MYFRAME_CURR_DIR
 unset $MYFRAME_SCRIPT_PATH

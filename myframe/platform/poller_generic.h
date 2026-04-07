@@ -37,7 +37,7 @@ class PollerGeneric final : public Poller {
 };
 
 PollerGeneric::~PollerGeneric() {
-  LOG(INFO) << "poller deconstruct";
+  VLOG(1) << "poller deconstruct";
 }
 
 bool PollerGeneric::Init() {

@@ -173,11 +173,11 @@ void WorkerTimer::Run() {
 }
 
 void WorkerTimer::Init() {
-  LOG(INFO) << "timer worker " << GetWorkerName() << " init";
+  VLOG(1) << GetWorkerName() << " init";
 }
 
 void WorkerTimer::Exit() {
-  LOG(INFO) << "timer worker " << GetWorkerName() << " exit";
+  VLOG(1) << GetWorkerName() << " exit";
 }
 
 int WorkerTimer::SetTimeout(

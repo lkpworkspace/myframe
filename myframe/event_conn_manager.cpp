@@ -18,11 +18,11 @@ EventConnManager::EventConnManager(
   std::shared_ptr<Poller> poller)
   : ev_mgr_(ev_mgr) {
   poller_ = poller;
-  LOG(INFO) << "EventConnManager create";
+  VLOG(1) << "EventConnManager create";
 }
 
 EventConnManager::~EventConnManager() {
-  LOG(INFO) << "EventConnManager deconstruct";
+  VLOG(1) << "EventConnManager deconstruct";
 }
 
 bool EventConnManager::Init(int sz) {

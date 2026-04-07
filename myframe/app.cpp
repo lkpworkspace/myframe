@@ -59,7 +59,7 @@ App::App()
 }
 
 App::~App() {
-  LOG(INFO) << "app deconstruct";
+  VLOG(1) << "app deconstruct";
 }
 
 bool App::Init(const Arguments& args) {
@@ -358,10 +358,10 @@ bool App::StartCommonWorker(int worker_count) {
     worker->SetTypeName("C");
     worker->SetInstName(std::to_string(i));
     if (!AddWorker(worker)) {
-      LOG(ERROR) << "start common worker " << i << " failed";
+      LOG(ERROR) << "Start " << worker->GetWorkerName() << " failed";
       continue;
     }
-    LOG(INFO) << "start common worker " << worker->GetWorkerName();
+    LOG(INFO) << "Start " << worker->GetWorkerName();
     ret = true;
   }
   return ret;
@@ -373,10 +373,10 @@ bool App::StartTimerWorker() {
   worker->SetTypeName("T");
   worker->SetInstName("1");
   if (!AddWorker(worker)) {
-    LOG(ERROR) << "start timer worker failed";
+    LOG(ERROR) << "Start " << worker->GetWorkerName() << " failed";
     return false;
   }
-  LOG(INFO) << "start timer worker " << worker->GetWorkerName();
+  LOG(INFO) << "Start " << worker->GetWorkerName();
   return true;
 }
 
@@ -526,9 +526,10 @@ void App::DispatchMsg(std::shared_ptr<ActorContext> context) {
   if (nullptr == context) {
     return;
   }
-  VLOG(1) << context->GetActor()->GetActorName() << " dispatch msg...";
   context->SetRuningFlag(false);
   auto msg_list = context->GetMailbox()->GetSendList();
+  VLOG(1) << context->GetActor()->GetActorName()
+    << " dispatch " << msg_list->size() << " msg...";
   DispatchMsg(msg_list);
 }
 
@@ -545,10 +546,6 @@ void App::CheckStopWorkers() {
       VLOG(1) << "no actor need process, waiting...";
       break;
     }
-    VLOG(1)
-      << actor_ctx->GetActor()->GetActorName()
-      << " dispatch msg to "
-      << *worker_ctx;
     auto actor_mailbox = actor_ctx->GetMailbox();
     std::size_t actor_ctx_recv_sz = actor_mailbox->RecvSize();
     if (!actor_mailbox->RecvEmpty()) {
@@ -556,11 +553,10 @@ void App::CheckStopWorkers() {
         actor_ctx_recv_sz > warning_msg_size_.load())
           << actor_ctx->GetActor()->GetActorName()
           << " recv msg size too many: " << actor_ctx_recv_sz;
-      VLOG(1) << "run " << actor_ctx->GetActor()->GetActorName();
+      VLOG(1) << "Assign " << actor_ctx->GetActor()->GetActorName()
+        << "'s "<< actor_ctx_recv_sz
+        << " msg to " << *worker_ctx << " for execution";
       actor_mailbox->MoveToRun();
-      VLOG(1) << actor_ctx->GetActor()->GetActorName()
-        << " has " << actor_ctx_recv_sz
-        << " msg need process";
       worker_ctx_mgr_->PopFrontIdleWorker();
       auto common_idle_worker = worker_ctx->GetWorker<WorkerCommon>();
       common_idle_worker->SetActorContext(actor_ctx);
@@ -612,8 +608,9 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
 
 void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   // 将用户线程的发送队列分发完毕
-  VLOG(1) << *worker_ctx << " dispatch msg...";
-  DispatchMsg(worker_ctx->GetMailbox()->GetSendList());
+  auto send_list = worker_ctx->GetMailbox()->GetSendList();
+  VLOG(1) << *worker_ctx << " dispatch " << send_list->size() << " msg...";
+  DispatchMsg(send_list);
 
   CmdChannel::Cmd cmd;
   auto cmd_channel = worker_ctx->GetCmdChannel();
@@ -755,7 +752,6 @@ int App::Exec() {
   ev_mgr_->Clear();
   actor_ctx_mgr_->ClearContext();
   state_.store(State::kQuit);
-  LOG(INFO) << "app exit exec";
   return 0;
 }
 

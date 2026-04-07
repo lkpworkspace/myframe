@@ -29,11 +29,11 @@ void WorkerCommon::Run() {
 }
 
 void WorkerCommon::Init() {
-  LOG(INFO) << "Worker " << GetWorkerName() << " init";
+  VLOG(1) << GetWorkerName() << " init";
 }
 
 void WorkerCommon::Exit() {
-  LOG(INFO) << "Worker " << GetWorkerName() << " exit";
+  VLOG(1) << GetWorkerName() << " exit";
 }
 
 int WorkerCommon::Work() {

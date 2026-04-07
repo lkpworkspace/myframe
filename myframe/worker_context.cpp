@@ -26,14 +26,15 @@ WorkerContext::WorkerContext(
   , app_(app) {
   worker_->SetContext(this);
   cmd_channel_ = CmdChannel::Create(poller);
+  VLOG(1) << worker_->GetWorkerName() << "(" << this << ") context create";
 }
 
 WorkerContext::~WorkerContext() {
-  LOG(INFO) << worker_->GetWorkerName() << " deconstruct";
+  VLOG(1) << worker_->GetWorkerName() << "(" << this << ") deconstruct";
 }
 
 bool WorkerContext::Init(const Json::Value& conf) {
-  LOG(INFO) << worker_->GetWorkerName() << " context init";
+  VLOG(1) << worker_->GetWorkerName() << "(" << this << ") context init";
   config_ = conf;
   return true;
 }
@@ -86,9 +87,6 @@ void WorkerContext::Initialize() {
   if (Common::SetThreadName(nullptr, th_name)) {
     LOG(WARNING) << "set " << mailbox_.Addr()
       << " thread name " << th_name << " failed";
-  } else {
-    LOG(INFO) << "set " << mailbox_.Addr()
-      << " thread name " << th_name;
   }
   worker_->Init();
 }
@@ -123,7 +121,7 @@ const Json::Value* WorkerContext::GetConfig() const {
 
 std::ostream& operator<<(std::ostream& out, WorkerContext& ctx) {
   auto w = ctx.GetWorker<Worker>();
-  out << w->GetWorkerName() << "." << ctx.GetThreadId();
+  out << w->GetWorkerName() << "(" << &ctx << ")";
   return out;
 }
 

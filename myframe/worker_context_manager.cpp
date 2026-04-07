@@ -20,11 +20,11 @@ namespace myframe {
 WorkerContextManager::WorkerContextManager(
     std::shared_ptr<EventManager> ev_mgr)
     : ev_mgr_(ev_mgr) {
-  LOG(INFO) << "WorkerContextManager create";
+  VLOG(1) << "WorkerContextManager create";
 }
 
 WorkerContextManager::~WorkerContextManager() {
-  LOG(INFO) << "WorkerContextManager deconstruct";
+  VLOG(1) << "WorkerContextManager deconstruct";
 }
 
 bool WorkerContextManager::Init(int warning_msg_size) {

@@ -8,6 +8,13 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/log.h"
 
 namespace myframe {
+MsgManager::MsgManager() {
+  VLOG(1) << "MsgManager create";
+}
+
+MsgManager::~MsgManager() {
+  VLOG(1) << "MsgManager deconstruct";
+}
 
 bool MsgManager::AddSubInfo(const std::shared_ptr<Msg>& msg) {
   auto topic_name = GetTopicName(msg, true);

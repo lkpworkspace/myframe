@@ -47,6 +47,9 @@ class MsgManager final {
   typedef std::function<
     void(std::shared_ptr<Msg>, const std::string&, Msg::TransMode)> pub_cb_t;
 
+  MsgManager();
+  ~MsgManager();
+
   bool AddSubInfo(const std::shared_ptr<Msg>& msg);
 
   bool AddPubInfo(const std::shared_ptr<Msg>& msg);

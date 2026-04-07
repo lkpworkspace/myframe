@@ -23,10 +23,11 @@ ActorContext::ActorContext(
     , in_wait_que_(false)
     , actor_(actor)
     , app_(app) {
+  VLOG(1) << this << " create";
 }
 
 ActorContext::~ActorContext() {
-  LOG(INFO) << mailbox_.Addr() << " context deconstruct";
+  VLOG(1) << mailbox_.Addr() << "(" << this << ") context deconstruct";
 }
 
 std::shared_ptr<App> ActorContext::GetApp() { return app_.lock(); }
@@ -46,7 +47,7 @@ int ActorContext::Init(const Json::Value& conf) {
   }
   mailbox_.SetPendingQueueSize(pending_queue_size);
   mailbox_.SetRunQueueSize(run_queue_size);
-  LOG(INFO) << mailbox_.Addr() << " context init";
+  VLOG(1) << mailbox_.Addr() << "(" << this << ") context init";
   return actor_->Init();
 }
 
