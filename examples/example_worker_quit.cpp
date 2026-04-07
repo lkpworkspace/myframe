@@ -4,6 +4,16 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范Worker退出
+
+创建对象：
+  worker.ExampleWorkerQuit.1
+
+执行逻辑：
+  worker.ExampleWorkerQuit.1会在程序启动1秒后退出。
+*/
 #include <chrono>
 #include <thread>
 

@@ -4,14 +4,22 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范应用框架基础的发送消息能力
 
+创建对象：
+  actor.ExampleActorHelloWorld.1
+
+执行逻辑：
+  actor.ExampleActorHelloWorld.1初始化会创建"hello,world"消息
+  并发送给目的地址是actor.ExampleActorHelloWorld.1的对象处理
+  actor.ExampleActorHelloWorld.1收到后会打印出来。
+*/
 #include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 
-/*
-    自己给自己发送一条消息
-*/
 class ExampleActorHelloWorld : public myframe::Actor {
  public:
   /* actor模块加载完毕后调用 */

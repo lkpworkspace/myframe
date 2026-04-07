@@ -4,6 +4,19 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范应用框架的发布订阅功能
+
+创建对象：
+  actor.ExampleActorPub.1
+  actor.ExampleActorSub.1
+
+执行逻辑：
+  actor.ExampleActorPub.1会定时发布消息
+  actor.ExampleActorSub.1初始化会订阅actor.ExampleActorPub.1的消息
+  actor.ExampleActorSub.1会打印收到的订阅消息。
+*/
 #include <chrono>
 #include <random>
 #include <thread>
@@ -23,11 +36,16 @@ class ExampleActorPub : public myframe::Actor {
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     if (msg->GetType() == MYFRAME_MSG_TYPE_TIMER) {
       auto pub_msg = std::make_shared<myframe::Msg>();
-      pub_msg->SetData("hello, this is pub msg");
+      std::string data = "hello, this is pub msg ";
+      data += std::to_string(seq_num_++);
+      pub_msg->SetData(data);
       Publish(std::move(pub_msg));
       Timeout("1000ms", 100);
     }
   }
+
+ private:
+  int seq_num_{0};
 };
 
 class ExampleActorSub : public myframe::Actor {
@@ -38,7 +56,7 @@ class ExampleActorSub : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    LOG(INFO) << "-----> get pub msg: " << *msg;
+    LOG(INFO) << "-----> get pub msg: " << *msg << ", data: " << msg->GetData();
   }
 };
 

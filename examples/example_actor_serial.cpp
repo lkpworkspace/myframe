@@ -4,6 +4,20 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范应用框架的流水线处理能力
+
+创建对象：
+  actor.ExampleActorSerial1.1
+  actor.ExampleActorSerial2.1
+  actor.ExampleActorSerial3.1
+
+执行逻辑：
+  actor.ExampleActorSerial1.1处理消息完成后通知
+  actor.ExampleActorSerial2.1处理消息，actor.ExampleActorSerial2.1处理完成后通知
+  actor.ExampleActorSerial3.1处理消息。
+*/
 #include <chrono>
 #include <random>
 #include <thread>

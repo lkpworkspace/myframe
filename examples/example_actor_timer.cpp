@@ -4,7 +4,16 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范应用框架的定时器
 
+创建对象：
+  actor.ExampleActorTimer.1
+
+执行逻辑：
+  actor.ExampleActorTimer.1每隔1秒触发一次打印超时消息
+*/
 #include "myframe/log.h"
 #include "myframe/msg.h"
 #include "myframe/actor.h"
@@ -19,7 +28,7 @@ class ExampleActorTimer : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     if (msg->GetType() == MYFRAME_MSG_TYPE_TIMER &&
-        msg->GetDesc() == "1000ms") {
+        msg->GetName() == "1000ms") {
       /* 设置下一次超时时间 100 * 10 ms */
       Timeout("1000ms", 100);
       LOG(INFO) << *msg << ": " << "timeout";

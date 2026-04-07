@@ -1,15 +1,13 @@
 {
     "type":"library",
-    "lib":"example_worker_actor_interactive",
+    "lib":"example_actor_pub_sub",
     "actor":{
-        "ExampleActorInteractive":[
+        "ExampleActorPub":[
             {
                 "instance_name":"1"
             }
-        ]
-    },
-    "worker":{
-        "ExampleWorkerInteractive":[
+        ],
+        "ExampleActorSub":[
             {
                 "instance_name":"1"
             }
