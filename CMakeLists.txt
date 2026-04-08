@@ -91,13 +91,10 @@ install(FILES
   DESTINATION .
 )
 if (MYFRAME_INSTALL_TEMPLATE)
-  install(PROGRAMS
-    "tools/gen_mod_proj.py"
-    DESTINATION ${MYFRAME_BIN_DIR}
-  )
   install(DIRECTORY templates DESTINATION .)
 endif()
 install(PROGRAMS
+  "tools/myframe_tool.py"
   "tools/myframe_setup.sh"
   DESTINATION ${MYFRAME_BIN_DIR}
 )

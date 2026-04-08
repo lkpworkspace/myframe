@@ -30,7 +30,7 @@ target_link_libraries(${PROJECT_NAME}
 #### export
 include (GenerateExportHeader)
 generate_export_header (${PROJECT_NAME}
-  EXPORT_MACRO_NAME MYFRAME_SUBMODULE_EXPORT
+  EXPORT_MACRO_NAME MYFRAME_MODULE_EXPORT
   EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/export.h"
 )
 
