@@ -14,7 +14,7 @@ output*
 .vscode
 
 launcher/launcher_config.h
-test/performance_test_config.h
+test/test_config.h
 myframe/export.h
 myframe/config.h
 3rd/pkg/

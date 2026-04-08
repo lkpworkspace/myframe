@@ -10,7 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
 class Hello : public myframe::Actor {
  public:
@@ -26,7 +26,7 @@ class Hello : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容 */
-    std::cout << *msg << ": " << msg->GetData() << std::endl;
+    std::cout << *msg << ", data: " << msg->GetData() << std::endl;
   }
 };
 
@@ -40,7 +40,6 @@ int main() {
   }
 
   auto& mod = app->GetModManager();
-
   mod->RegActor("Hello", [](const std::string&) {
       return std::make_shared<Hello>();
   });

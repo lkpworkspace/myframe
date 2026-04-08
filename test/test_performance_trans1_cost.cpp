@@ -17,7 +17,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
 class TransMsgCostTest : public myframe::Actor {
  public:
@@ -75,7 +75,7 @@ class TransMsgCostTest : public myframe::Actor {
 int main() {
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
-  myframe::InitLog(log_dir, "performance_trans1_cost_test");
+  myframe::InitLog(log_dir, "test_performance_trans1_cost");
 
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;

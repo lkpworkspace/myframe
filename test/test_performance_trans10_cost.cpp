@@ -17,7 +17,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
 
 class Trans10ActorCostTest : public myframe::Actor {
@@ -98,7 +98,7 @@ std::vector<int64_t> Trans10ActorCostTest::cost_us_list_;
 int main() {
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
-  myframe::InitLog(log_dir, "performance_trans10_cost_test");
+  myframe::InitLog(log_dir, "test_performance_trans10_cost");
 
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;

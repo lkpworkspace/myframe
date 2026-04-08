@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 ### configure file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/performance_test_config.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/test_config.h @ONLY)
 
 ### link static libs
 if (glog_lib_type STREQUAL "STATIC_LIBRARY")
@@ -24,68 +24,68 @@ if (MYFRAME_ENABLE_ASAN)
 endif ()
 
 ### test bin
-add_executable(hello_test hello_test.cpp)
-target_link_libraries(hello_test
+add_executable(test_hello test_hello.cpp)
+target_link_libraries(test_hello
     myframe
 )
 
-add_executable(common_test common_test.cpp)
-target_link_libraries(common_test
+add_executable(test_common test_common.cpp)
+target_link_libraries(test_common
     myframe
 )
 
-add_executable(actor_run_queue_test actor_run_queue_test.cpp)
-target_link_libraries(actor_run_queue_test
+add_executable(test_actor_run_queue test_actor_run_queue.cpp)
+target_link_libraries(test_actor_run_queue
     myframe
 )
 
-add_executable(app_send_test app_send_test.cpp)
-target_link_libraries(app_send_test
+add_executable(test_app_send test_app_send.cpp)
+target_link_libraries(test_app_send
     myframe
 )
 
-add_executable(app_send_req_test app_send_req_test.cpp)
-target_link_libraries(app_send_req_test
+add_executable(test_app_send_req test_app_send_req.cpp)
+target_link_libraries(test_app_send_req
     myframe
 )
 
-add_executable(performance_trans1_cost_test performance_trans1_cost_test.cpp)
-target_link_libraries(performance_trans1_cost_test
+add_executable(test_performance_trans1_cost test_performance_trans1_cost.cpp)
+target_link_libraries(test_performance_trans1_cost
     myframe
 )
 
-add_executable(performance_trans10_cost_test performance_trans10_cost_test.cpp)
-target_link_libraries(performance_trans10_cost_test
+add_executable(test_performance_trans10_cost test_performance_trans10_cost.cpp)
+target_link_libraries(test_performance_trans10_cost
     myframe
 )
 
-add_executable(performance_trans1_fullspeed_test performance_trans1_fullspeed_test.cpp)
-target_link_libraries(performance_trans1_fullspeed_test
+add_executable(test_performance_trans1_fullspeed test_performance_trans1_fullspeed.cpp)
+target_link_libraries(test_performance_trans1_fullspeed
     myframe
 )
 
-add_executable(performance_trans20_fullspeed_test performance_trans20_fullspeed_test.cpp)
-target_link_libraries(performance_trans20_fullspeed_test
+add_executable(test_performance_trans20_fullspeed test_performance_trans20_fullspeed.cpp)
+target_link_libraries(test_performance_trans20_fullspeed
     myframe
 )
 
-add_executable(performance_trans100_fullspeed_test performance_trans100_fullspeed_test.cpp)
-target_link_libraries(performance_trans100_fullspeed_test
+add_executable(test_performance_trans100_fullspeed test_performance_trans100_fullspeed.cpp)
+target_link_libraries(test_performance_trans100_fullspeed
     myframe
 )
 
 ### install
 INSTALL(TARGETS
-    hello_test
-    common_test
-    actor_run_queue_test
-    app_send_test
-    app_send_req_test
-    performance_trans1_cost_test
-    performance_trans10_cost_test
-    performance_trans1_fullspeed_test
-    performance_trans20_fullspeed_test
-    performance_trans100_fullspeed_test
+    test_hello
+    test_common
+    test_actor_run_queue
+    test_app_send
+    test_app_send_req
+    test_performance_trans1_cost
+    test_performance_trans10_cost
+    test_performance_trans1_fullspeed
+    test_performance_trans20_fullspeed
+    test_performance_trans100_fullspeed
     LIBRARY DESTINATION ${MYFRAME_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_BIN_DIR}

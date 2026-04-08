@@ -4,6 +4,13 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+设置run_queue_size为2，
+给自己一次性发送10条消息，
+理论上每执行两条消息就应该让出线程资源，
+下一次执行应该在另外一个线程，
+可以通过打印线程号判断是否让出资源。
+*/
 #include <algorithm>
 #include <numeric>
 #include <vector>
@@ -16,15 +23,8 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
-/*
-设置run_queue_size为2，
-给自己一次性发送10条消息，
-理论上每执行两条消息就应该让出线程资源，
-下一次执行应该在另外一个线程，
-可以通过打印线程号判断是否让出资源。
-*/
 class RunQueueTest : public myframe::Actor {
  public:
   int Init() override {
@@ -52,7 +52,7 @@ class RunQueueTest : public myframe::Actor {
 int main() {
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
-  myframe::InitLog(log_dir, "actor_run_queue_test");
+  myframe::InitLog(log_dir, "test_actor_run_queue");
 
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;
@@ -61,10 +61,8 @@ int main() {
     return -1;
   }
 
-  // mod manager
+  // 注册/创建echo Actor
   auto& mod = app->GetModManager();
-
-  // 注册echo Actor
   mod->RegActor("RunQueueTest", [](const std::string&) {
       return std::make_shared<RunQueueTest>();
   });

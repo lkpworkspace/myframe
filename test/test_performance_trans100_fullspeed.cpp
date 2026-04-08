@@ -17,14 +17,14 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
-class FullSpeed20ActorTransTest : public myframe::Actor {
+class FullSpeed100ActorTransTest : public myframe::Actor {
  public:
-  FullSpeed20ActorTransTest() : msg_(8192, 'j') {}
+  FullSpeed100ActorTransTest() : msg_(8192, 'k') {}
 
   int Init() override {
-    LOG(INFO) << "init full speed 20 actor trans ";
+    LOG(INFO) << "init full speed 100 actor trans ";
     // 启动测试
     msg_cnt_per_sec_list_.reserve(64);
     auto mailbox = GetMailbox();
@@ -44,7 +44,8 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
                   .count();
     cnt_++;
     if (us / 1000.0 > 1000.0) {
-      LOG(INFO) << GetActorName() << ": full speed 20 actor msg count " << cnt_;
+      LOG(INFO) << GetActorName() << ": full speed 100 actor msg count "
+                << cnt_;
       msg_cnt_per_sec_list_.push_back(cnt_);
       cnt_ = 0;
       last_ = std::chrono::high_resolution_clock::now();
@@ -58,13 +59,13 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
     } else {
       if (!is_send_) {
         is_send_.store(true);
-        LOG(INFO) << "runing FullSpeed20ActorTransTest end";
+        LOG(INFO) << "runing FullSpeed100ActorTransTest end";
         int sum = std::accumulate(msg_cnt_per_sec_list_.begin(),
           msg_cnt_per_sec_list_.end(), 0);
         int avg = sum / msg_cnt_per_sec_list_.size();
-        LOG(INFO) << "20 actor fullspeed trans msg avg(cnt/sec): " << avg;
+        LOG(INFO) << "100 actor fullspeed trans msg avg(cnt/sec): " << avg;
         std::sort(msg_cnt_per_sec_list_.begin(), msg_cnt_per_sec_list_.end());
-        LOG(INFO) << "20 actor fullspeed trans msg 99(cnt/sec): "
+        LOG(INFO) << "100 actor fullspeed trans msg 99(cnt/sec): "
           << msg_cnt_per_sec_list_[
               static_cast<size_t>(msg_cnt_per_sec_list_.size() * 0.99)];
         GetApp()->Quit();
@@ -81,12 +82,12 @@ class FullSpeed20ActorTransTest : public myframe::Actor {
   std::string msg_;
   std::vector<int> msg_cnt_per_sec_list_;
 };
-std::atomic_bool FullSpeed20ActorTransTest::is_send_{false};
+std::atomic_bool FullSpeed100ActorTransTest::is_send_{false};
 
 int main() {
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
-  myframe::InitLog(log_dir, "performance_trans20_fullspeed_test");
+  myframe::InitLog(log_dir, "test_performance_trans100_fullspeed");
 
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;
@@ -98,16 +99,16 @@ int main() {
   // mod manager
   auto& mod = app->GetModManager();
 
-  // 20个actor消息吞吐量（测试时长1分钟，全速运行）
-  mod->RegActor("FullSpeed20ActorTransTest", [](const std::string&) {
-    return std::make_shared<FullSpeed20ActorTransTest>();
+  // 100个actor消息吞吐量（测试时长1分钟，全速运行）
+  mod->RegActor("FullSpeed100ActorTransTest", [](const std::string&) {
+    return std::make_shared<FullSpeed100ActorTransTest>();
   });
-  for (int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 100; ++i) {
     auto actor = mod->CreateActorInst("class",
-      "FullSpeed20ActorTransTest", std::to_string(i));
+      "FullSpeed100ActorTransTest", std::to_string(i));
     app->AddActor(actor);
   }
 
-  LOG(INFO) << "FullSpeed20ActorTransTest begin...";
+  LOG(INFO) << "FullSpeed100ActorTransTest begin...";
   return app->Exec();
 }
