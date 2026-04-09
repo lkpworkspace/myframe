@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
-"""
-执行前请设置好环境变量
-source myframe_setup.sh
-"""
+
 import time
+import myframe_setup
 import pymyframe as myframe
 
 # 创建actor对象接收主线程发送的消息

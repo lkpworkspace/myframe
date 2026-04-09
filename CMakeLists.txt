@@ -95,6 +95,7 @@ if (MYFRAME_INSTALL_TEMPLATE)
 endif()
 install(PROGRAMS
   "tools/myframe_tool.py"
+  "tools/myframe_setup.py"
   "tools/myframe_setup.sh"
   DESTINATION ${MYFRAME_BIN_DIR}
 )
