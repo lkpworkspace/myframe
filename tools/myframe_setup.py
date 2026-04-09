@@ -34,6 +34,7 @@ def setup():
         lib_dir = os.path.join(root_dir, 'lib')
         checkLibEnv(lib_dir, 'LD_LIBRARY_PATH')
     elif os_name == 'Darwin':
+        lib_dir = os.path.join(root_dir, 'lib')
         checkLibEnv(lib_dir, 'DYLD_LIBRARY_PATH')
     else:
         printUsage()
