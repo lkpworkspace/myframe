@@ -31,6 +31,7 @@ class TestTimer(myframe.Actor):
 class TestPub(myframe.Actor):
     def __init__(self):
         super().__init__()
+        self.num = 0
 
     def init(self):
         print(f"{self.getActorName()} init")
@@ -40,7 +41,8 @@ class TestPub(myframe.Actor):
     def proc(self, msg):
         print(f"TestPub: {msg.debugString()}, data: {msg.getData()}")
         if msg.getType() == "TIMER":
-            self.publish("hello, this is pub msg")
+            self.publish(f"hello, this is pub msg {self.num}")
+            self.num += 1
             self.timeout("pub", 1000)
 
 class TestSub(myframe.Actor):
