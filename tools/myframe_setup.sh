@@ -23,7 +23,7 @@ export PYTHONPATH=${PYTHONPATH}:${MYFRAME_PARENT_DIR}/lib/python
 # export GLOG_minloglevel=0
 # export GLOG_logtostderr=false
 
-unset $OS_TYPE
-unset $MYFRAME_PARENT_DIR
-unset $MYFRAME_CURR_DIR
-unset $MYFRAME_SCRIPT_PATH
+unset OS_TYPE
+unset MYFRAME_PARENT_DIR
+unset MYFRAME_CURR_DIR
+unset MYFRAME_SCRIPT_PATH

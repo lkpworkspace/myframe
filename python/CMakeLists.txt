@@ -29,11 +29,20 @@ target_include_directories(${PROJECT_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${Python_INCLUDE_DIRS}
 )
-target_link_libraries(${PROJECT_NAME}
-  PRIVATE
-  myframe
-  ${Python_LIBRARIES}
-)
+if(APPLE)
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    myframe
+  )
+  # 允许运行时动态查找 Python 符号
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+else()
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    myframe
+    ${Python_LIBRARIES}
+  )
+endif()
 
 install(TARGETS
   ${PROJECT_NAME}
