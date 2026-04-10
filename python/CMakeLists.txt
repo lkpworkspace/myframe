@@ -49,7 +49,5 @@ install(FILES
   WORLD_READ
   DESTINATION ${MYFRAME_PYTHON_DIR}
 )
-install(PROGRAMS
-  "${CMAKE_CURRENT_SOURCE_DIR}/example_myframe.py"
-  DESTINATION ${MYFRAME_BIN_DIR}
-)
+
+add_subdirectory(examples)
