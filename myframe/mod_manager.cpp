@@ -18,18 +18,18 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 ModManager::ModManager() {
-  LOG(INFO) << "ModManager create";
+  VLOG(1) << "ModManager create";
 }
 
 ModManager::~ModManager() {
-  LOG(INFO) << "ModManager deconstruct";
+  VLOG(1) << "ModManager deconstruct";
 }
 
 bool ModManager::LoadMod(const std::string& dl_path) {
   auto dlname = stdfs::path(dl_path).filename().string();
   std::unique_lock<std::shared_mutex> lk(mods_rw_);
   if (mods_.find(dlname) != mods_.end()) {
-    VLOG(1) << dlname << " has loaded";
+    VLOG(1) << dlname << " has been loaded";
     return true;
   }
   auto lib = SharedLibrary::Create();

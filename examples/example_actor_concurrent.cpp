@@ -4,6 +4,25 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范应用框架的并行处理能力
+
+创建对象：
+  actor.ExampleActorConcurrent.1
+  actor.ExampleActorConcurrent.2
+  actor.ExampleActorConcurrent.3
+  actor.ExampleActorConcurrentTrigger.1
+
+执行逻辑：
+  actor.ExampleActorConcurrentTrigger.1分别向
+    actor.ExampleActorConcurrent.1
+    actor.ExampleActorConcurrent.2
+    actor.ExampleActorConcurrent.3
+  发送开始执行的指令，它们收到消息后开始执行任务，执行完成后
+  向actor.ExampleActorConcurrentTrigger.1回复执行完成消息
+  3个都完成后打印并行处理任务完成。
+*/
 #include <chrono>
 #include <random>
 #include <thread>

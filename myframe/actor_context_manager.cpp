@@ -18,11 +18,11 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 ActorContextManager::ActorContextManager() : ctx_count_(0) {
-  LOG(INFO) << "ActorContextManager create";
+  VLOG(1) << "ActorContextManager create";
 }
 
 ActorContextManager::~ActorContextManager() {
-  LOG(INFO) << "ActorContextManager deconstruct";
+  VLOG(1) << "ActorContextManager deconstruct";
 }
 
 void ActorContextManager::DispatchMsg(

@@ -14,11 +14,11 @@ Author: 李柯鹏 <likepeng0418@163.com>
 namespace myframe {
 
 EventManager::EventManager() {
-  LOG(INFO) << "EventManager create";
+  VLOG(1) << "EventManager create";
 }
 
 EventManager::~EventManager() {
-  LOG(INFO) << "EventManager deconstruct";
+  VLOG(1) << "EventManager deconstruct";
   std::unique_lock<std::shared_mutex> lk(rw_);
   name_handle_map_.clear();
   evs_.clear();

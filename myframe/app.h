@@ -19,6 +19,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/export.h"
 #include "myframe/common.h"
 #include "myframe/arguments.h"
+#include "myframe/msg.h"
 
 namespace myframe {
 
@@ -37,6 +38,7 @@ class WorkerCommon;
 class WorkerTimer;
 class WorkerContextManager;
 class ModManager;
+class MsgManager;
 class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   friend class Actor;
 
@@ -106,9 +108,14 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   void CheckStopWorkers();
 
   /// 分发消息
+  void DispatchMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst,
+    Msg::TransMode trans_mode);
   void DispatchMsg(std::shared_ptr<Msg> msg);
   void DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list);
   void DispatchMsg(std::shared_ptr<ActorContext> context);
+
   /// 处理事件
   void ProcessEvent(const std::vector<ev_handle_t>& evs);
   void ProcessWorkerEvent(std::shared_ptr<WorkerContext>);
@@ -128,6 +135,8 @@ class MYFRAME_EXPORT App final : public std::enable_shared_from_this<App> {
   std::recursive_mutex local_mtx_;
   /// 缓存消息列表
   std::list<std::shared_ptr<Msg>> cache_msgs_;
+  /// 消息管理对象
+  std::unique_ptr<MsgManager> msg_mgr_;
   /// 模块管理对象
   std::unique_ptr<ModManager> mods_;
   /// poller

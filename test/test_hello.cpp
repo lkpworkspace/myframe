@@ -10,7 +10,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
 class Hello : public myframe::Actor {
  public:
@@ -26,29 +26,20 @@ class Hello : public myframe::Actor {
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
     /* 获得文本消息， 打印 源actor地址 目的actor地址 消息内容 */
-    std::cout << *msg << ": " << msg->GetData() << std::endl;
+    std::cout << *msg << ", data: " << msg->GetData() << std::endl;
   }
 };
 
 int main() {
-  auto lib_dir =
-    myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
-
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;
-  args.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR, lib_dir);
-  args.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, 1);
-  args.SetInt(MYFRAME_KEY_EVENT_CONNE_SIZE, 2);
-  args.SetInt(MYFRAME_KEY_WARNING_MSG_SIZE, 10);
-  args.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE, -1);
-  args.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, 2);
+  args.SetInt(MYFRAME_ARG_KEY_THREAD_POOL_SIZE, 1);
   if (false == app->Init(args)) {
     std::cout << "Init failed\n";
     return -1;
   }
 
   auto& mod = app->GetModManager();
-
   mod->RegActor("Hello", [](const std::string&) {
       return std::make_shared<Hello>();
   });

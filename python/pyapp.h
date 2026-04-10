@@ -35,12 +35,16 @@ class AppConf {
   }
 
   void setLibDir(const std::string& dir) {
-    args_.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR,
+    args_.SetStr(MYFRAME_ARG_KEY_SERVICE_LIB_DIR,
       myframe::Common::GetAbsolutePath(dir).string());
   }
 
   void setLogDir(const std::string& dir) {
-    log_dir_ = myframe::Common::GetAbsolutePath(dir).string();
+    if (dir.empty()) {
+      log_dir_ = "";
+    } else {
+      log_dir_ = myframe::Common::GetAbsolutePath(dir).string();
+    }
   }
 
   void setLogMaxSizeMB(int sz) {
@@ -48,21 +52,21 @@ class AppConf {
   }
 
   void setThreadPoolSize(int sz) {
-    args_.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, sz);
+    args_.SetInt(MYFRAME_ARG_KEY_THREAD_POOL_SIZE, sz);
   }
 
   void setPendingQueueSize(int sz) {
-    args_.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE, sz);
+    args_.SetInt(MYFRAME_ARG_KEY_PENDING_QUEUE_SIZE, sz);
   }
 
   void setRunQueueSize(int sz) {
-    args_.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, sz);
+    args_.SetInt(MYFRAME_ARG_KEY_RUN_QUEUE_SIZE, sz);
   }
 
  private:
   int log_max_size_{100};
   std::string log_dir_{"log"};
-  std::string process_name_{"launcher"};
+  std::string process_name_{"myframe"};
   myframe::Arguments args_;
 };
 
@@ -84,10 +88,12 @@ class App {
 
   bool init(const AppConf& conf) {
     // 初始化Log
-    myframe::InitLog(
-      conf.log_dir_,
-      conf.process_name_,
-      conf.log_max_size_);
+    if (!conf.log_dir_.empty()) {
+      myframe::InitLog(
+        conf.log_dir_,
+        conf.process_name_,
+        conf.log_max_size_);
+    }
     // 初始化App
     app_ = std::make_shared<myframe::App>();
     bool res = app_->Init(conf.args_);

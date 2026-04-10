@@ -23,7 +23,6 @@ class MYFRAME_EXPORT Msg final {
   };
 
   Msg() = default;
-  Msg(const char* data);
   Msg(const char* data, int len);
   Msg(const std::string& data);
   Msg(Msg&& o);
@@ -52,14 +51,16 @@ class MYFRAME_EXPORT Msg final {
 
   /**
    * @brief 消息名称
-   * @note 自定义，用于区分传递给同一个actor的不同消息
+   * @note 目前Actor的Subscribe, Publish和Timeout有使用到，
+   * 见 Actor::Subscribe() / Actor::Publish() / Actor::Timeout()，
+   * 也可以自定义，用于区分传递给同一个actor的不同消息
    * @return const std::string& 消息名称
    */
   const std::string& GetName() const { return name_; }
 
   /**
    * @brief 消息类型
-   * @note 目前使用到的 "TEXT", "TIMER", "SUBSCRIBE";
+   * @note 参考 MYFRAME_MSG_TYPE_* 宏定义;
    * 也可以自定义，用于区分传递给同一个actor的不同消息类型
    * @return const std::string& 消息类型
    */
@@ -67,9 +68,7 @@ class MYFRAME_EXPORT Msg final {
 
   /**
    * @brief 消息描述
-   * @note 目前Actor的Timeout和Subscribe有使用到，
-   * 见 Actor::Timeout() / Actor::Subscribe()，
-   * 也可以自定义
+   * @note 自定义
    * @return const std::string& 消息描述
    */
   const std::string& GetDesc() const { return desc_; }

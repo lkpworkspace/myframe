@@ -4,6 +4,18 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范用户在Actor中创建的自定义线程如何优雅退出
+
+创建对象：
+  actor.ExampleThreadQuit.1
+
+执行逻辑：
+  初始化创建一个自定义线程每隔1秒发送消息给actor.ExampleThreadQuit.1
+  在框架退出时会执行actor.ExampleThreadQuit.1析构函数，在析构函数中
+  停止自定义线程运行并回收线程资源。
+*/
 #include <thread>
 #include <chrono>
 #include <memory>
@@ -42,7 +54,7 @@ class ExampleThreadQuit : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
-    LOG(INFO) << "recv msg: " << *msg;
+    LOG(INFO) << *msg << ", data: " << msg->GetData();
   }
 
  private:

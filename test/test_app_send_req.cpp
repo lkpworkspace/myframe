@@ -17,7 +17,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/mod_manager.h"
 #include "myframe/app.h"
 
-#include "performance_test_config.h"
+#include "test_config.h"
 
 class EchoActorTest : public myframe::Actor {
  public:
@@ -40,30 +40,19 @@ class EchoActorTest : public myframe::Actor {
 };
 
 int main() {
-  auto lib_dir =
-      myframe::Common::GetAbsolutePath(MYFRAME_LIB_DIR).string();
   auto log_dir =
       myframe::Common::GetAbsolutePath(MYFRAME_LOG_DIR).string();
-
-  myframe::InitLog(log_dir, "app_send_req_test");
+  myframe::InitLog(log_dir, "test_app_send_req");
 
   auto app = std::make_shared<myframe::App>();
   myframe::Arguments args;
-  args.SetStr(MYFRAME_KEY_SERVICE_LIB_DIR, lib_dir);
-  args.SetInt(MYFRAME_KEY_THREAD_POOL_SIZE, 4);
-  args.SetInt(MYFRAME_KEY_EVENT_CONNE_SIZE, 2);
-  args.SetInt(MYFRAME_KEY_WARNING_MSG_SIZE, 10);
-  args.SetInt(MYFRAME_KEY_PENDING_QUEUE_SIZE, -1);
-  args.SetInt(MYFRAME_KEY_RUN_QUEUE_SIZE, 2);
   if (false == app->Init(args)) {
     LOG(ERROR) << "Init failed";
     return -1;
   }
 
-  // mod manager
+  // 注册/创建echo Actor
   auto& mod = app->GetModManager();
-
-  // 注册echo Actor
   mod->RegActor("EchoActorTest", [](const std::string&) {
       return std::make_shared<EchoActorTest>();
   });
@@ -91,6 +80,8 @@ int main() {
           continue;
         }
         LOG(INFO) << "thread " << i << " resp: " << resp->GetData();
+        // 避免单线程持续占用锁
+        // std::this_thread::yield();
       }
       std::lock_guard<std::mutex> g(mtx);
       LOG(INFO) << "user thread " << i << " exit";

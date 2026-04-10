@@ -1,13 +1,13 @@
 {
     "type":"library",
-    "lib":"example_actor_subscribe",
-    "actor":{
-        "ExampleActorPub":[
+    "lib":"example_worker_io",
+    "worker":{
+        "ExampleWorkerOutput":[
             {
                 "instance_name":"1"
             }
         ],
-        "ExampleActorSub":[
+        "ExampleWorkerInput":[
             {
                 "instance_name":"1"
             }

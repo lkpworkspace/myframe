@@ -77,8 +77,8 @@ class MYFRAME_EXPORT Actor {
    *      如果想实现周期性的定时器，可以在收到超时消息之后，
    *      再次调用此函数设置下一次的超时。
    *
-   *      msg->GetType() == "TIMER" 确认是定时器消息
-   *      msg->GetDesc() == timer_name 确认是那个定时器消息
+   *      msg->GetType() == MYFRAME_MSG_TYPE_TIMER 确认是定时器消息
+   *      msg->GetName() == timer_name 确认是那个定时器消息
    *
    * @return:         成功返回: 0, 失败返回: -1
    */
@@ -87,19 +87,43 @@ class MYFRAME_EXPORT Actor {
   /**
    * Subscribe() - 订阅actor的消息
    * @addr: 订阅actor的地址
-   * @msg_desc: 订阅消息描述
+   * @msg_name: 订阅消息名
    * @mode: 订阅消息影响范围
    *
-   *     被订阅的组件需要在Proc函数中处理订阅消息，消息格式：
+   *     订阅消息格式：
    *        msg->GetSrc() 确定是订阅组件地址
-   *        msg->GetType() == "SUBSCRIBE" 确认是订阅消息
-   *        msg->GetDesc() == <msg_desc> 确认消息描述
+   *        msg->GetDst() 确定是被订阅组件地址
+   *        msg->GetType() == MYFRAME_MSG_TYPE_SUB 确认是订阅消息
+   *        msg->GetName() == <msg_name> 确认消息名
+   *
    * @return: 成功返回true,失败返回false
    */
   bool Subscribe(
     const std::string& addr,
-    const std::string& msg_desc = "",
+    const std::string& msg_name = "",
     const Msg::TransMode mode = Msg::TransMode::kIntra);
+
+  /**
+   * Publish() - 发布actor的消息
+   * @msg: 发布消息
+   *
+   *    发布消息格式：
+   *        msg->SetSrc() 发布消息地址
+   *        msg->SetType(MYFRAME_MSG_TYPE_PUB) 发布类型消息
+   *        msg->SetName(<msg_name>) 发布消息名
+   *        msg->SetData(<msg>) 消息内容
+   *        msg->SetAnyData(<msg_obj>) 消息对象
+   *    示例：
+   *        auto pub_msg = std::make_shared<Msg>();
+   *        // 其它内容由框架填充，此处只需设置消息名称,内容和传播范围即可
+   *        pub_msg->SetTransMode(Msg::TransMode::kIntra);
+   *        pub_msg->SetName("text");
+   *        pub_msg->SetData("hello,world");
+   *        Publish(std::move(pub_msg));
+   *
+   * @return: 成功返回true,失败返回false
+   */
+  bool Publish(std::shared_ptr<Msg> msg);
 
   /**
    * GetApp() - 获得应用实例

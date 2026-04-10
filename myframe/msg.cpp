@@ -12,10 +12,6 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-Msg::Msg(const char* data) {
-  SetData(data, strlen(data));
-}
-
 Msg::Msg(const char* data, int len) {
   SetData(data, len);
 }
@@ -70,7 +66,17 @@ Msg& Msg::operator=(const Msg& o) noexcept {
 std::ostream& operator<<(std::ostream& out, const Msg& msg) {
   out << "[" << msg.GetSrc()
     << " to " << msg.GetDst()
-    << "] TransMode: " << static_cast<int>(msg.GetTransMode());
+    << "]";
+  auto tm = msg.GetTransMode();
+  if (Msg::TransMode::kIntra == tm) {
+    out << " TransMode: INTRA";
+  } else if (Msg::TransMode::kDDS == tm) {
+    out << " TransMode: DDS";
+  } else if (Msg::TransMode::kHybrid == tm) {
+    out << " TransMode: HYBRID";
+  } else {
+    out << " TransMode: " << static_cast<int>(tm);
+  }
   if (!msg.GetName().empty()) {
     out << ", Name: " << msg.GetName();
   }

@@ -59,7 +59,7 @@
 
 ### 创建组件工程
 ```sh
-python path/to/myframe/bin/gen_mod_proj.py --dir="path/to/proj_dir/" --name="mod_name"
+python3 path/to/myframe/bin/myframe_tool.py create -p="path/to/proj_dir/" -n="mod_name"
 ```
 
 ### 组件工程目录说明
@@ -67,7 +67,7 @@ python path/to/myframe/bin/gen_mod_proj.py --dir="path/to/proj_dir/" --name="mod
   - 提供actor/worker的使用模板,根据需求决定使用actor或者worker
 
 - 配置文件：
-  - Template.json：Service配置
+  - template.json：Service配置
 
 ### 组件工程构建安装
 ```sh

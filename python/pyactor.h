@@ -45,11 +45,21 @@ class Actor {
   }
 
   bool subscribe(
-    const std::string& addr,
-    const std::string& desc,
-    const Msg::TransMode mode = Msg::TransMode::INTRA) {
+      const std::string& addr,
+      const std::string& msg_name,
+      const Msg::TransMode mode = Msg::TransMode::INTRA) {
     if (subscribe_cb_) {
-      return subscribe_cb_(addr, desc, mode);
+      return subscribe_cb_(addr, msg_name, mode);
+    }
+    return false;
+  }
+
+  bool publish(
+      const std::string& data,
+      const std::string& msg_name = "",
+      const Msg::TransMode mode = Msg::TransMode::INTRA) {
+    if (publish_cb_) {
+      return publish_cb_(data, msg_name, mode);
     }
     return false;
   }
@@ -76,6 +86,12 @@ class Actor {
     subscribe_cb_ = cb;
   }
 
+  void setPublishCallback(
+    std::function<
+      bool(const std::string&, const std::string&, const Msg::TransMode)> cb) {
+    publish_cb_ = cb;
+  }
+
   void setGetActorNameCallback(std::function<const std::string(void)> cb) {
     get_actor_name_cb_ = cb;
   }
@@ -85,6 +101,9 @@ class Actor {
   std::function<
     bool(const std::string&, const std::string&, const Msg::TransMode)>
       subscribe_cb_;
+  std::function<
+    bool(const std::string&, const std::string&, const Msg::TransMode)>
+      publish_cb_;
   std::function<const std::string(void)> get_actor_name_cb_;
 };
 

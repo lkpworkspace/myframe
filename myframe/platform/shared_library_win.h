@@ -60,7 +60,8 @@ bool SharedLibraryWin::Load(
   }
   handle_ = LoadLibrary(path.c_str());
   if (handle_ == nullptr) {
-    LOG(ERROR) << "Open dll " << path << " failed";
+    LOG(ERROR) << "Open dll " << path << " failed, err code "
+      << GetLastError();
     FreeLibrary(handle_);
     return false;
   }

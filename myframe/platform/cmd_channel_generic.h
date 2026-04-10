@@ -46,10 +46,11 @@ class CmdChannelGeneric final : public CmdChannel {
 
 CmdChannelGeneric::CmdChannelGeneric(std::shared_ptr<Poller> poller)
   : CmdChannel(poller) {
+  VLOG(1) << "CmdChannel " << this << " create";
 }
 
 CmdChannelGeneric::~CmdChannelGeneric() {
-  LOG(INFO) << "CmdChannel " << this << " deconstruct";
+  VLOG(1) << "CmdChannel " << this << " deconstruct";
 }
 
 ev_handle_t CmdChannelGeneric::GetOwnerHandle() const {

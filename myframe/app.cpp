@@ -26,6 +26,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include "myframe/worker_context_manager.h"
 #include "myframe/mod_manager.h"
 #include "myframe/poller.h"
+#include "myframe/msg_manager.h"
 
 namespace myframe {
 
@@ -46,7 +47,8 @@ std::shared_ptr<WorkerTimer> App::GetTimerWorker() {
 }
 
 App::App()
-  : mods_(new ModManager())
+  : msg_mgr_(new MsgManager())
+  , mods_(new ModManager())
   , poller_(Poller::Create())
   , actor_ctx_mgr_(new ActorContextManager())
   , ev_mgr_(new EventManager())
@@ -57,7 +59,7 @@ App::App()
 }
 
 App::~App() {
-  LOG(INFO) << "app deconstruct";
+  VLOG(1) << "app deconstruct";
 }
 
 bool App::Init(const Arguments& args) {
@@ -76,25 +78,25 @@ bool App::Init(const Arguments& args) {
   int default_run_queue_size = 2;
   for (const auto& arg : args) {
     if (arg.type == Argument::ArgType::kArgString) {
-      if (arg.key == MYFRAME_KEY_SERVICE_LIB_DIR) {
+      if (arg.key == MYFRAME_ARG_KEY_SERVICE_LIB_DIR) {
         lib_dir = arg.value_str;
       }
     }
     if (arg.type == Argument::ArgType::kArgInteger) {
       int value_int = arg.value_int;
-      if (arg.key == MYFRAME_KEY_THREAD_POOL_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_THREAD_POOL_SIZE) {
         thread_pool_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_WARNING_MSG_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_WARNING_MSG_SIZE) {
         warning_msg_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_PENDING_QUEUE_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_PENDING_QUEUE_SIZE) {
         default_pending_queue_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_RUN_QUEUE_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_RUN_QUEUE_SIZE) {
         default_run_queue_size = value_int;
       }
-      if (arg.key == MYFRAME_KEY_EVENT_CONNE_SIZE) {
+      if (arg.key == MYFRAME_ARG_KEY_EVENT_CONNE_SIZE) {
         event_conn_size = value_int;
       }
     }
@@ -357,10 +359,10 @@ bool App::StartCommonWorker(int worker_count) {
     worker->SetTypeName("C");
     worker->SetInstName(std::to_string(i));
     if (!AddWorker(worker)) {
-      LOG(ERROR) << "start common worker " << i << " failed";
+      LOG(ERROR) << "Start " << worker->GetWorkerName() << " failed";
       continue;
     }
-    LOG(INFO) << "start common worker " << worker->GetWorkerName();
+    LOG(INFO) << "Start " << worker->GetWorkerName();
     ret = true;
   }
   return ret;
@@ -372,86 +374,98 @@ bool App::StartTimerWorker() {
   worker->SetTypeName("T");
   worker->SetInstName("1");
   if (!AddWorker(worker)) {
-    LOG(ERROR) << "start timer worker failed";
+    LOG(ERROR) << "Start " << worker->GetWorkerName() << " failed";
     return false;
   }
-  LOG(INFO) << "start timer worker " << worker->GetWorkerName();
+  LOG(INFO) << "Start " << worker->GetWorkerName();
   return true;
 }
 
-void App::DispatchMsg(std::shared_ptr<Msg> msg) {
-  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+void App::DispatchMsg(
+    std::shared_ptr<Msg> msg,
+    const std::string& dst,
+    Msg::TransMode trans_mode) {
   VLOG(1) << *msg;
+  std::lock_guard<std::recursive_mutex> lock(local_mtx_);
+  auto dst_addr = dst.empty() ? msg->GetDst() : dst;
   /// 消息分发
-  Common::SplitMsgName(msg->GetDst(), &name_list_);
+  Common::SplitMsgName(dst_addr, &name_list_);
   if (name_list_.size() != 3) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
   }
   // trans func
-  static auto trans2actor = [this](std::shared_ptr<Msg> m) {
-    if (actor_ctx_mgr_->HasActor(m->GetDst())) {
-      actor_ctx_mgr_->DispatchMsg(std::move(m));
-    }
-  };
-  static auto trans2worker = [this](std::shared_ptr<Msg> m) {
-    if (ev_mgr_->Has(m->GetDst())) {
-      worker_ctx_mgr_->DispatchWorkerMsg(std::move(m));
-    }
-  };
-  static auto trans2ev = [this](std::shared_ptr<Msg> m) {
-    if (name_list_[1] == "conn") {
-      auto handle = ev_mgr_->ToHandle(m->GetDst());
-      ev_conn_mgr_->Notify(handle, std::move(m));
-    } else {
-      LOG(ERROR) << "Unknown msg " << *m;
-    }
-  };
-  static auto trans2dds = [this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      return;
-    }
-    if (node_addr_.substr(0, 5) == "actor") {
-      actor_ctx_mgr_->DispatchMsg(m, node_addr_);
-    } else if (node_addr_.substr(0, 6) == "worker") {
-      worker_ctx_mgr_->DispatchWorkerMsg(m, node_addr_);
-    } else {
-      LOG(ERROR) << "Unknown msg " << *m;
-    }
-  };
-  static auto trans2hybird1 = [&, this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      trans2actor(std::move(m));
-      return;
-    }
-    trans2actor(m);
-    trans2dds(std::move(m));
-  };
-  static auto trans2hybird2 = [&, this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      trans2worker(std::move(m));
-      return;
-    }
-    trans2worker(m);
-    trans2dds(std::move(m));
-  };
-  static auto trans2hybird3 = [&, this](std::shared_ptr<Msg> m) {
-    if (node_addr_.empty()) {
-      trans2ev(std::move(m));
-      return;
-    }
-    trans2ev(m);
-    trans2dds(std::move(m));
-  };
+  static auto trans2actor =
+    [this](std::shared_ptr<Msg> m, const std::string& d) {
+      if (actor_ctx_mgr_->HasActor(d)) {
+        actor_ctx_mgr_->DispatchMsg(std::move(m), d);
+      }
+    };
+  static auto trans2worker =
+    [this](std::shared_ptr<Msg> m, const std::string& d) {
+      if (ev_mgr_->Has(d)) {
+        worker_ctx_mgr_->DispatchWorkerMsg(std::move(m), d);
+      }
+    };
+  static auto trans2ev =
+    [this](std::shared_ptr<Msg> m, const std::string& d) {
+      if (name_list_[1] == "conn") {
+        auto handle = ev_mgr_->ToHandle(d);
+        ev_conn_mgr_->Notify(handle, std::move(m));
+      } else {
+        LOG(ERROR) << "Unknown msg " << *m;
+      }
+    };
+  static auto trans2dds =
+    [this](std::shared_ptr<Msg> m, const std::string& d) {
+      (void)d;
+      if (node_addr_.empty()) {
+        return;
+      }
+      if (node_addr_.substr(0, 5) == "actor") {
+        actor_ctx_mgr_->DispatchMsg(m, node_addr_);
+      } else if (node_addr_.substr(0, 6) == "worker") {
+        worker_ctx_mgr_->DispatchWorkerMsg(m, node_addr_);
+      } else {
+        LOG(ERROR) << "Unknown msg " << *m;
+      }
+    };
+  static auto trans2hybird1 =
+    [&, this](std::shared_ptr<Msg> m, const std::string& d) {
+      if (node_addr_.empty()) {
+        trans2actor(std::move(m), d);
+        return;
+      }
+      trans2actor(m, d);
+      trans2dds(std::move(m), d);
+    };
+  static auto trans2hybird2 =
+    [&, this](std::shared_ptr<Msg> m, const std::string& d) {
+      if (node_addr_.empty()) {
+        trans2worker(std::move(m), d);
+        return;
+      }
+      trans2worker(m, d);
+      trans2dds(std::move(m), d);
+    };
+  static auto trans2hybird3 =
+    [&, this](std::shared_ptr<Msg> m, const std::string& d) {
+      if (node_addr_.empty()) {
+        trans2ev(std::move(m), d);
+        return;
+      }
+      trans2ev(m, d);
+      trans2dds(std::move(m), d);
+    };
   // trans vec
   static std::vector<
-    std::vector<
-      std::function<void(std::shared_ptr<Msg>)>>> trans_map = {
-    // kIntra, kDDS, kHybird
-    {trans2actor, trans2dds, trans2hybird1},  // actor
-    {trans2worker, trans2dds, trans2hybird2},  // worker
-    {trans2ev, trans2dds, trans2hybird3}  // connevent
-  };
+    std::vector<std::function<void(std::shared_ptr<Msg>, const std::string&)>>>
+      trans_map = {
+        // kIntra, kDDS, kHybird
+        {trans2actor, trans2dds, trans2hybird1},  // actor
+        {trans2worker, trans2dds, trans2hybird2},  // worker
+        {trans2ev, trans2dds, trans2hybird3}  // connevent
+      };
   // trans
   int trans_idx1 = -1;
   int trans_idx2 = -1;
@@ -462,7 +476,6 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
   } else if (name_list_[0] == "event") {
     trans_idx1 = 2;
   }
-  auto trans_mode = msg->GetTransMode();
   if (trans_mode == Msg::TransMode::kIntra) {
     trans_idx2 = 0;
   } else if (trans_mode == Msg::TransMode::kDDS) {
@@ -474,7 +487,32 @@ void App::DispatchMsg(std::shared_ptr<Msg> msg) {
     LOG(ERROR) << "Unknown msg " << *msg;
     return;
   }
-  trans_map[trans_idx1][trans_idx2](std::move(msg));
+  trans_map[trans_idx1][trans_idx2](std::move(msg), dst_addr);
+}
+
+void App::DispatchMsg(std::shared_ptr<Msg> msg) {
+  auto msg_type = msg->GetType();
+  if (msg_type == MYFRAME_MSG_TYPE_SUB) {  // 判断是订阅消息
+    if (msg_mgr_->AddSubInfo(msg)) {
+      DispatchMsg(std::move(msg), node_addr_, Msg::TransMode::kDDS);
+    }
+  } else if (msg_type == MYFRAME_MSG_TYPE_PUB) {  // 判断时发布消息
+    if (msg_mgr_->AddPubInfo(msg)) {
+      msg_mgr_->DispatchPubMsg(
+        std::move(msg),
+        [this](
+            std::shared_ptr<Msg> m,
+            const std::string& d,
+            Msg::TransMode trans_mode) {
+          auto dst_addr = d.empty() ? node_addr_ : d;
+          DispatchMsg(std::move(m), dst_addr, trans_mode);
+        });
+    }
+  } else {  // 判断是普通消息
+    auto dst = msg->GetDst();
+    auto tm = msg->GetTransMode();
+    DispatchMsg(std::move(msg), dst, tm);
+  }
 }
 
 void App::DispatchMsg(std::list<std::shared_ptr<Msg>>* msg_list) {
@@ -489,9 +527,10 @@ void App::DispatchMsg(std::shared_ptr<ActorContext> context) {
   if (nullptr == context) {
     return;
   }
-  VLOG(1) << context->GetActor()->GetActorName() << " dispatch msg...";
   context->SetRuningFlag(false);
   auto msg_list = context->GetMailbox()->GetSendList();
+  VLOG(1) << context->GetActor()->GetActorName()
+    << " dispatch " << msg_list->size() << " msg...";
   DispatchMsg(msg_list);
 }
 
@@ -508,10 +547,6 @@ void App::CheckStopWorkers() {
       VLOG(1) << "no actor need process, waiting...";
       break;
     }
-    VLOG(1)
-      << actor_ctx->GetActor()->GetActorName()
-      << " dispatch msg to "
-      << *worker_ctx;
     auto actor_mailbox = actor_ctx->GetMailbox();
     std::size_t actor_ctx_recv_sz = actor_mailbox->RecvSize();
     if (!actor_mailbox->RecvEmpty()) {
@@ -519,11 +554,10 @@ void App::CheckStopWorkers() {
         actor_ctx_recv_sz > warning_msg_size_.load())
           << actor_ctx->GetActor()->GetActorName()
           << " recv msg size too many: " << actor_ctx_recv_sz;
-      VLOG(1) << "run " << actor_ctx->GetActor()->GetActorName();
+      VLOG(1) << "Assign " << actor_ctx->GetActor()->GetActorName()
+        << "'s "<< actor_ctx_recv_sz
+        << " msg to " << *worker_ctx << " for execution";
       actor_mailbox->MoveToRun();
-      VLOG(1) << actor_ctx->GetActor()->GetActorName()
-        << " has " << actor_ctx_recv_sz
-        << " msg need process";
       worker_ctx_mgr_->PopFrontIdleWorker();
       auto common_idle_worker = worker_ctx->GetWorker<WorkerCommon>();
       common_idle_worker->SetActorContext(actor_ctx);
@@ -575,8 +609,9 @@ void App::ProcessTimerEvent(std::shared_ptr<WorkerContext> worker_ctx) {
 
 void App::ProcessUserEvent(std::shared_ptr<WorkerContext> worker_ctx) {
   // 将用户线程的发送队列分发完毕
-  VLOG(1) << *worker_ctx << " dispatch msg...";
-  DispatchMsg(worker_ctx->GetMailbox()->GetSendList());
+  auto send_list = worker_ctx->GetMailbox()->GetSendList();
+  VLOG(1) << *worker_ctx << " dispatch " << send_list->size() << " msg...";
+  DispatchMsg(send_list);
 
   CmdChannel::Cmd cmd;
   auto cmd_channel = worker_ctx->GetCmdChannel();
@@ -718,7 +753,6 @@ int App::Exec() {
   ev_mgr_->Clear();
   actor_ctx_mgr_->ClearContext();
   state_.store(State::kQuit);
-  LOG(INFO) << "app exit exec";
   return 0;
 }
 

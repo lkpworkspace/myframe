@@ -4,6 +4,18 @@ All rights reserved.
 
 Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
+/*
+示例概述：
+  示范如何在Worker/Actor间传递对象
+
+创建对象：
+  actor.ExampleActorTransObj.1
+  worker.ExampleWorkerTransObj.1
+
+执行逻辑：
+  worker.ExampleWorkerTransObj.1每隔1秒会创建TransObj对象
+  发送给actor.ExampleActorTransObj.1。
+*/
 #include <chrono>
 #include <thread>
 
