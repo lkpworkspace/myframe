@@ -34,6 +34,11 @@ target_link_libraries(test_common
     myframe
 )
 
+add_executable(test_arguments test_arguments.cpp)
+target_link_libraries(test_arguments
+    myframe
+)
+
 add_executable(test_actor_run_queue test_actor_run_queue.cpp)
 target_link_libraries(test_actor_run_queue
     myframe
@@ -78,6 +83,7 @@ target_link_libraries(test_performance_trans100_fullspeed
 INSTALL(TARGETS
     test_hello
     test_common
+    test_arguments
     test_actor_run_queue
     test_app_send
     test_app_send_req
@@ -90,3 +96,4 @@ INSTALL(TARGETS
     ARCHIVE DESTINATION ${MYFRAME_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_BIN_DIR}
 )
+install(DIRECTORY test_data DESTINATION .)

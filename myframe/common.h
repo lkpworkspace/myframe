@@ -33,6 +33,9 @@ class MYFRAME_EXPORT Common final {
 
   static Json::Value LoadJsonFromFile(const std::string& json_file);
   static Json::Value LoadJsonFromString(const std::string& json_str);
+  static bool SaveFile(
+    const std::string& filepath,
+    const std::string& data);
 
   static void SplitMsgName(
     const std::string& name,

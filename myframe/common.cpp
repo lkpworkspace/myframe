@@ -70,6 +70,20 @@ Json::Value Common::LoadJsonFromString(const std::string& json_str) {
   return root;
 }
 
+bool Common::SaveFile(
+    const std::string& filepath,
+    const std::string& data) {
+  std::ofstream ofs(filepath, std::ios::binary);
+  if (!ofs.is_open()) {
+    return false;
+  }
+  ofs.write(data.data(), data.size());
+  if (!ofs.good()) {
+    return false;
+  }
+  return true;
+}
+
 stdfs::path Common::GetWorkRoot() {
   auto p = GetCurrLibPath();
   if (p.has_parent_path()) {
