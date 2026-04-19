@@ -1,23 +1,52 @@
+# Prerequisites
+*.d
 
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
 *.ipch
-
 *.bin
 
-bin/
-
+# build dir
 build*
-
 output*
+3rd/pkg/
+3rd/src/
 
+# editor dir
 *.user
-
 .vscode
 
+# tmp file
 launcher/launcher_config.h
 test/test_config.h
 myframe/export.h
 myframe/config.h
-3rd/pkg/
-3rd/src/
 .DS_Store
 tmp.md
