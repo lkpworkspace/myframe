@@ -49,6 +49,3 @@ cmake --build build_proj -j --config Release --target install
 
 ## 文档
 - [开发手册](doc/development_guide.md)
-- [Discussions](https://github.com/lkpworkspace/myframe/discussions)
-- [WIKI](https://github.com/lkpworkspace/myframe/wiki)
-- [FAQ](https://github.com/lkpworkspace/myframe/wiki/FAQs)
