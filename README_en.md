@@ -1,5 +1,7 @@
 # myframe
 
+English | [中文](README.md)
+
 ## Overview
 
 A component-based programming framework implemented in C++. Applications consist of actors and workers.  

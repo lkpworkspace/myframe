@@ -1,5 +1,7 @@
 # myframe
 
+[English](README_en.md) | 中文
+
 ![myframe](doc/pics/myframe.png)
 
 ## 概述
