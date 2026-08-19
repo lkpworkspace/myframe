@@ -37,7 +37,7 @@ cmake --build build_proj -j --config Release --target install
 ```
 
 ### Hello,World API示例
-- [API 示例](test/hello_test.cpp)
+- [API 示例](test/test_hello.cpp)
 
 ### Hello,World 组件示例
 - [组件代码示例](examples/example_actor_helloworld.cpp)

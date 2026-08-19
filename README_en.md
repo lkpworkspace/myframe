@@ -40,7 +40,7 @@ cmake --build build_proj -j --config Release --target install
 
 ### Hello, World API Example
 
-- [API example](test/hello_test.cpp)
+- [API example](test/test_hello.cpp)
 
 ### Hello, World Component Example
 
