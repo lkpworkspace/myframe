@@ -36,6 +36,7 @@ cmake --build build_3rd -j --config Release
 # Build and install
 cmake --preset release
 cmake --build --preset release
+ctest --preset release
 ```
 
 ### Hello, World API Example

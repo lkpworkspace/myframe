@@ -1,5 +1,3 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
-
 add_compile_definitions(${PROJECT_NAME}_EXPORTS)
 
 ### link static lib

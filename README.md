@@ -34,6 +34,7 @@ cmake --build build_3rd -j --config Release
 # 构建安装
 cmake --preset release
 cmake --build --preset release
+ctest --preset release
 ```
 
 ### Hello,World API示例

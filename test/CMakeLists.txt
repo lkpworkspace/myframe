@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.10)
-
 ### configure file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/test_config.h @ONLY)
 
@@ -25,11 +23,13 @@ add_executable(test_common test_common.cpp)
 target_link_libraries(test_common
     myframe
 )
+add_test(NAME test_common COMMAND ${CMAKE_INSTALL_PREFIX}/bin/test_common)
 
 add_executable(test_arguments test_arguments.cpp)
 target_link_libraries(test_arguments
     myframe
 )
+add_test(NAME test_arguments COMMAND ${CMAKE_INSTALL_PREFIX}/bin/test_arguments)
 
 add_executable(test_actor_run_queue test_actor_run_queue.cpp)
 target_link_libraries(test_actor_run_queue

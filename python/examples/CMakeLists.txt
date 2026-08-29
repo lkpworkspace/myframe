@@ -1,5 +1,3 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
-
 ### install
 file(GLOB example_py_files "*.py")
 install(PROGRAMS
