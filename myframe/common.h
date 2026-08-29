@@ -57,6 +57,8 @@ class MYFRAME_EXPORT Common final {
   static std::string GetLibName(const std::string& name);
   static stdfs::path GetCurrLibPath();
   static stdfs::path GetCurrExePath();
+
+  static std::string ExecCommand(const std::string& cmd);
 };
 
 }  // namespace myframe

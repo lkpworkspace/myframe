@@ -423,4 +423,21 @@ std::string Common::GetLibName(const std::string& name) {
 #endif
 }
 
+std::string Common::ExecCommand(const std::string& cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+  std::unique_ptr<FILE, decltype(&pclose)>
+    pipe_fd(popen(cmd.c_str(), "r"), pclose);
+  if (!pipe_fd) {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe_fd.get()) != nullptr) {
+    result += buffer.data();
+  }
+  if (!result.empty() && result.back() == '\n') {
+    result.pop_back();
+  }
+  return result;
+}
+
 }  // namespace myframe

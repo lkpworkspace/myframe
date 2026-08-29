@@ -32,8 +32,8 @@ worker自驱动，可以通过消息与actor交互;
 cmake -S 3rd -B build_3rd -DCMAKE_INSTALL_PREFIX=output
 cmake --build build_3rd -j --config Release
 # 构建安装
-cmake -S . -B build_proj -DCMAKE_INSTALL_PREFIX=output -DCMAKE_PREFIX_PATH=output -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-cmake --build build_proj -j --config Release --target install
+cmake --preset release
+cmake --build --preset release
 ```
 
 ### Hello,World API示例
