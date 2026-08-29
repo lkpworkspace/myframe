@@ -40,7 +40,7 @@ std::vector<stdfs::path> Common::GetDirFiles(const std::string& conf_path) {
         res.emplace_back(dir_entry.path());
       }
     }
-  } catch(const std::exception &e) {
+  } catch(const std::exception&) {
     return res;
   }
   return res;
@@ -426,15 +426,34 @@ std::string Common::GetLibName(const std::string& name) {
 std::string Common::ExecCommand(const std::string& cmd) {
   std::array<char, 128> buffer;
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)>
-    pipe_fd(popen(cmd.c_str(), "r"), pclose);
+
+  auto deleter = [](FILE* fp) {
+    if (fp != nullptr) {
+#if defined(MYFRAME_OS_WINDOWS)
+      _pclose(fp);
+#else
+      pclose(fp);
+#endif
+    }
+  };
+#if defined(MYFRAME_OS_WINDOWS)
+  std::unique_ptr<FILE, decltype(deleter)>
+    pipe_fd(_popen(cmd.c_str(), "r"), deleter);
+#else
+  std::unique_ptr<FILE, decltype(deleter)>
+    pipe_fd(popen(cmd.c_str(), "r"), deleter);
+#endif
   if (!pipe_fd) {
     throw std::runtime_error("popen() failed!");
   }
-  while (fgets(buffer.data(), buffer.size(), pipe_fd.get()) != nullptr) {
+  while (fgets(
+      buffer.data(),
+      buffer.size(),
+      pipe_fd.get()) != nullptr) {
     result += buffer.data();
   }
-  if (!result.empty() && result.back() == '\n') {
+  while (!result.empty()
+      && (result.back() == '\n' || result.back() == '\r')) {
     result.pop_back();
   }
   return result;
