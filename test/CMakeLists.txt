@@ -14,14 +14,6 @@ if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
     JsonCpp::JsonCpp
   )
 endif ()
-if (MYFRAME_ENABLE_ASAN)
-  add_compile_options(
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
-  )
-  add_link_options(
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
-  )
-endif ()
 
 ### test bin
 add_executable(test_hello test_hello.cpp)

@@ -17,7 +17,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 
 namespace myframe {
 
-ActorContextManager::ActorContextManager() : ctx_count_(0) {
+ActorContextManager::ActorContextManager() {
   VLOG(1) << "ActorContextManager create";
 }
 

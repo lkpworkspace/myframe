@@ -8,7 +8,7 @@ project(myframe
   LANGUAGES CXX
 )
 
-### option
+### options
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
@@ -20,24 +20,44 @@ option(MYFRAME_ENABLE_PYBIND "Enable Python bindings" OFF)
 ### cmake module
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-### compile option
+### compile/link options
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-if (CMAKE_CXX_STANDARD_REQUIRED)
-  message(STATUS "Set cxx standard ${CMAKE_CXX_STANDARD}")
-else()
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_STANDARD 17)
-  message(STATUS "Set default cxx standard 17")
-endif()
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
-if (MSVC)
-  add_definitions(
-		-wd4251
+
+add_compile_options(
+  $<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
+
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-pedantic-errors>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wfloat-equal>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wshadow>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wcast-qual>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wnon-virtual-dtor>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wold-style-cast>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Woverloaded-virtual>
+
+  $<$<CXX_COMPILER_ID:GNU>:-Werror>
+  $<$<CXX_COMPILER_ID:GNU>:-Wswitch-default>
+  $<$<CXX_COMPILER_ID:GNU>:-Wsign-promo>
+  $<$<CXX_COMPILER_ID:GNU>:-Wsuggest-override>
+  $<$<CXX_COMPILER_ID:GNU>:-Wextra-semi>
+)
+if (MYFRAME_ENABLE_ASAN)
+  add_compile_options(
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fsanitize=address,undefined>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-omit-frame-pointer>
   )
-endif (MSVC)
+  add_link_options(
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fsanitize=address,undefined>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-omit-frame-pointer>
+  )
+endif ()
 
 ### install path
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
