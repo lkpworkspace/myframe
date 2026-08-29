@@ -104,7 +104,7 @@ endif()
 
 ### install file/dir
 install(FILES
-  "LICENSE"
+  "LICENSE.txt"
   PERMISSIONS
   OWNER_READ OWNER_WRITE
   GROUP_READ

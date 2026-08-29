@@ -90,5 +90,11 @@
         "outputOnFailure": true
       }
     }
+  ],
+  "packagePresets": [
+    {
+      "name": "release",
+      "configurePreset": "release"
+    }
   ]
 }
