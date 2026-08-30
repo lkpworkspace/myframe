@@ -14,19 +14,19 @@
       }
     },
     {
-      "name": "debug",
-      "displayName": "Debug",
-      "inherits": "default",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
       "name": "release",
       "displayName": "Release",
       "inherits": "default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -41,18 +41,20 @@
   ],
   "buildPresets": [
     {
-      "name": "debug",
-      "displayName": "Debug",
-      "configurePreset": "debug",
+      "name": "release",
+      "displayName": "Release",
+      "configurePreset": "release",
+      "configuration": "Release",
       "targets": [
         "install"
       ],
       "jobs": 0
     },
     {
-      "name": "release",
-      "displayName": "Release",
-      "configurePreset": "release",
+      "name": "debug",
+      "displayName": "Debug",
+      "configurePreset": "debug",
+      "configuration": "Debug",
       "targets": [
         "install"
       ],
@@ -62,6 +64,7 @@
       "name": "asan",
       "displayName": "Asan",
       "configurePreset": "asan",
+      "configuration": "Debug",
       "targets": [
         "install"
       ],
@@ -70,15 +73,17 @@
   ],
   "testPresets": [
     {
-      "name": "debug",
-      "configurePreset": "debug",
+      "name": "release",
+      "configurePreset": "release",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
     },
     {
-      "name": "release",
-      "configurePreset": "release",
+      "name": "debug",
+      "configurePreset": "debug",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -86,6 +91,7 @@
     {
       "name": "asan",
       "configurePreset": "asan",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }

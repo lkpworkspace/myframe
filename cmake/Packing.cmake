@@ -20,12 +20,12 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 
 if (WIN32)
-    install(FILES "${CMAKE_SOURCE_DIR}/LICENSE.txt" DESTINATION . RENAME LICENSE.txt COMPONENT runtime)
-    # bundle the msvc runtime so the installed server runs on a clean machine
+    # Download link for the portable binary zip (no admin needed):
+    #   https://github.com/wixtoolset/wix3/releases/download/wix314rtm/wix314-binaries.zip
+    # 添加path/to/wix/v3.14/bin路径到环境变量
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION bin)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT runtime)
     include(InstallRequiredSystemLibraries)
-
     set(CPACK_GENERATOR "WIX")
     # a stable upgrade guid lets new installers replace older ones instead of installing side by side
     set(CPACK_WIX_UPGRADE_GUID "EEFDB893-E848-4637-B2D9-BEEAEF4C00C0")
