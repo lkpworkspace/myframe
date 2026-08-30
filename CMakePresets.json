@@ -100,7 +100,24 @@
   "packagePresets": [
     {
       "name": "release",
+      "displayName": "Package Release (default)",
       "configurePreset": "release"
+    },
+    {
+      "name": "release-zip",
+      "displayName": "Package Release (ZIP)",
+      "configurePreset": "release",
+      "variables": {
+        "CPACK_GENERATOR": "ZIP"
+      }
+    },
+    {
+      "name": "release-tgz",
+      "displayName": "Package Release (TGZ)",
+      "configurePreset": "release",
+      "variables": {
+        "CPACK_GENERATOR": "TGZ"
+      }
     }
   ]
 }
