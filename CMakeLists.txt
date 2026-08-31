@@ -29,20 +29,20 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_compile_options(
+  # MSVC
   $<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>
   $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
-
+  # GNU,Clang,AppleClang
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
-  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-pedantic-errors>
+  $<$<CXX_COMPILER_ID:GNU>:-Werror>
+  $<$<CXX_COMPILER_ID:GNU>:-pedantic-errors>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wfloat-equal>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wshadow>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wcast-qual>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wnon-virtual-dtor>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wold-style-cast>
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Woverloaded-virtual>
-
-  $<$<CXX_COMPILER_ID:GNU>:-Werror>
   $<$<CXX_COMPILER_ID:GNU>:-Wswitch-default>
   $<$<CXX_COMPILER_ID:GNU>:-Wsign-promo>
   $<$<CXX_COMPILER_ID:GNU>:-Wsuggest-override>
@@ -50,12 +50,12 @@ add_compile_options(
 )
 if (MYFRAME_ENABLE_ASAN)
   add_compile_options(
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fsanitize=address,undefined>
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-omit-frame-pointer>
+    $<$<AND:$<CXX_COMPILER_ID:GNU,Clang,AppleClang>,$<CONFIG:Debug>>:-fsanitize=address,undefined>
+    $<$<AND:$<CXX_COMPILER_ID:GNU,Clang,AppleClang>,$<CONFIG:Debug>>:-fno-omit-frame-pointer>
   )
   add_link_options(
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fsanitize=address,undefined>
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-omit-frame-pointer>
+    $<$<AND:$<CXX_COMPILER_ID:GNU,Clang,AppleClang>,$<CONFIG:Debug>>:-fsanitize=address,undefined>
+    $<$<AND:$<CXX_COMPILER_ID:GNU,Clang,AppleClang>,$<CONFIG:Debug>>:-fno-omit-frame-pointer>
   )
 endif ()
 
