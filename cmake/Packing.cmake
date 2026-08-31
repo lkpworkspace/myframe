@@ -45,6 +45,7 @@ else ()
     set(CPACK_DEB_COMPONENT_INSTALL YES)
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS YES)
     set(CPACK_GENERATOR "DEB")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 endif ()
 
 include(CPack)
