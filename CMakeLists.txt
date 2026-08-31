@@ -103,14 +103,6 @@ if (MYFRAME_ENABLE_PYBIND)
 endif()
 
 ### install file/dir
-install(FILES
-  "LICENSE.txt"
-  PERMISSIONS
-  OWNER_READ OWNER_WRITE
-  GROUP_READ
-  WORLD_READ
-  DESTINATION .
-)
 if (MYFRAME_INSTALL_TEMPLATE)
   install(DIRECTORY templates DESTINATION .)
 endif()

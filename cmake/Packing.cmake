@@ -13,9 +13,6 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_CONTACT "likepeng0418@163.com")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-# package only the server runtime so dependency headers and static libs stay out of the installer
-# set(CPACK_COMPONENTS_ALL runtime)
-
 # group
 set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 
@@ -34,7 +31,7 @@ if (WIN32)
     # add the install bin directory to the system path
     # set(CPACK_WIX_PATCH_FILE "${CMAKE_SOURCE_DIR}/cmake/wix-patch.xml")
 elseif (APPLE)
-    install(FILES "${CMAKE_SOURCE_DIR}/LICENSE.txt" DESTINATION share/doc/myframe RENAME LICENSE.txt COMPONENT runtime)
+    install(FILES "${CMAKE_SOURCE_DIR}/LICENSE.txt" DESTINATION share/doc/myframe COMPONENT runtime)
     set(CPACK_GENERATOR "productbuild")
     set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 else ()
