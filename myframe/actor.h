@@ -59,6 +59,7 @@ class MYFRAME_EXPORT Actor {
    * Proc() - 消息处理函数
    * @msg:      actor收到的消息
    *
+   *      统一的消息处理入口, 所有的消息都会通过该函数传递给actor, 由actor自行处理。
    */
   virtual void Proc(const std::shared_ptr<const Msg>& msg) = 0;
 
@@ -80,6 +81,8 @@ class MYFRAME_EXPORT Actor {
    *      msg->GetType() == MYFRAME_MSG_TYPE_TIMER 确认是定时器消息
    *      msg->GetName() == timer_name 确认是那个定时器消息
    *
+   *      具体示例请参考 examples/example_actor_timer.cpp
+   *
    * @return:         成功返回: 0, 失败返回: -1
    */
   int Timeout(const std::string& timer_name, int expired);
@@ -95,6 +98,8 @@ class MYFRAME_EXPORT Actor {
    *        msg->GetDst() 确定是被订阅组件地址
    *        msg->GetType() == MYFRAME_MSG_TYPE_SUB 确认是订阅消息
    *        msg->GetName() == <msg_name> 确认消息名
+   *
+   *     具体示例请参考 examples/example_actor_pub_sub.cpp
    *
    * @return: 成功返回true,失败返回false
    */
@@ -121,9 +126,52 @@ class MYFRAME_EXPORT Actor {
    *        pub_msg->SetData("hello,world");
    *        Publish(std::move(pub_msg));
    *
+   *    具体示例请参考 examples/example_actor_pub_sub.cpp
+   *
    * @return: 成功返回true,失败返回false
    */
   bool Publish(std::shared_ptr<Msg> msg);
+
+  /**
+   * Request() - 请求其它actor的服务
+   * @msg: 请求消息
+   * @callback: 回调函数, 用于处理请求的响应消息
+   *
+   *    请求消息格式：
+   *        msg->SetDst() 其它actor的地址
+   *        msg->SetName(<msg_name>) 消息名
+   *        msg->SetData(<msg>) 消息内容
+   *        msg->SetAnyData(<msg_obj>) 消息对象
+   *
+   *    响应消息格式：
+   *        msg->GetData() 响应消息内容
+   *        msg->GetAnyData() 响应消息对象
+   *
+   *    具体示例请参考 examples/example_actor_req_resp.cpp
+   *
+   * @return: 成功返回true,失败返回false
+   */
+  bool Request(
+    std::shared_ptr<Msg> msg,
+    std::function<void(const std::shared_ptr<const Msg>)> callback
+  );
+
+  /**
+   * Response() - 回复其它actor的请求消息
+   * @req_msg: 请求消息
+   * @resp_msg: 响应消息
+   *
+   *    响应消息格式：
+   *        msg->SetData(<msg>) 响应消息内容
+   *        msg->SetAnyData(<msg_obj>) 响应消息对象
+   *
+   *    具体示例请参考 examples/example_actor_req_resp.cpp
+   *
+   * @return: 成功返回true,失败返回false
+   */
+  bool Response(
+    const std::shared_ptr<const Msg>& req_msg,
+    std::shared_ptr<Msg> resp_msg);
 
   /**
    * GetApp() - 获得应用实例

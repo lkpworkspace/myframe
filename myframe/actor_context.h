@@ -34,6 +34,16 @@ class ActorContext final {
 
   void Proc(const std::shared_ptr<const Msg>& msg);
 
+  void ProcResponse(const std::shared_ptr<const Msg>& msg);
+
+  bool Request(
+    std::shared_ptr<Msg> msg,
+    std::function<void(const std::shared_ptr<const Msg>)> callback);
+
+  bool Response(
+    const std::shared_ptr<const Msg>& req_msg,
+    std::shared_ptr<Msg> resp_msg);
+
   void SetRuningFlag(bool in_worker) { in_worker_ = in_worker; }
   bool IsRuning() { return in_worker_; }
 
@@ -55,6 +65,12 @@ class ActorContext final {
 
   std::shared_ptr<Actor> actor_;
   std::weak_ptr<App> app_;
+
+  unsigned int request_id_{0};
+  std::unordered_map<
+    std::string,
+    std::function<void(const std::shared_ptr<const Msg>)>>
+      request_callbacks_;
 
   DISALLOW_COPY_AND_ASSIGN(ActorContext)
 };

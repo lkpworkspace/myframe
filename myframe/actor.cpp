@@ -94,6 +94,24 @@ bool Actor::Publish(std::shared_ptr<Msg> msg) {
   return true;
 }
 
+bool Actor::Request(
+    std::shared_ptr<Msg> msg,
+    std::function<void(const std::shared_ptr<const Msg>)> callback) {
+  if (ctx_ == nullptr) {
+    return false;
+  }
+  return ctx_->Request(std::move(msg), std::move(callback));
+}
+
+bool Actor::Response(
+    const std::shared_ptr<const Msg>& req_msg,
+    std::shared_ptr<Msg> resp_msg) {
+  if (ctx_ == nullptr) {
+    return false;
+  }
+  return ctx_->Response(req_msg, std::move(resp_msg));
+}
+
 void Actor::SetContext(ActorContext* c) { ctx_ = c; }
 
 const Json::Value* Actor::GetConfig() const {
