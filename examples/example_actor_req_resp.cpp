@@ -56,9 +56,11 @@ class ExampleActorReq : public myframe::Actor {
       data += std::to_string(seq_num_++);
       req_msg->SetData(data);
       req_msg->SetDst("actor.ExampleActorResp.1");
-      Request(std::move(req_msg), [this](const std::shared_ptr<const myframe::Msg> resp_msg) {
-        LOG(INFO) << "-----> get resp msg: " << *resp_msg << ", data: " << resp_msg->GetData();
-      });
+      Request(std::move(req_msg),
+        [this](const std::shared_ptr<const myframe::Msg> resp_msg) {
+          LOG(INFO) << "-----> get resp msg: " << *resp_msg
+            << ", data: " << resp_msg->GetData();
+        });
       Timeout("1000ms", 100);
     }
   }

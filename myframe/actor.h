@@ -9,6 +9,7 @@ Author: 李柯鹏 <likepeng0418@163.com>
 #include <any>
 #include <memory>
 #include <string>
+#include <functional>
 
 #include <json/json.h>
 
@@ -153,8 +154,7 @@ class MYFRAME_EXPORT Actor {
    */
   bool Request(
     std::shared_ptr<Msg> msg,
-    std::function<void(const std::shared_ptr<const Msg>)> callback
-  );
+    std::function<void(const std::shared_ptr<const Msg>)> callback);
 
   /**
    * Response() - 回复其它actor的请求消息

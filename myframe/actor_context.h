@@ -6,9 +6,10 @@ Author: 李柯鹏 <likepeng0418@163.com>
 ****************************************************************************/
 
 #pragma once
-#include <list>
 #include <memory>
 #include <string>
+#include <functional>
+#include <unordered_map>
 
 #include <json/json.h>
 

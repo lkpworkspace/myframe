@@ -71,14 +71,13 @@ python3 path/to/myframe/bin/myframe_tool.py create -p="path/to/proj_dir/" -n="mo
 
 ### 组件工程构建安装
 ```sh
-# 如果myframe库和依赖库安装到系统目录里，则不需要设置CMAKE_PREFIX_PATH变量
-cmake -S . -B build -DCMAKE_PREFIX_PATH="path/to/myframe;path/to/jsoncpp;path/to/glog"
+cmake -S . -B build -DCMAKE_PREFIX_PATH="path/to/myframe" -DCMAKE_INSTALL_PREFIX="path/to/myframe"
 cmake --build build --config Release --target install
 ```
 
 ### 运行组件
 ```sh
-/path/to/myframe/bin/launcher -p app ${组件名}.json
+/path/to/myframe/bin/myframe_launcher -p app ${组件名}.json
 ```
 
 ### 日志文件
