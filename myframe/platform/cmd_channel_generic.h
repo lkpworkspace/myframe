@@ -61,20 +61,17 @@ ev_handle_t CmdChannelGeneric::GetMainHandle() const {
   return reinterpret_cast<ev_handle_t>(const_cast<CmdChannelGeneric*>(this));
 }
 
+// 调度线程(main)通知工作线程(owner)
 int CmdChannelGeneric::SendToOwner(const Cmd& cmd) {
-  std::lock_guard<std::mutex> lk(mtx_);
-  to_owner_cmd_.push_back(cmd);
+  {
+    std::lock_guard<std::mutex> lk(mtx_);
+    to_owner_cmd_.push_back(cmd);
+  }
   cv_.notify_one();
   return 0;
 }
 
-int CmdChannelGeneric::RecvFromOwner(Cmd* cmd) {
-  std::lock_guard<std::mutex> lk(main_cmd_mtx_);
-  *cmd = to_main_cmd_.front();
-  to_main_cmd_.pop_front();
-  return 0;
-}
-
+// 工作线程(owner)接收调度线程(main)指令
 int CmdChannelGeneric::RecvFromMain(Cmd* cmd, int timeout_ms) {
   std::unique_lock<std::mutex> lk(mtx_);
   using namespace std::chrono_literals;  // NOLINT
@@ -96,9 +93,20 @@ int CmdChannelGeneric::RecvFromMain(Cmd* cmd, int timeout_ms) {
   return 0;
 }
 
-int CmdChannelGeneric::SendToMain(const Cmd& cmd) {
+// 调度线程(main)接收工作线程(owner)指令
+int CmdChannelGeneric::RecvFromOwner(Cmd* cmd) {
   std::lock_guard<std::mutex> lk(main_cmd_mtx_);
-  to_main_cmd_.push_back(cmd);
+  *cmd = to_main_cmd_.front();
+  to_main_cmd_.pop_front();
+  return 0;
+}
+
+// 工作线程(owner)通知调度线程(main)
+int CmdChannelGeneric::SendToMain(const Cmd& cmd) {
+  {
+    std::lock_guard<std::mutex> lk(main_cmd_mtx_);
+    to_main_cmd_.push_back(cmd);
+  }
 
   poller_->Notify(
     reinterpret_cast<ev_handle_t>(

@@ -28,11 +28,8 @@ It is suitable for building medium- to large-scale projects.
 * [GitHub CI: macOS](.github/workflows/macos.yml)
 
 ## Quick Local Build
-
+[build and install dependencies](3rd/README.md)
 ```sh
-# Download, build, and install dependencies
-cmake -S 3rd -B build_3rd -DCMAKE_INSTALL_PREFIX=output
-cmake --build build_3rd -j --config Release
 # Build and install
 cmake --preset release
 cmake --build --preset release
