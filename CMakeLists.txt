@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 if (POLICY CMP0091) # >= 3.15
   cmake_policy(SET CMP0091 NEW)
 endif()
+set(MYFRAME_VERSION "1.1.0" CACHE STRING "myframe project version")
 project(myframe
-  VERSION 1.1.0
+  VERSION ${MYFRAME_VERSION}
   LANGUAGES CXX
 )
 

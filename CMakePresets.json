@@ -2,29 +2,31 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "default",
+      "name": "Default",
       "displayName": "Default",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "installDir": "${sourceDir}/output",
+      "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
+      "installDir": "${sourceDir}/.mypm/output/${presetName}",
       "cacheVariables": {
-        "CMAKE_PREFIX_PATH": "${sourceDir}/output",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/deps/jsoncpp-1.9.5;${sourceDir}/.mypm/deps/gflags-2.2.2;${sourceDir}/.mypm/deps/glog-0.6.0;${sourceDir}/.mypm/deps/swig-4.3.1",
         "BUILD_SHARED_LIBS": "ON",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MYFRAME_VERSION":"1.1.0",
+        "MYFRAME_ENABLE_PYBIND":"ON"
       }
     },
     {
-      "name": "release",
+      "name": "Release",
       "displayName": "Release",
-      "inherits": "default",
+      "inherits": "Default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "debug",
+      "name": "Debug",
       "displayName": "Debug",
-      "inherits": "default",
+      "inherits": "Default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -32,7 +34,7 @@
     {
       "name": "asan",
       "displayName": "AddressSanitizer",
-      "inherits": "default",
+      "inherits": "Default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "MYFRAME_ENABLE_ASAN": "ON"
@@ -41,9 +43,9 @@
   ],
   "buildPresets": [
     {
-      "name": "release",
+      "name": "Release",
       "displayName": "Release",
-      "configurePreset": "release",
+      "configurePreset": "Release",
       "configuration": "Release",
       "targets": [
         "install"
@@ -51,9 +53,9 @@
       "jobs": 0
     },
     {
-      "name": "debug",
+      "name": "Debug",
       "displayName": "Debug",
-      "configurePreset": "debug",
+      "configurePreset": "Debug",
       "configuration": "Debug",
       "targets": [
         "install"
@@ -73,16 +75,16 @@
   ],
   "testPresets": [
     {
-      "name": "release",
-      "configurePreset": "release",
+      "name": "Release",
+      "configurePreset": "Release",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
     },
     {
-      "name": "debug",
-      "configurePreset": "debug",
+      "name": "Debug",
+      "configurePreset": "Debug",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
@@ -99,22 +101,22 @@
   ],
   "packagePresets": [
     {
-      "name": "release",
+      "name": "Release",
       "displayName": "Package Release (default)",
-      "configurePreset": "release"
+      "configurePreset": "Release"
     },
     {
-      "name": "release-zip",
+      "name": "Release-zip",
       "displayName": "Package Release (ZIP)",
-      "configurePreset": "release",
+      "configurePreset": "Release",
       "variables": {
         "CPACK_GENERATOR": "ZIP"
       }
     },
     {
-      "name": "release-tgz",
+      "name": "Release-tgz",
       "displayName": "Package Release (TGZ)",
-      "configurePreset": "release",
+      "configurePreset": "Release",
       "variables": {
         "CPACK_GENERATOR": "TGZ"
       }

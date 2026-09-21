@@ -31,11 +31,11 @@ It is suitable for building medium- to large-scale projects.
 [build and install dependencies](3rd/README.md)
 ```sh
 # Build and install
-cmake --preset release
-cmake --build --preset release
+cmake --preset Release
+cmake --build --preset Release
 # Test and pack
-ctest --preset release
-cpack --preset release
+ctest --preset Release
+cpack --preset Release
 ```
 
 ### Hello, World API Example

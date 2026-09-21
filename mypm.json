@@ -1,0 +1,44 @@
+{
+  "name": "myframe",
+  "buildType": "Release",
+  "scripts": {
+    "config": "builtin",
+    "build": "builtin"
+  },
+  "dependencies": {
+    "jsoncpp": {
+      "name": "jsoncpp",
+      "version": "1.9.5",
+      "shared": true,
+      "dirName": "jsoncpp-1.9.5",
+      "private": false,
+      "installPath": ".mypm/deps"
+    },
+    "gflags": {
+      "name": "gflags",
+      "version": "2.2.2",
+      "shared": true,
+      "dirName": "gflags-2.2.2",
+      "private": true,
+      "installPath": ".mypm/deps"
+    },
+    "glog": {
+      "name": "glog",
+      "version": "0.6.0",
+      "shared": true,
+      "dirName": "glog-0.6.0",
+      "private": false,
+      "installPath": ".mypm/deps"
+    }
+  },
+  "devDependencies": {
+    "swig": {
+      "name": "swig",
+      "version": "4.3.1",
+      "shared": true,
+      "dirName": "swig-4.3.1",
+      "private": false,
+      "installPath": ".mypm/deps"
+    }
+  }
+}

@@ -30,11 +30,11 @@ worker自驱动，可以通过消息与actor交互;
 [依赖构建安装](3rd/README.md)
 ```sh
 # 构建安装
-cmake --preset release
-cmake --build --preset release
+cmake --preset Release
+cmake --build --preset Release
 # 测试/打包
-ctest --preset release
-cpack --preset release
+ctest --preset Release
+cpack --preset Release
 ```
 
 ### Hello,World API示例
