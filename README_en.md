@@ -33,9 +33,8 @@ It is suitable for building medium- to large-scale projects.
 # Build and install
 cmake --preset Release
 cmake --build --preset Release
-# Test and pack
+# Test
 ctest --preset Release
-cpack --preset Release
 ```
 
 ### Hello, World API Example

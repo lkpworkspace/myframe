@@ -32,9 +32,8 @@ worker自驱动，可以通过消息与actor交互;
 # 构建安装
 cmake --preset Release
 cmake --build --preset Release
-# 测试/打包
+# 测试
 ctest --preset Release
-cpack --preset Release
 ```
 
 ### Hello,World API示例

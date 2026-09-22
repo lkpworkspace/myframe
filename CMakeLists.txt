@@ -13,7 +13,6 @@ project(myframe
 option(MYFRAME_USE_CV "Using conditional variables for thread communication" ON)
 option(MYFRAME_GENERATE_EXAMPLE "Generate example library" ON)
 option(MYFRAME_GENERATE_TEST "Generate test executable program" ON)
-option(MYFRAME_INSTALL_TEMPLATE "Install template project" ON)
 option(MYFRAME_INSTALL_LAUNCHER "Install launcher program" ON)
 option(MYFRAME_ENABLE_ASAN "Enable ASAN" OFF)
 option(MYFRAME_ENABLE_PYBIND "Enable Python bindings" OFF)
@@ -104,17 +103,10 @@ if (MYFRAME_ENABLE_PYBIND)
 endif()
 
 ### install file/dir
-if (MYFRAME_INSTALL_TEMPLATE)
-  install(DIRECTORY templates DESTINATION .)
-endif()
 install(PROGRAMS
-  "tools/myframe_tool.py"
   "tools/myframe_setup.py"
   "tools/myframe_setup.sh"
   DESTINATION ${MYFRAME_BIN_DIR}
 )
 install(DIRECTORY DESTINATION ${MYFRAME_LOG_DIR})
 install(DIRECTORY DESTINATION ${MYFRAME_SERVICE_DIR})
-
-### package
-include(Packing)

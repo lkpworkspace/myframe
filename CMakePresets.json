@@ -98,28 +98,5 @@
         "outputOnFailure": true
       }
     }
-  ],
-  "packagePresets": [
-    {
-      "name": "Release",
-      "displayName": "Package Release (default)",
-      "configurePreset": "Release"
-    },
-    {
-      "name": "Release-zip",
-      "displayName": "Package Release (ZIP)",
-      "configurePreset": "Release",
-      "variables": {
-        "CPACK_GENERATOR": "ZIP"
-      }
-    },
-    {
-      "name": "Release-tgz",
-      "displayName": "Package Release (TGZ)",
-      "configurePreset": "Release",
-      "variables": {
-        "CPACK_GENERATOR": "TGZ"
-      }
-    }
   ]
 }

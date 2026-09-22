@@ -1,5 +1,32 @@
 # 开发手册
 ![myframe](/doc/pics/myframe_view.png)
+
+## 安装和构建
+[安装和构建说明](package_manager.md)
+
+## 目录结构
+```txt
+产出目录
+|- bin
+|- conf
+|- include
+|- lib
+|- log
+ - service
+```
+- bin
+  - 主要存放启动器(myframe_launcher),环境设置脚本(myframe_setup)等可执行程序
+- conf
+  - 放置启动器配置文件以及其它用户配置
+- incllude
+  - 开发头文件
+- lib
+  - 所有库文件
+- log
+  - 程序生成日志目录
+- service
+  - 插件描述文件存放目录
+
 ## 术语介绍
 - Actor：基础的执行单元
   - 驱动类型：消息驱动（被动执行）
@@ -11,76 +38,65 @@
   - 并发类型：单个Worker串行执行，多个Worker并行执行
   - 通信方式：接收消息或者发送消息
 
-- Service：由任意个Actor和Worker组成，通过描述文件展现; 它描述框架需要加载的库，需要创建的实例以及实例名称。
-  - 例如下面这个例子:
-  ```json
-  {
-    "type": "library",
-    "lib": "Hello",
-    "actor": {
-      "HelloActor": [
-        {
-          "instance_name": "1",
-          "instance_config": {
-            "pending_queue_size":-1,
-            "run_queue_size":2
-          }
-        }
-      ]
-    },
-    "worker": {
-      "HelloReceiver": [
-        {
-          "instance_name": "1"
-        }
-      ],
-      "HelloSender": [
-        {
-          "instance_name": "1"
-        }
-      ]
-    }
-  }
-  ```
-  - "type":"library": 服务通过库的形式提供
-  - "lib":"Hello": 需要加载的库名称
-    - 可以写简略库名，比如 Hello
-    - 也可以写库的全名，比如libHello.so, Hello,dll
-  - 创建1个actor实例，名称是 actor.HelloActor.1
-    - pending_queue_size是这个等待队列长度,-1是无限制
-    - run_queue_size是设置每次执行消费最大消息数量, -1是无限制
-  - 创建1个worker实例，名称是 worker.HelloReceiver.1
-  - 创建1个worker实例，名称是 worker.HelloSender.1
+- Service：由任意个Actor和Worker组成，通过描述文件展现; 详见[描述文件](#组件描述文件)
 
 - Module/Component：通常代指Actor或者Worker
 
-## 开发
-组件开发模式，通过编写组件开发业务。
+## 组件系统
+组件主要由两部分构成:
+- 组件描述文件
+- 组件动态库
 
-### 创建组件工程
-```sh
-python3 path/to/myframe/bin/myframe_tool.py create -p="path/to/proj_dir/" -n="mod_name"
+### 组件描述文件
+- 该描述文件通常存放到service目录
+```json
+{
+  "type": "library",
+  "lib": "Hello",
+  "actor": {
+    "HelloActor": [
+      {
+        "instance_name": "1",
+        "instance_config": {
+          "pending_queue_size":-1,
+          "run_queue_size":2
+        }
+      }
+    ]
+  },
+  "worker": {
+    "HelloReceiver": [
+      {
+        "instance_name": "1"
+      }
+    ],
+    "HelloSender": [
+      {
+        "instance_name": "1"
+      }
+    ]
+  }
+}
 ```
+- "type":"library": 服务通过库的形式提供
+- "lib":"Hello": 需要加载的库名称
+  - 可以写简略库名，比如 Hello
+  - 也可以写库的全名，比如libHello.so, Hello,dll
+- 创建1个actor实例，名称是 actor.HelloActor.1
+  - pending_queue_size是这个等待队列长度,-1是无限制
+  - run_queue_size是设置每次执行消费最大消息数量, -1是无限制
+- 创建1个worker实例，名称是 worker.HelloReceiver.1
+- 创建1个worker实例，名称是 worker.HelloSender.1
 
-### 组件工程目录说明
-- 源文件(template.cpp)
-  - 提供actor/worker的使用模板,根据需求决定使用actor或者worker
+### 组件动态库
+- 该动态库通常存放在lib目录下
 
-- 配置文件：
-  - template.json：Service配置
+### 组件加载
 
-### 组件工程构建安装
+#### 通过myframe_launcher加载
+- 更详细的用法可以通过 myframe_launcher -h 查看
 ```sh
-cmake -S . -B build -DCMAKE_PREFIX_PATH="path/to/myframe" -DCMAKE_INSTALL_PREFIX="path/to/myframe"
-cmake --build build --config Release --target install
-```
-
-### 运行组件
-```sh
-/path/to/myframe/bin/myframe_launcher -p app ${组件名}.json
-```
-
-### 日志文件
-```sh
-path/to/myframe/log/app.INFO
+# 进入bin目录
+source myframe_setup.sh
+./myframe_launcher -p app ${组件名}.json
 ```
