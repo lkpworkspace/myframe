@@ -15,6 +15,19 @@ option(MYFRAME_ENABLE_PYBIND "Enable Python bindings" OFF)
 
 set(DEPS_SOURCE_DIR ${CMAKE_BINARY_DIR}/src CACHE PATH "package source dir")
 set(DEPS_DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/pkg CACHE PATH "package tgz dir")
+set(DEPS_INSTALL_ONE_FOLDER TRUE CACHE BOOL "package install one folder")
+
+if (DEPS_INSTALL_ONE_FOLDER)
+    set(gflags_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+    set(glog_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+    set(jsoncpp_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+    set(swig_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+else ()
+    set(gflags_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/gflags-2.2.2")
+    set(glog_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/glog-0.6.0")
+    set(jsoncpp_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/jsoncpp-1.9.5")
+    set(swig_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/swig-4.3.1")
+endif()
 
 ExternalProject_Add(
     gflags
@@ -29,7 +42,7 @@ ExternalProject_Add(
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/gflags-2.2.2
+        -DCMAKE_INSTALL_PREFIX=${gflags_INSTALL_DIR}
         -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
 )
 
@@ -48,8 +61,8 @@ ExternalProject_Add(
         -DCMAKE_BUILD_TYPE=Release
         -DWITH_PKGCONFIG=OFF
         -DWITH_GTEST=OFF
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/glog-0.6.0
-        -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}/gflags-2.2.2
+        -DCMAKE_INSTALL_PREFIX=${glog_INSTALL_DIR}
+        -DCMAKE_PREFIX_PATH=${gflags_INSTALL_DIR}
         -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
 )
 ExternalProject_Add_StepDependencies(glog install gflags)
@@ -72,7 +85,7 @@ ExternalProject_Add(
         -DJSONCPP_WITH_TESTS=OFF
         -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
         -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/jsoncpp-1.9.5
+        -DCMAKE_INSTALL_PREFIX=${jsoncpp_INSTALL_DIR}
         -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
 )
 
@@ -88,7 +101,7 @@ if (MYFRAME_ENABLE_PYBIND)
         CMAKE_ARGS
             -DBUILD_SHARED_LIBS=ON
             -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/swig-4.3.1
+            -DCMAKE_INSTALL_PREFIX=${swig_INSTALL_DIR}
             -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
     )
 endif()

@@ -3,7 +3,6 @@
   "configurePresets": [
     {
       "name": "Default",
-      "displayName": "Default",
       "hidden": true,
       "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
       "installDir": "${sourceDir}/.mypm/output/${presetName}",
@@ -16,8 +15,39 @@
       }
     },
     {
+      "name": "Local",
+      "hidden": true,
+      "inherits": "Default",
+      "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
+      "installDir": "${sourceDir}/.mypm/output",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/output"
+      }
+    },
+    {
+      "name": "ReleaseLocal",
+      "inherits": "Local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "DebugLocal",
+      "inherits": "Local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "AsanLocal",
+      "inherits": "Local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MYFRAME_ENABLE_ASAN": "ON"
+      }
+    },
+    {
       "name": "Release",
-      "displayName": "Release",
       "inherits": "Default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
@@ -25,15 +55,13 @@
     },
     {
       "name": "Debug",
-      "displayName": "Debug",
       "inherits": "Default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "asan",
-      "displayName": "AddressSanitizer",
+      "name": "Asan",
       "inherits": "Default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -43,8 +71,34 @@
   ],
   "buildPresets": [
     {
+      "name": "ReleaseLocal",
+      "configurePreset": "ReleaseLocal",
+      "configuration": "Release",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "DebugLocal",
+      "configurePreset": "DebugLocal",
+      "configuration": "Debug",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "AsanLocal",
+      "configurePreset": "AsanLocal",
+      "configuration": "Debug",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
       "name": "Release",
-      "displayName": "Release",
       "configurePreset": "Release",
       "configuration": "Release",
       "targets": [
@@ -54,7 +108,6 @@
     },
     {
       "name": "Debug",
-      "displayName": "Debug",
       "configurePreset": "Debug",
       "configuration": "Debug",
       "targets": [
@@ -63,9 +116,8 @@
       "jobs": 0
     },
     {
-      "name": "asan",
-      "displayName": "Asan",
-      "configurePreset": "asan",
+      "name": "Asan",
+      "configurePreset": "Asan",
       "configuration": "Debug",
       "targets": [
         "install"
@@ -75,6 +127,30 @@
   ],
   "testPresets": [
     {
+      "name": "ReleaseLocal",
+      "configurePreset": "ReleaseLocal",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "DebugLocal",
+      "configurePreset": "DebugLocal",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "AsanLocal",
+      "configurePreset": "AsanLocal",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
       "name": "Release",
       "configurePreset": "Release",
       "configuration": "Release",
@@ -91,8 +167,8 @@
       }
     },
     {
-      "name": "asan",
-      "configurePreset": "asan",
+      "name": "Asan",
+      "configurePreset": "Asan",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
