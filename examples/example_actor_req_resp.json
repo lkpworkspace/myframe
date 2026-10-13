@@ -1,0 +1,16 @@
+{
+    "type":"library",
+    "lib":"example_actor_req_resp",
+    "actor":{
+        "ExampleActorReq":[
+            {
+                "instance_name":"1"
+            }
+        ],
+        "ExampleActorResp":[
+            {
+                "instance_name":"1"
+            }
+        ]
+    }
+}

@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
+# 打印堆栈信息
+# import faulthandler
+# faulthandler.enable()
+
 import time
 import myframe_setup
 import pymyframe as myframe

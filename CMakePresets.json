@@ -1,0 +1,178 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "Default",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
+      "installDir": "${sourceDir}/.mypm/output/${presetName}",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/deps/jsoncpp-1.9.5;${sourceDir}/.mypm/deps/gflags-2.2.2;${sourceDir}/.mypm/deps/glog-0.6.0;${sourceDir}/.mypm/deps/swig-4.3.1",
+        "BUILD_SHARED_LIBS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MYFRAME_VERSION":"1.1.0",
+        "MYFRAME_ENABLE_PYBIND":"ON"
+      }
+    },
+    {
+      "name": "Local",
+      "hidden": true,
+      "inherits": "Default",
+      "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
+      "installDir": "${sourceDir}/.mypm/output",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/output"
+      }
+    },
+    {
+      "name": "ReleaseLocal",
+      "inherits": "Local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "DebugLocal",
+      "inherits": "Local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "AsanLocal",
+      "inherits": "Local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MYFRAME_ENABLE_ASAN": "ON"
+      }
+    },
+    {
+      "name": "Release",
+      "inherits": "Default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "Debug",
+      "inherits": "Default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "Asan",
+      "inherits": "Default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MYFRAME_ENABLE_ASAN": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ReleaseLocal",
+      "configurePreset": "ReleaseLocal",
+      "configuration": "Release",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "DebugLocal",
+      "configurePreset": "DebugLocal",
+      "configuration": "Debug",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "AsanLocal",
+      "configurePreset": "AsanLocal",
+      "configuration": "Debug",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "Release",
+      "configurePreset": "Release",
+      "configuration": "Release",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "Debug",
+      "configurePreset": "Debug",
+      "configuration": "Debug",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    },
+    {
+      "name": "Asan",
+      "configurePreset": "Asan",
+      "configuration": "Debug",
+      "targets": [
+        "install"
+      ],
+      "jobs": 0
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "ReleaseLocal",
+      "configurePreset": "ReleaseLocal",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "DebugLocal",
+      "configurePreset": "DebugLocal",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "AsanLocal",
+      "configurePreset": "AsanLocal",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Release",
+      "configurePreset": "Release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Debug",
+      "configurePreset": "Debug",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Asan",
+      "configurePreset": "Asan",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

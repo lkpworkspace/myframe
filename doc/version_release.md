@@ -1,5 +1,5 @@
 # 版本发布
-* 修改CMakeLists.txt中版本号
+* 修改CMakeLists.txt/CMakePresets.json中版本号
 * 提交修改
 * 合入master
 * 生成版本tag并发布

@@ -9,6 +9,9 @@ def printUsage():
     print('Please run \'source myframe_setup.sh\' before run this script!!!')
 
 def checkLibEnv(lib_dir, env_key):
+    """
+    在VSCode终端设置变量,python可能查不到,切换系统终端运行即可
+    """
     try:
         ld_library_path = os.environ[env_key]
         paths = ld_library_path.split(':')

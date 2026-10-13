@@ -40,7 +40,7 @@ std::vector<stdfs::path> Common::GetDirFiles(const std::string& conf_path) {
         res.emplace_back(dir_entry.path());
       }
     }
-  } catch(const std::exception &e) {
+  } catch(const std::exception&) {
     return res;
   }
   return res;
@@ -68,6 +68,20 @@ Json::Value Common::LoadJsonFromString(const std::string& json_str) {
     return Json::Value::nullSingleton();
   }
   return root;
+}
+
+bool Common::SaveFile(
+    const std::string& filepath,
+    const std::string& data) {
+  std::ofstream ofs(filepath, std::ios::binary);
+  if (!ofs.is_open()) {
+    return false;
+  }
+  ofs.write(data.data(), data.size());
+  if (!ofs.good()) {
+    return false;
+  }
+  return true;
 }
 
 stdfs::path Common::GetWorkRoot() {
@@ -407,6 +421,42 @@ std::string Common::GetLibName(const std::string& name) {
 #elif defined(MYFRAME_OS_MACOSX)
   return "lib" + name + ".dylib";
 #endif
+}
+
+std::string Common::ExecCommand(const std::string& cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+
+  auto deleter = [](FILE* fp) {
+    if (fp != nullptr) {
+#if defined(MYFRAME_OS_WINDOWS)
+      _pclose(fp);
+#else
+      pclose(fp);
+#endif
+    }
+  };
+#if defined(MYFRAME_OS_WINDOWS)
+  std::unique_ptr<FILE, decltype(deleter)>
+    pipe_fd(_popen(cmd.c_str(), "r"), deleter);
+#else
+  std::unique_ptr<FILE, decltype(deleter)>
+    pipe_fd(popen(cmd.c_str(), "r"), deleter);
+#endif
+  if (!pipe_fd) {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(
+      buffer.data(),
+      buffer.size(),
+      pipe_fd.get()) != nullptr) {
+    result += buffer.data();
+  }
+  while (!result.empty()
+      && (result.back() == '\n' || result.back() == '\r')) {
+    result.pop_back();
+  }
+  return result;
 }
 
 }  // namespace myframe

@@ -1,5 +1,7 @@
 # myframe
 
+[English](README_en.md) | 中文
+
 ![myframe](doc/pics/myframe.png)
 
 ## 概述
@@ -25,17 +27,17 @@ worker自驱动，可以通过消息与actor交互;
 * [github ci macOS](.github/workflows/macos.yml)
 
 ## 快速本地构建
+[依赖构建安装](3rd/README.md)
 ```sh
-# 下载/构建/安装依赖库
-cmake -S 3rd -B build_3rd -DCMAKE_INSTALL_PREFIX=output
-cmake --build build_3rd -j --config Release
 # 构建安装
-cmake -S . -B build_proj -DCMAKE_INSTALL_PREFIX=output -DCMAKE_PREFIX_PATH=output -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-cmake --build build_proj -j --config Release --target install
+cmake --preset ReleaseLocal
+cmake --build --preset ReleaseLocal
+# 测试
+ctest --preset ReleaseLocal
 ```
 
 ### Hello,World API示例
-- [API 示例](test/hello_test.cpp)
+- [API 示例](test/test_hello.cpp)
 
 ### Hello,World 组件示例
 - [组件代码示例](examples/example_actor_helloworld.cpp)
@@ -49,6 +51,3 @@ cmake --build build_proj -j --config Release --target install
 
 ## 文档
 - [开发手册](doc/development_guide.md)
-- [Discussions](https://github.com/lkpworkspace/myframe/discussions)
-- [WIKI](https://github.com/lkpworkspace/myframe/wiki)
-- [FAQ](https://github.com/lkpworkspace/myframe/wiki/FAQs)

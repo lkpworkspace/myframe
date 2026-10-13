@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.10)
-
 ### config
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
@@ -54,17 +52,6 @@ if (glog_lib_type STREQUAL "STATIC_LIBRARY" OR jsoncpp_lib_type STREQUAL "STATIC
       "$<$<CXX_COMPILER_ID:GNU,Clang>:LINKER:--exclude-libs,ALL>"
     )
   endif ()
-endif ()
-
-if (MYFRAME_ENABLE_ASAN)
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
-  )
-  target_link_options(${PROJECT_NAME}
-    PRIVATE
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
-  )
 endif ()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})

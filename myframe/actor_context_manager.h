@@ -47,8 +47,6 @@ class ActorContextManager final {
   std::shared_ptr<ActorContext> GetContext(const std::string& actor_name);
   void PrintWaitQueue();
 
-  /// 当前注册actor数量
-  uint32_t ctx_count_;
   /// 待处理actor链表
   std::list<std::weak_ptr<ActorContext>> wait_queue_;
   /// 读写锁

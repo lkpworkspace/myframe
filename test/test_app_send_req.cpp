@@ -71,6 +71,7 @@ int main() {
         std::this_thread::sleep_for(
           std::chrono::milliseconds(100));
       }
+      LOG(INFO) << "thread " << i <<  " begin runing...";
       int cnt = send_cnt;
       while (cnt--) {
         auto msg = std::make_shared<myframe::Msg>("hello");

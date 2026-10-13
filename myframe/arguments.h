@@ -19,6 +19,7 @@ class MYFRAME_EXPORT Argument {
   enum class ArgType : std::uint8_t {
     kArgString = 0,
     kArgInteger,
+    kArgNull = 99,
   };
   ArgType type;
   std::string key;
@@ -30,6 +31,10 @@ class MYFRAME_EXPORT Argument {
 
 class MYFRAME_EXPORT Arguments : public std::vector<Argument> {
  public:
+  bool Load(const std::string& filepath);
+
+  bool Save(const std::string& filepath);
+
   void SetStr(const std::string& key, const std::string& value);
 
   void SetInt(const std::string& key, int value);

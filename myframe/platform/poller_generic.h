@@ -61,8 +61,10 @@ int PollerGeneric::Wait(std::vector<ev_handle_t>* evs, int timeout_ms) {
 }
 
 void PollerGeneric::Notify(ev_handle_t h) {
-  std::lock_guard<std::mutex> lk(mtx_);
-  evs_.push_back(h);
+  {
+    std::lock_guard<std::mutex> lk(mtx_);
+    evs_.push_back(h);
+  }
   cv_.notify_one();
 }
 

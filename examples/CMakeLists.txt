@@ -1,5 +1,3 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
-
 add_compile_definitions(${PROJECT_NAME}_EXPORTS)
 
 ### link static lib
@@ -11,14 +9,6 @@ endif ()
 if (jsoncpp_lib_type STREQUAL "STATIC_LIBRARY")
   link_libraries(
     JsonCpp::JsonCpp
-  )
-endif ()
-if (MYFRAME_ENABLE_ASAN)
-  add_compile_options(
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
-  )
-  add_link_options(
-    "$<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>"
   )
 endif ()
 
@@ -33,6 +23,8 @@ add_library(example_actor_concurrent SHARED example_actor_concurrent.cpp)
 target_link_libraries(example_actor_concurrent ${PROJECT_NAME})
 add_library(example_actor_pub_sub SHARED example_actor_pub_sub.cpp)
 target_link_libraries(example_actor_pub_sub ${PROJECT_NAME})
+add_library(example_actor_req_resp SHARED example_actor_req_resp.cpp)
+target_link_libraries(example_actor_req_resp ${PROJECT_NAME})
 
 ### worker
 add_library(example_worker_quit SHARED example_worker_quit.cpp)
@@ -66,6 +58,7 @@ install(TARGETS
   example_actor_serial
   example_actor_concurrent
   example_actor_pub_sub
+  example_actor_req_resp
   example_worker_quit
   example_worker_io
   example_config
