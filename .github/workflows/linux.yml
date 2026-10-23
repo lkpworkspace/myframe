@@ -71,6 +71,7 @@ jobs:
       if: steps.cache-glog.outputs.cache-hit != 'true'
       run: |
           cmake -S glog-0.6.0 -B build-glog \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/glog \
@@ -84,6 +85,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
           cmake -S . -B ${{github.workspace}}/build_${{matrix.build_type}} \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_CXX_STANDARD=${{matrix.std}} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
