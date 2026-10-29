@@ -5,7 +5,7 @@
       "name": "mypm",
       "hidden": true,
       "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
-      "installDir": "${sourceDir}/.mypm/output/${presetName}",
+      "installDir": "${sourceDir}/.mypm/install/${presetName}",
       "cacheVariables": {
         "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/deps/jsoncpp-1.9.5;${sourceDir}/.mypm/deps/gflags-2.2.2;${sourceDir}/.mypm/deps/glog-0.6.0;${sourceDir}/.mypm/deps/swig-4.3.1",
         "BUILD_SHARED_LIBS": "ON",
@@ -19,9 +19,9 @@
       "hidden": true,
       "inherits": "mypm",
       "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
-      "installDir": "${sourceDir}/.mypm/output",
+      "installDir": "${sourceDir}/.mypm/install",
       "cacheVariables": {
-        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/output"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/install"
       }
     },
     {
