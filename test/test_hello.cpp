@@ -46,5 +46,14 @@ int main() {
   auto actor = mod->CreateActorInst("class", "Hello", "1");
   app->AddActor(actor);
 
-  return app->Exec();
+  std::thread th([&]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    app->Quit();
+  });
+
+  app->Exec();
+  if (th.joinable()) {
+    th.join();
+  }
+  return 0;
 }

@@ -60,11 +60,7 @@ if (MYFRAME_ENABLE_ASAN)
 endif ()
 
 ### install path
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  message(STATUS "Set default install prefix ${CMAKE_INSTALL_PREFIX}")
-else()
-  message(STATUS "Set install prefix ${CMAKE_INSTALL_PREFIX}")
-endif()
+message(STATUS "Install prefix ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(MYFRAME_BIN_DIR "bin")
 set(MYFRAME_INC_DIR "include")
@@ -73,6 +69,9 @@ set(MYFRAME_LOG_DIR "log")
 set(MYFRAME_SERVICE_DIR "service")
 set(MYFRAME_CONF_DIR "conf")
 set(MYFRAME_PYTHON_DIR "lib/python")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${MYFRAME_BIN_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${MYFRAME_LIB_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${MYFRAME_LIB_DIR}")
 
 ### deps libs
 find_package(Threads REQUIRED)

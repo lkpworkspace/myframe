@@ -149,30 +149,6 @@
       "output": {
         "outputOnFailure": true
       }
-    },
-    {
-      "name": "Release",
-      "configurePreset": "Release",
-      "configuration": "Release",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "Debug",
-      "configurePreset": "Debug",
-      "configuration": "Debug",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "Asan",
-      "configurePreset": "Asan",
-      "configuration": "Debug",
-      "output": {
-        "outputOnFailure": true
-      }
     }
   ]
 }
