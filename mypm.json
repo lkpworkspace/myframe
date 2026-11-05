@@ -1,9 +1,8 @@
 {
   "name": "myframe",
-  "buildType": "Release",
+  "cmakePreset":"Release",
   "scripts": {
-    "config": "builtin",
-    "build": "builtin"
+    "build": "cmake --preset ${cmakePreset} && cmake --build --preset ${cmakePreset}"
   },
   "dependencies": {
     "jsoncpp": {

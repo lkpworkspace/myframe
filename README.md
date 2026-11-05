@@ -27,8 +27,10 @@ worker自驱动，可以通过消息与actor交互;
 * [github ci macOS](.github/workflows/macos.yml)
 
 ## 快速本地构建
-[依赖构建安装](3rd/README.md)
 ```sh
+# 安装依赖
+cmake -S 3rd -B ".mypm/build_3rd" -DCMAKE_INSTALL_PREFIX=".mypm/install" -DMYFRAME_ENABLE_PYBIND=ON
+cmake --build ".mypm/build_3rd" -j --config Release
 # 构建安装
 cmake --preset ReleaseLocal
 cmake --build --preset ReleaseLocal

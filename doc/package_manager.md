@@ -10,7 +10,6 @@ mypm install
 ## 构建项目
 进入代码库根目录执行以下命令:
 ```sh
-mypm run config
 mypm run build
 ```
 
@@ -29,6 +28,5 @@ cd myframe_plugin
 # 添加myframe依赖
 mypm add myframe
 # 构建
-mypm run config
 mypm run build
 ```
