@@ -20,7 +20,7 @@ It is suitable for building medium- to large-scale projects.
 * [GitHub CI: macOS](.github/workflows/macos.yml)
 
 ## Quick Local Build
-[build and install dependencies](3rd/README.md)
+
 ```sh
 # Install dependencies
 cmake -S 3rd -B ".mypm/build_3rd" -DCMAKE_INSTALL_PREFIX=".mypm/install" -DMYFRAME_ENABLE_PYBIND=ON
