@@ -1,4 +1,5 @@
 # 开发手册
+![myframe](/doc/pics/myframe.png)
 ![myframe](/doc/pics/myframe_view.png)
 
 ## 安装和构建

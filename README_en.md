@@ -1,4 +1,8 @@
 # myframe
+![C++17](https://img.shields.io/badge/C++-17-blue)
+![Linux Supported](https://img.shields.io/badge/Linux-Supported-brightgreen?logo=linux&logoColor=black)
+![macOS Supported](https://img.shields.io/badge/macOS-Supported-brightgreen?logo=apple&logoColor=white)
+![Windows Supported](https://img.shields.io/badge/Windows-Supported-brightgreen?logo=windows&logoColor=white)
 
 English | [中文](README.md)
 
@@ -8,18 +12,6 @@ A component-based programming framework implemented in C++. Applications consist
 Actors are message-driven and can exchange messages with one another.  
 Workers are self-driven and can interact with actors through messages.  
 It is suitable for building medium- to large-scale projects.
-
-## Development and Runtime Environment
-
-| C++ Standard |
-| ------------ |
-| C++17        |
-
-| Supported Operating Systems |
-| --------------------------- |
-| Linux                       |
-| Windows                     |
-| macOS                       |
 
 ## GitHub Builds
 
