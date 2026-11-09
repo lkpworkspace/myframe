@@ -10,7 +10,7 @@
         "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/deps/jsoncpp-1.9.5;${sourceDir}/.mypm/deps/gflags-2.2.2;${sourceDir}/.mypm/deps/glog-0.6.0;${sourceDir}/.mypm/deps/swig-4.3.1",
         "BUILD_SHARED_LIBS": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "MYFRAME_VERSION":"1.1.1",
+        "MYFRAME_VERSION":"1.1.2",
         "MYFRAME_ENABLE_PYBIND":"ON"
       }
     },
