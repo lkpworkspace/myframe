@@ -22,6 +22,7 @@ function main() {
     -and -not -path "./output*" \
     -and -not -path "./3rd/*" \
     -and -not -path "./myframe/export.h" \
+    -and -not -path "./.mypm/*" \
     | xargs python3 ./cpplint.py
 }
 

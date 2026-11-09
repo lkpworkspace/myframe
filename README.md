@@ -1,8 +1,10 @@
 # myframe
+![C++17](https://img.shields.io/badge/C++-17-blue)
+![Linux Supported](https://img.shields.io/badge/Linux-Supported-brightgreen?logo=linux&logoColor=black)
+![macOS Supported](https://img.shields.io/badge/macOS-Supported-brightgreen?logo=apple&logoColor=white)
+![Windows Supported](https://img.shields.io/badge/Windows-Supported-brightgreen?logo=windows&logoColor=white)
 
 [English](README_en.md) | 中文
-
-![myframe](doc/pics/myframe.png)
 
 ## 概述
 C++实现的组件化的编程框架,程序由actor和worker组成;  
@@ -10,25 +12,16 @@ actor基于消息驱动,actor之间可以进行消息传递;
 worker自驱动，可以通过消息与actor交互;  
 适用于构建中大型项目.  
 
-## 开发/运行环境
-| C++ 标准   |
-| -------------- |
-| C++17          |
-
-| 操作系统支持   |
-| -------------- |
-| Linux |
-| Windows |
-| macOS |
-
 ## github构建
 * [github ci linux](.github/workflows/linux.yml)
 * [github ci windows](.github/workflows/windows.yml)
 * [github ci macOS](.github/workflows/macos.yml)
 
 ## 快速本地构建
-[依赖构建安装](3rd/README.md)
 ```sh
+# 安装依赖
+cmake -S 3rd -B ".mypm/build_3rd" -DCMAKE_INSTALL_PREFIX=".mypm/install" -DMYFRAME_ENABLE_PYBIND=ON
+cmake --build ".mypm/build_3rd" -j --config Release
 # 构建安装
 cmake --preset ReleaseLocal
 cmake --build --preset ReleaseLocal

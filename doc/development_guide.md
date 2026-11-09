@@ -1,11 +1,12 @@
 # 开发手册
+![myframe](/doc/pics/myframe.png)
 ![myframe](/doc/pics/myframe_view.png)
 
 ## 安装和构建
 - 方法一: 通过包管理的方式构建
   - [安装和构建说明](package_manager.md)
 - 方法二: 直接通过cmake脚本构建
-  - [查看README](../README.md)
+  - [查看README快速本地构建](../README.md#快速本地构建)
 
 ## 目录结构
 ```txt

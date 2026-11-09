@@ -2,26 +2,26 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "Default",
+      "name": "mypm",
       "hidden": true,
       "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
-      "installDir": "${sourceDir}/.mypm/output/${presetName}",
+      "installDir": "${sourceDir}/.mypm/install/${presetName}",
       "cacheVariables": {
         "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/deps/jsoncpp-1.9.5;${sourceDir}/.mypm/deps/gflags-2.2.2;${sourceDir}/.mypm/deps/glog-0.6.0;${sourceDir}/.mypm/deps/swig-4.3.1",
         "BUILD_SHARED_LIBS": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "MYFRAME_VERSION":"1.1.0",
+        "MYFRAME_VERSION":"1.1.1",
         "MYFRAME_ENABLE_PYBIND":"ON"
       }
     },
     {
       "name": "Local",
       "hidden": true,
-      "inherits": "Default",
+      "inherits": "mypm",
       "binaryDir": "${sourceDir}/.mypm/build/${presetName}",
-      "installDir": "${sourceDir}/.mypm/output",
+      "installDir": "${sourceDir}/.mypm/install",
       "cacheVariables": {
-        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/output"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.mypm/install"
       }
     },
     {
@@ -48,21 +48,21 @@
     },
     {
       "name": "Release",
-      "inherits": "Default",
+      "inherits": "mypm",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
       "name": "Debug",
-      "inherits": "Default",
+      "inherits": "mypm",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "Asan",
-      "inherits": "Default",
+      "inherits": "mypm",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "MYFRAME_ENABLE_ASAN": "ON"
@@ -145,30 +145,6 @@
     {
       "name": "AsanLocal",
       "configurePreset": "AsanLocal",
-      "configuration": "Debug",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "Release",
-      "configurePreset": "Release",
-      "configuration": "Release",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "Debug",
-      "configurePreset": "Debug",
-      "configuration": "Debug",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "Asan",
-      "configurePreset": "Asan",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true

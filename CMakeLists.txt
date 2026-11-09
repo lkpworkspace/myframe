@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 if (POLICY CMP0091) # >= 3.15
   cmake_policy(SET CMP0091 NEW)
 endif()
-set(MYFRAME_VERSION "1.1.0" CACHE STRING "myframe project version")
+set(MYFRAME_VERSION "1.1.1" CACHE STRING "myframe project version")
 project(myframe
   VERSION ${MYFRAME_VERSION}
   LANGUAGES CXX
@@ -60,11 +60,7 @@ if (MYFRAME_ENABLE_ASAN)
 endif ()
 
 ### install path
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  message(STATUS "Set default install prefix ${CMAKE_INSTALL_PREFIX}")
-else()
-  message(STATUS "Set install prefix ${CMAKE_INSTALL_PREFIX}")
-endif()
+message(STATUS "Install prefix ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(MYFRAME_BIN_DIR "bin")
 set(MYFRAME_INC_DIR "include")
@@ -73,6 +69,9 @@ set(MYFRAME_LOG_DIR "log")
 set(MYFRAME_SERVICE_DIR "service")
 set(MYFRAME_CONF_DIR "conf")
 set(MYFRAME_PYTHON_DIR "lib/python")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${MYFRAME_BIN_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${MYFRAME_LIB_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${MYFRAME_LIB_DIR}")
 
 ### deps libs
 find_package(Threads REQUIRED)
@@ -96,7 +95,7 @@ if (MYFRAME_GENERATE_EXAMPLE)
 endif()
 if (MYFRAME_GENERATE_TEST)
   enable_testing()
-  add_subdirectory(test)
+  add_subdirectory(tests)
 endif()
 if (MYFRAME_ENABLE_PYBIND)
   add_subdirectory(python)
