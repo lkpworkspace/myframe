@@ -1,8 +1,16 @@
 {
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+
   "cmake.useCMakePresets": "always",
   "cmake.configurePreset": "DebugLocal",
   "cmake.buildPreset": "DebugLocal",
   "cmake.buildBeforeRun": true,
   "cmake.configureOnOpen": true,
+
+  "C_Cpp.default.cppStandard": "c++17",
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
