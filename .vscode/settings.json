@@ -1,0 +1,8 @@
+{
+  "cmake.useCMakePresets": "always",
+  "cmake.configurePreset": "DebugLocal",
+  "cmake.buildPreset": "DebugLocal",
+  "cmake.buildBeforeRun": true,
+  "cmake.configureOnOpen": true,
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+}

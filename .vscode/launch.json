@@ -1,0 +1,51 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "CMake: macOS LLDB DAP",
+      "type": "lldb-dap",
+      "request": "launch",
+      "program": "${command:cmake.launchTargetPath}",
+      "args": [],
+      "stopOnEntry": false,
+      "cwd": "${workspaceFolder}/.mypm/install",
+      "env": {
+        "DYLD_LIBRARY_PATH": "${workspaceFolder}/.mypm/install/lib:${env:DYLD_LIBRARY_PATH}"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "CMake: Linux system GDB",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${command:cmake.launchTargetPath}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/.mypm/install",
+      "environment": [
+        {
+          "name": "LD_LIBRARY_PATH",
+          "value": "${workspaceFolder}/.mypm/install/lib:${env:LD_LIBRARY_PATH}"
+        }
+      ],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb"
+    },
+    {
+      "name": "CMake: Windows Visual Studio Debugger",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${command:cmake.launchTargetPath}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/.mypm/install",
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "${workspaceFolder}\\.mypm\\install\\bin;${env:PATH}"
+        }
+      ]
+    }
+  ]
+}

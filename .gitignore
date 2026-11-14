@@ -39,11 +39,10 @@ tmp
 
 # editor dir
 *.user
-.vscode
 
 # tmp file
 launcher/launcher_config.h
-test/test_config.h
+tests/test_config.h
 myframe/export.h
 myframe/config.h
 .DS_Store
