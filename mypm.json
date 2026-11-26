@@ -1,5 +1,11 @@
 {
   "name": "myframe",
+  "environment": [
+    {
+      "name": "PATH",
+      "value": "${PATH}"
+    }
+  ],
   "cmakePreset":"Release",
   "scripts": {
     "build": "cmake --preset ${cmakePreset} && cmake --build --preset ${cmakePreset}"
@@ -11,7 +17,8 @@
       "shared": true,
       "dirName": "jsoncpp-1.9.5",
       "private": false,
-      "installPath": ".mypm/deps"
+      "installPath": ".mypm/deps",
+      "toolchain": ""
     },
     "gflags": {
       "name": "gflags",
@@ -19,7 +26,8 @@
       "shared": true,
       "dirName": "gflags-2.2.2",
       "private": true,
-      "installPath": ".mypm/deps"
+      "installPath": ".mypm/deps",
+      "toolchain": ""
     },
     "glog": {
       "name": "glog",
@@ -27,7 +35,8 @@
       "shared": true,
       "dirName": "glog-0.6.0",
       "private": false,
-      "installPath": ".mypm/deps"
+      "installPath": ".mypm/deps",
+      "toolchain": ""
     }
   },
   "devDependencies": {
@@ -37,7 +46,8 @@
       "shared": true,
       "dirName": "swig-4.3.1",
       "private": false,
-      "installPath": ".mypm/deps"
+      "installPath": ".mypm/deps",
+      "toolchain": ""
     }
   }
 }
